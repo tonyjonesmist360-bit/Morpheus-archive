@@ -1,0 +1,70 @@
+# UI system — one screen, one product
+
+Written after the status panel shipped in a different visual language to the HUD. Two products on
+one screen is the opposite of clean, and the HUD's identity was there first, so the HUD is the
+reference and everything else conforms to it.
+
+## The identity
+
+**Field gear.** Stencilled bone-on-olive, worn and quiet. It is equipment, not a dashboard.
+
+```
+--bone   #d8d2c0   text, full bars, active pips
+--olive  #3c4230   moodle dots
+--rust   #b4552d   danger, low bars, heavy areas
+--blood  #8e2f2f   critical only
+--smoke  rgba(24,26,19,.72)   every panel ground
+--line   rgba(216,210,192,.22)  every border
+```
+
+Type: `'Trebuchet MS','Segoe UI',sans-serif`. Labels are **uppercase, bold, letter-spaced 1.2–1.6px,
+9.5–10px**. Values are `tabular-nums` so digits do not jitter.
+
+## The rule that governs everything
+
+> **One bold element: the moodle column. Everything else stays thin.**
+
+Straight from the HUD source, and it is the whole reason the screen reads at a glance. When you add
+something, it is thin unless you can argue it deserves to outrank a bleeding warning. Almost nothing
+does.
+
+## Bar colours mean one thing everywhere
+
+| Bar | Colour | Tag |
+|---|---|---|
+| Health | `--bone` | `VIT` |
+| Hunger | `#c98f3d` | `FOOD` |
+| Thirst | `#5f8fa3` | `H2O` |
+| Fatigue | `#7d8a5c` | `REST` |
+| **Any bar under 25** | `--rust` + `throb` | — |
+
+The status panel uses the same four colours and the same tags. A glance at the HUD and a glance at
+the panel must agree.
+
+## What lives where
+
+| Surface | Shows | Key |
+|---|---|---|
+| **HUD** (`outbreak_hud`) — always on | 4 vitals bars, moodle column, noise ripple, world strip | — |
+| **World strip** — thinnest line on screen | time / blackout / weather / radio channel / mob area | — |
+| **Status panel** (`outbreak_status`) — on demand | condition + wounds, carrying by category, skills, world | `F1` |
+| **Wheel** (`outbreak_wheel`) — on demand | contextual actions | `G` |
+
+Nothing duplicates for its own sake: the panel repeats the vitals because you open it *to* check
+them, but it never repeats the moodles, which are already unmissable.
+
+## Adding to the HUD
+
+1. Does it change often enough to watch, and matter enough to interrupt? If not, it belongs in the
+   status panel.
+2. Thin. Existing type scale, existing palette, no new accent colour.
+3. **No new loop.** Subscribe to `outbreak:tick` and throttle, the way the world strip does.
+   `ARCHITECTURE.md` lists every permitted client loop; adding one is a contract change.
+4. Handle the NUI action in the page. `tools_diag.py` flags a `SendNUIMessage` action the HTML never
+   handles, which is how the world strip's missing handler got caught before it shipped.
+
+## Accessibility notes, honestly
+
+Colour carries meaning in the bars, and red/green is the worst pair for it. Mitigated by every bar
+also carrying a number and a stencil tag, and by low bars throbbing rather than only changing hue.
+Not solved — a colourblind-safe palette is open work, and worth doing before the crew grows.

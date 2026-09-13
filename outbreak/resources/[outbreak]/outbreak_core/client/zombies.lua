@@ -44,6 +44,12 @@ exports('nearestZombie', function(radius)
   for z in pairs(zombies) do if DoesEntityExist(z) and not IsEntityDead(z) then local d = #(GetEntityCoords(z) - pos) if d < bd then best, bd = z, d end end end
   return best, bd
 end)
+-- Which mob area the player is standing in, or nil. Read by the HUD strip and the
+-- status panel so 'this place is heavy' is legible before it is lethal.
+exports('currentZone', function()
+  local z = hotZone(GetEntityCoords(PlayerPedId()))
+  return z and { id = z.id, mult = z.mult, bias = z.bias } or nil
+end)
 exports('countZombies', function(radius)
   local pos = GetEntityCoords(PlayerPedId()); local n = 0
   for z in pairs(zombies) do if DoesEntityExist(z) and not IsEntityDead(z) and #(GetEntityCoords(z) - pos) < (radius or 60.0) then n = n + 1 end end

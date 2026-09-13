@@ -37,6 +37,19 @@
   .fill.low { background: var(--rust) !important; animation: throb 1.2s infinite; }
   @keyframes throb { 50% { opacity: .45; } }
 
+  /* World strip — one thin line under the bars. Deliberately the quietest thing on
+     screen: time, weather, radio, and whether this place is heavy. Never bold; the
+     moodle column stays the only loud element. */
+  #strip {
+    display: flex; gap: 7px; align-items: center; flex-wrap: wrap;
+    font-size: 9.5px; letter-spacing: 1.2px; font-weight: bold;
+    color: rgba(216, 210, 192, .45); text-shadow: 0 1px 2px rgba(0,0,0,.8);
+    margin-top: 2px; text-transform: uppercase;
+  }
+  #strip s { text-decoration: none; color: rgba(216, 210, 192, .2); }
+  #strip .hot { color: var(--rust); }
+  #strip .dark { color: #7f88a8; }
+
   /* Moodle column — right edge, Zomboid homage */
   #moodles {
     position: fixed; right: 16px; top: 30%;
@@ -88,6 +101,7 @@
     <div class="bar" id="f-hunger"><span class="tag">FOOD</span><div class="track"><div class="fill" style="width:100%"></div></div></div>
     <div class="bar" id="f-thirst"><span class="tag">H2O</span><div class="track"><div class="fill" style="width:100%"></div></div></div>
     <div class="bar" id="f-fatigue"><span class="tag">REST</span><div class="track"><div class="fill" style="width:100%"></div></div></div>
+    <div id="strip"></div>
   </div>
   <div id="moodles"></div>
   <div id="noise"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><span id="ndot"></span></div>
@@ -110,6 +124,16 @@
       const n = document.getElementById('noise');
       n.classList.toggle('loud', data.value > 25);
       n.classList.toggle('danger', data.value > 60);
+      return;
+    }
+    if (data.action === 'world') {
+      const w = data.data || {}, bits = [];
+      if (w.hour != null) bits.push(String(w.hour).padStart(2,'0') + ':00');
+      if (w.blackout) bits.push('<span class="dark">BLACKOUT</span>');
+      if (w.weather) bits.push(w.weather);
+      if (w.channel) bits.push('CH ' + w.channel);
+      if (w.zone) bits.push(`<span class="${w.heavy ? 'hot' : ''}">${String(w.zone).replace(/_/g,' ')}</span>`);
+      document.getElementById('strip').innerHTML = bits.join('<s>/</s>');
       return;
     }
     if (data.action !== 'needs') return;

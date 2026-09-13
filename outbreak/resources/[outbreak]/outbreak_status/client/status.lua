@@ -80,6 +80,8 @@ local function gather()
       zombies = ex(function() return exports.outbreak_core:countZombies() end, 0) or 0,
       channel = ex(function() return exports.outbreak_radio:getChannel() end, 0) or 0,
       job     = ex(function() return exports.outbreak_faction:getJob() end, nil),
+      zone    = ex(function() local z = exports.outbreak_core:currentZone(); return z and z.id end, nil),
+      heavy   = ex(function() local z = exports.outbreak_core:currentZone(); return z and (z.mult or 1) > 1.5 end, false),
     },
   }
 end

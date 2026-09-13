@@ -2,79 +2,89 @@
 <meta charset="utf-8">
 <title>Outbreak — Status</title>
 <style>
+  /* Field-gear, same identity as outbreak_hud: stencilled bone-on-olive, worn and quiet.
+     Palette and type are lifted from outbreak_hud/html/index.html deliberately - one screen,
+     one product. If that file's palette changes, change this one with it. */
   :root{
-    --bg:rgba(8,9,11,.82); --card:#121417; --line:#22262c;
-    --ink:#e8e6e1; --dim:#8a8f98; --faint:#5b616b;
-    --ok:#7bb86f; --warn:#d9a441; --bad:#c8553d; --crit:#e0483a;
-    --accent:#c9a227;
+    --bone:#d8d2c0; --olive:#3c4230; --rust:#b4552d; --blood:#8e2f2f;
+    --smoke:rgba(24,26,19,.72); --panel:#1a1d16; --deep:#12140f;
+    --line:rgba(216,210,192,.22); --dim:rgba(216,210,192,.55); --faint:rgba(216,210,192,.32);
+    --ok:#7d8a5c; --water:#5f8fa3; --food:#c98f3d;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
   body{
-    font:13px/1.45 "Segoe UI",system-ui,sans-serif; color:var(--ink);
-    background:transparent; display:none; overflow:hidden;
-    -webkit-font-smoothing:antialiased;
+    font:13px/1.45 'Trebuchet MS','Segoe UI',sans-serif; color:var(--bone);
+    background:transparent; display:none; overflow:hidden; -webkit-font-smoothing:antialiased;
   }
   body.on{display:block}
-  #veil{position:fixed;inset:0;background:var(--bg);backdrop-filter:blur(3px);
+  #veil{position:fixed;inset:0;background:rgba(12,13,10,.80);
         display:flex;align-items:center;justify-content:center;padding:24px}
   #panel{width:min(1080px,96vw);max-height:92vh;display:flex;flex-direction:column;
-         border:1px solid var(--line);background:#0e1013;
-         box-shadow:0 24px 80px rgba(0,0,0,.7);animation:rise .13s ease-out}
+         background:var(--deep);border:1px solid var(--line);
+         box-shadow:0 24px 80px rgba(0,0,0,.75);animation:rise .13s ease-out}
   @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
-  header{display:flex;align-items:baseline;gap:14px;padding:16px 20px;border-bottom:1px solid var(--line)}
-  h1{font-size:19px;font-weight:650;letter-spacing:.3px}
-  h1 em{font-style:normal;color:var(--faint);font-weight:400}
+  header{display:flex;align-items:baseline;gap:14px;padding:15px 20px;
+         border-bottom:1px solid var(--line);background:var(--smoke)}
+  h1{font-size:18px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase}
+  h1 em{font-style:normal;color:var(--faint);font-weight:normal;letter-spacing:.5px}
   .former{color:var(--dim);font-size:12.5px}
   .chips{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
-  .chip{font-size:10.5px;letter-spacing:.7px;text-transform:uppercase;
-        padding:3px 9px;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
-  .chip.bad{color:var(--bad);border-color:#4a2a24}
-  .chip.crit{color:#fff;background:var(--crit);border-color:var(--crit)}
-  .chip.warn{color:var(--warn);border-color:#4a3b1c}
+  .chip{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;font-weight:bold;
+        padding:3px 9px;border:1px solid var(--line);color:var(--dim);
+        background:var(--smoke);white-space:nowrap}
+  .chip.bad{color:var(--rust);border-color:rgba(180,85,45,.55)}
+  .chip.crit{color:var(--bone);background:var(--blood);border-color:var(--blood)}
+  .chip.warn{color:var(--food);border-color:rgba(201,143,61,.5)}
 
-  .grid{display:grid;grid-template-columns:1.15fr 1fr 1fr .95fr;gap:1px;background:var(--line);
-        flex:1;min-height:0}
-  section{background:var(--card);padding:15px 17px;overflow:auto;min-height:0}
-  h2{font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--faint);
-     margin-bottom:12px;font-weight:600}
+  .grid{display:grid;grid-template-columns:1.15fr 1fr 1fr .95fr;gap:1px;
+        background:var(--line);flex:1;min-height:0}
+  section{background:var(--panel);padding:15px 17px;overflow:auto;min-height:0}
+  h2{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:var(--faint);
+     margin-bottom:12px;font-weight:bold}
 
+  /* Bars echo the HUD's vitals strip: stencil tag, thin track, no rounding. */
   .bar{margin-bottom:11px}
-  .bar .t{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
-  .bar .t b{font-weight:500;color:var(--dim)}
-  .bar .t span{font-variant-numeric:tabular-nums;color:var(--ink)}
-  .track{height:4px;background:#1d2126;overflow:hidden}
-  .fill{height:100%;transition:width .2s}
+  .bar .t{display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px;
+          letter-spacing:1.2px;text-transform:uppercase;font-weight:bold}
+  .bar .t b{color:var(--dim)}
+  .bar .t span{font-variant-numeric:tabular-nums;color:var(--bone)}
+  .track{height:7px;background:var(--smoke);border:1px solid var(--line)}
+  .fill{height:100%;transition:width .3s}
+  .fill.low{animation:throb 1.2s infinite}
+  @keyframes throb{50%{opacity:.45}}
 
   .rows{display:flex;flex-direction:column;gap:7px}
   .row{display:flex;justify-content:space-between;gap:10px;font-size:12.5px}
-  .row b{font-weight:400;color:var(--dim);text-transform:capitalize}
+  .row b{font-weight:normal;color:var(--dim);text-transform:capitalize}
   .row span{font-variant-numeric:tabular-nums}
   .group{margin-bottom:13px}
-  .group>.gh{display:flex;justify-content:space-between;font-size:10.5px;letter-spacing:1px;
-             text-transform:uppercase;color:var(--faint);margin-bottom:5px;
-             border-bottom:1px solid #191d22;padding-bottom:3px}
+  .group>.gh{display:flex;justify-content:space-between;font-size:10px;letter-spacing:1.4px;
+             text-transform:uppercase;color:var(--faint);font-weight:bold;
+             margin-bottom:5px;border-bottom:1px solid var(--line);padding-bottom:3px}
   .group>.gh span{color:var(--dim)}
   .none{color:var(--faint);font-size:12px;font-style:italic}
 
   .sk{display:flex;align-items:center;gap:9px;margin-bottom:9px}
-  .sk b{font-weight:400;color:var(--dim);text-transform:capitalize;width:82px;font-size:12.5px}
+  .sk b{font-weight:normal;color:var(--dim);text-transform:uppercase;width:86px;
+        font-size:10px;letter-spacing:1.1px}
   .pips{display:flex;gap:3px}
-  .pip{width:11px;height:11px;border:1px solid #262b31}
-  .pip.on{background:var(--accent);border-color:var(--accent)}
+  .pip{width:11px;height:11px;border:1px solid var(--line);background:var(--smoke)}
+  .pip.on{background:var(--bone);border-color:var(--bone)}
   .sk em{font-style:normal;color:var(--faint);font-size:11.5px;margin-left:auto;
          font-variant-numeric:tabular-nums}
 
   .wounds{margin-top:14px}
   .wd{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;
-      border-bottom:1px solid #191d22}
-  .wd b{font-weight:400;color:var(--bad);text-transform:capitalize}
+      border-bottom:1px solid var(--line)}
+  .wd b{font-weight:normal;color:var(--rust);text-transform:capitalize}
   .wd span{color:var(--dim);text-transform:capitalize}
 
   footer{padding:9px 20px;border-top:1px solid var(--line);display:flex;gap:16px;
-         font-size:11px;color:var(--faint)}
-  kbd{border:1px solid var(--line);padding:1px 6px;color:var(--dim);font-family:inherit;font-size:10.5px}
+         font-size:11px;color:var(--faint);background:var(--smoke)}
+  kbd{border:1px solid var(--line);padding:1px 6px;color:var(--dim);
+      font-family:inherit;font-size:10px;letter-spacing:1px;font-weight:bold}
   @media(max-width:900px){.grid{grid-template-columns:1fr 1fr}}
 </style>
 
@@ -97,12 +107,15 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 // Green above 60, amber to 30, red below. Same thresholds everywhere so the
 // colour means one thing across the whole panel.
-const tone = v => v>60?'var(--ok)':v>30?'var(--warn)':'var(--bad)';
-
-function bar(label,v){
+// Bar colours match outbreak_hud exactly - FOOD amber, H2O blue, REST olive, VIT bone -
+// so a bar means the same thing whether you glance at the HUD or open this.
+const TONE = { vit:'var(--bone)', food:'var(--food)', h2o:'var(--water)', rest:'var(--ok)' };
+function bar(tag,v,key){
   v = Math.max(0,Math.min(100, v||0));
-  return `<div class="bar"><div class="t"><b>${esc(label)}</b><span>${v}</span></div>
-    <div class="track"><div class="fill" style="width:${v}%;background:${tone(v)}"></div></div></div>`;
+  const low = v < 25 ? ' low' : '';
+  const col = v < 25 ? 'var(--rust)' : (TONE[key]||'var(--bone)');
+  return `<div class="bar"><div class="t"><b>${esc(tag)}</b><span>${v}</span></div>
+    <div class="track"><div class="fill${low}" style="width:${v}%;background:${col}"></div></div></div>`;
 }
 
 function render(d){
@@ -119,8 +132,8 @@ function render(d){
   if(!chips.length) chips.push(['','steady']);
   $('chips').innerHTML = chips.map(([k,t])=>`<span class="chip ${k}">${esc(t)}</span>`).join('');
 
-  $('cond').innerHTML = bar('Hunger',c.hunger)+bar('Thirst',c.thirst)+bar('Fatigue',c.fatigue)
-    + (typeof c.health==='number' ? bar('Health',c.health) : '');
+  $('cond').innerHTML = (typeof c.health==='number' ? bar('Vit',c.health,'vit') : '')
+    + bar('Food',c.hunger,'food') + bar('H2O',c.thirst,'h2o') + bar('Rest',c.fatigue,'rest');
 
   $('wounds').innerHTML = (c.wounds||[]).length
     ? '<h2>Wounds</h2>' + c.wounds.map(x=>`<div class="wd"><b>${esc(x.part)}</b><span>${esc(x.kind)}</span></div>`).join('')
@@ -143,10 +156,17 @@ function render(d){
   }).join('') || '<div class="none">No skills yet.</div>';
 
   const hh = w.hour==null ? '—' : String(w.hour).padStart(2,'0')+':00';
-  const rows=[['Time',hh],['Weather',w.weather||'—'],['Noise',(w.noise==null?'—':w.noise)],
+  const rows=[['Time',hh],['Weather',w.weather||'—'],
+              ['Blackout', w.blackout?'yes':'no'],
+              ['Noise',(w.noise==null?'—':w.noise)],
               ['Nearby dead',(w.zombies==null?'—':w.zombies)],
-              ['Radio',w.channel?('ch '+w.channel):'off'],['Faction',w.job&&w.job!=='unemployed'?w.job:'—']];
-  $('world').innerHTML = rows.map(([k,v])=>`<div class="row"><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join('');
+              ['Radio',w.channel?('ch '+w.channel):'off'],
+              ['Faction',w.job&&w.job!=='unemployed'?w.job:'—'],
+              ['Area', w.zone ? String(w.zone).replace(/_/g,' ') : 'open country']];
+  $('world').innerHTML = rows.map(([k,v])=>{
+    const hot = (k==='Area' && w.heavy) || (k==='Blackout' && w.blackout);
+    return `<div class="row"><b>${esc(k)}</b><span${hot?' style="color:var(--rust)"':''}>${esc(v)}</span></div>`;
+  }).join('');
 
   $('hint').textContent = c.infected ? 'Antibiotics buy time. They do not cure it.'
     : c.bleeding ? 'Bleeding. Bandage before you move.'

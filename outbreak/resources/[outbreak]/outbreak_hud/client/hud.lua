@@ -18,6 +18,27 @@ AddEventHandler('outbreak:hud:noise', function(v)
   SendNUIMessage({ action = 'noise', value = v })
 end)
 
+-- World strip: time, weather, blackout, radio channel, mob area.
+-- Subscribes to outbreak_core's existing tick rather than adding a loop - the same
+-- pattern ARCHITECTURE prescribes for noise and encumbrance. Throttled to 2s because
+-- none of this changes faster than that.
+local lastStrip = 0
+AddEventHandler('outbreak:tick', function()
+  local now = GetGameTimer()
+  if now - lastStrip < 2000 then return end
+  lastStrip = now
+  local ok, zone = pcall(function() return exports.outbreak_core:currentZone() end)
+  local ok2, ch = pcall(function() return exports.outbreak_radio:getChannel() end)
+  SendNUIMessage({ action = 'world', data = {
+    hour     = GlobalState.obTime,
+    weather  = GlobalState.obWeather,
+    blackout = GlobalState.obBlackout and true or false,
+    channel  = ok2 and ch or 0,
+    zone     = ok and zone and zone.id or nil,
+    heavy    = ok and zone and (zone.mult or 1) > 1.5 or false,
+  }})
+end)
+
 -- Hide default GTA hud pieces we replace
 CreateThread(function()
   while true do
