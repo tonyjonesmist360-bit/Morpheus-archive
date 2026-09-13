@@ -61,6 +61,39 @@ This is the class of bug `tools_diag*.py` explicitly cannot see.
 | Top-level (load-time) code | **OK.** Only `GetCoreObject()` and function definitions. No other boot hazard. |
 | `outbreak_world_items.id` has no AUTO_INCREMENT | **Intentional.** `worlditems.lua` assigns ids itself via `nextId`. |
 
+### PB-4 · `outbreak_faction` never loads oxmysql — **FIXED**
+
+- **Step:** `SMOKE-SCRIPT` §0 / checklist B2 ("no red `outbreak_*` errors on join") — fires on **every join**
+- **Symptom (predicted):** `attempt to index a nil value (global 'MySQL')` from `outbreak_faction`
+  every time any player connects. Reputation then silently reads 0 for everyone, and `addRep`
+  throws again on every faction reputation change.
+- **Root cause:** `outbreak_faction/fxmanifest.lua` declared
+  `server_scripts { 'server/faction.lua' }` with **no `@oxmysql/lib/MySQL.lua`**, but
+  `server/faction.lua` uses `MySQL.query.await` (line 52) and `MySQL.prepare` (line 61).
+  `repLoad` is wired to `QBCore:Server:PlayerLoaded`, so it runs on connect.
+  The other nine MySQL-using resources all include it correctly — faction is the only one that missed.
+- **Patch:** `outbreak_faction/fxmanifest.lua`
+  ```lua
+  - server_scripts { 'server/faction.lua' }
+  + server_scripts { '@oxmysql/lib/MySQL.lua', 'server/faction.lua' }
+  ```
+- **Status:** applied. Both analyzers clean. **Untested on FXServer.**
+- **Analyzer gap worth knowing:** neither `tools_diag.py` nor `tools_diag2.py` cross-checks
+  manifest includes against the globals a file actually uses. Both reported 0/0 with this bug present.
+
+### PB-5 · Second-pass checks that came back clean — no action
+
+| Check | Result |
+|---|---|
+| Every resource using `lib.*` includes `@ox_lib/init.lua` | **OK** — 18/18 |
+| Every resource using `MySQL.*` includes `@oxmysql/lib/MySQL.lua` | **Was 9/10** — see PB-4, now 10/10 |
+| `cache.*` (ox_lib global) used without ox_lib | **None** |
+| Cross-resource config globals (`NeedsCfg`, `EmoteCfg`, `LootCfg`, `WorldItemsCfg`) | **OK** — every consumer includes the defining file. `NoiseCfg` is file-local to `outbreak_noise/client/noise.lua`, by design. |
+| Internal `exports.outbreak_*` calls resolve to a definition | **OK** |
+| Calls into HELD groups (`outbreak_intel`, `outbreak_opportunities`, `outbreak_vehicles`) | **OK — all 6 sites `pcall`-guarded.** They no-op while progression/extended stay commented out, and light up when enabled. `outbreak_items/server/loot.lua:20` looks unguarded on its own line; the `pcall` wrapper is on line 19. |
+| `outbreak:*` events triggered with no handler | **None.** `outbreak:event:` is built by concatenation in `director.lua`; `outbreak:event:horde` is registered. |
+| `outbreak_worlditems` referencing `@outbreak_opportunities/...` | **Not an include** — it is a comment explaining why that is not possible; entropy reads exports instead. |
+
 ---
 
 ## Deferred
