@@ -60,7 +60,7 @@ if ($Only -eq 'both' -or $Only -eq 'items') {
                 elseif ($DryRun) { Note "would write $target" }
                 elseif (Confirm-Or-Exit 'items.lua') {
                     Backup-File -Path $target | Out-Null
-                    Set-Content -LiteralPath $target -Value $new -Encoding UTF8
+                    Write-TextNoBom -Path $target -Lines $new
                     Ok "63 outbreak items inserted"
                 }
             }
@@ -122,7 +122,7 @@ if ($Only -eq 'both' -or $Only -eq 'jobs') {
                     elseif ($DryRun) { Note "would write $target" }
                     elseif (Confirm-Or-Exit 'jobs.lua') {
                         Backup-File -Path $target | Out-Null
-                        Set-Content -LiteralPath $target -Value $new -Encoding UTF8
+                        Write-TextNoBom -Path $target -Lines $new
                         Ok "police replaced with military + raider"
                     }
                 }

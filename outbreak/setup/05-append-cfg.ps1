@@ -26,8 +26,8 @@ if ($current -match 'OUTBREAK PACK') {
     if ($DryRun) { Note "would append to $cfg" }
     else {
         Backup-File -Path $cfg | Out-Null
-        Add-Content -LiteralPath $cfg -Value ([Environment]::NewLine) -Encoding UTF8
-        Add-Content -LiteralPath $cfg -Value $addLines -Encoding UTF8
+        Add-TextNoBom -Path $cfg -Lines @('')
+        Add-TextNoBom -Path $cfg -Lines $addLines
         Ok "appended"
     }
 }

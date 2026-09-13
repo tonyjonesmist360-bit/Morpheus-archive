@@ -48,6 +48,40 @@ function Backup-File {
     return $backup
 }
 
+# Write text as UTF-8 WITHOUT a BOM. Windows PowerShell 5.1's -Encoding UTF8
+# emits a BOM, and Lua chokes on it: "unexpected symbol near '<\239>'".
+function Write-TextNoBom {
+    param(
+        [Parameter(Mandatory=$true)][string]$Path,
+        [Parameter(Mandatory=$true)][AllowEmptyCollection()][string[]]$Lines
+    )
+    $enc = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllLines($Path, $Lines, $enc)
+}
+
+function Add-TextNoBom {
+    param(
+        [Parameter(Mandatory=$true)][string]$Path,
+        [Parameter(Mandatory=$true)][AllowEmptyCollection()][string[]]$Lines
+    )
+    $enc = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::AppendAllLines($Path, [string[]]$Lines, $enc)
+}
+
+# Strip a UTF-8 BOM from a file if one is present. Returns $true if it removed one.
+# Works on raw bytes: File.ReadAllText silently swallows the BOM, so a text-level
+# check would never see it.
+function Remove-Bom {
+    param([Parameter(Mandatory=$true)][string]$Path)
+    if (-not [System.IO.File]::Exists($Path)) { return $false }
+    $bytes = [System.IO.File]::ReadAllBytes($Path)
+    if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+        [System.IO.File]::WriteAllBytes($Path, $bytes[3..($bytes.Length - 1)])
+        return $true
+    }
+    return $false
+}
+
 # Move a directory using .NET so that [brackets] in the path are always literal.
 function Move-Dir {
     param(

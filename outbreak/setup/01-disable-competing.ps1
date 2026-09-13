@@ -59,7 +59,7 @@ if (-not $changed) { Ok "npwd lines already in the desired state" }
 elseif ($DryRun) { Note "would rewrite 3 npwd lines in server.cfg" }
 else {
     Backup-File -Path $cfg | Out-Null
-    Set-Content -LiteralPath $cfg -Value $out -Encoding UTF8
+    Write-TextNoBom -Path $cfg -Lines $out
     Ok $(if ($Revert) { "npwd lines re-enabled" } else { "npwd lines commented out" })
 }
 
