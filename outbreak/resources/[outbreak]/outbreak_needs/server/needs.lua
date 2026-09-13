@@ -56,8 +56,9 @@ RegisterNetEvent('outbreak:server:needsTick', function(f)
   end
   st.bleeding = bleeding(st) > 0
   if dmg > 0 then
-    local ped = GetPlayerPed(src)
-    SetEntityHealth(ped, math.max(0, GetEntityHealth(ped) - dmg))
+    -- SetEntityHealth is a client-only native. The server stays authoritative for the
+    -- amount (starvation + bleed + infection stage); the client is the effector.
+    TriggerClientEvent('outbreak:client:survivalDamage', src, dmg)
   end
   push(src)
 end)

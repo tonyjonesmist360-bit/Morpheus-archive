@@ -83,7 +83,8 @@ Client → Server (validated server-side):
 Server → Client:
 `outbreak:client:loadNeeds`, `outbreak:client:consume`, `outbreak:client:infected`, `outbreak:client:antibiotics`, `outbreak:client:horde`,
 `outbreak:client:radioMsg`, `outbreak:client:revived`, `outbreak:client:respawn`, `outbreak:client:corpseSpawned`, `outbreak:client:thisIsHowYouDied`,
-`outbreak:client:freshSpawn`, `outbreak:client:createSurvivor`, `outbreak:client:skills`, `outbreak:client:barricadeLevel`, `outbreak:client:me`, `outbreak:client:carried`
+`outbreak:client:freshSpawn`, `outbreak:client:createSurvivor`, `outbreak:client:skills`, `outbreak:client:barricadeLevel`, `outbreak:client:me`, `outbreak:client:carried`,
+`outbreak:client:survivalDamage` (server computes starvation/bleed/infection damage, client applies it — `SetEntityHealth` is client-only)
 
 Client-local bus:
 `outbreak:tick`, `outbreak:noise:spike`, `outbreak:hud:update`, `outbreak:hud:noise`, `outbreak:client:bleedCheck`, `outbreak:anim:play`

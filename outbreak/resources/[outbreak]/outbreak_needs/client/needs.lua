@@ -47,6 +47,14 @@ end)
 
 RegisterNetEvent('outbreak:client:infected', function() TriggerServerEvent('outbreak:server:infect') end)
 
+-- Survival damage: the server decides how much (starvation, bleeding, infection stage)
+-- and this applies it, because SetEntityHealth does not exist server-side.
+RegisterNetEvent('outbreak:client:survivalDamage', function(dmg)
+  if type(dmg) ~= 'number' or dmg <= 0 then return end
+  local ped = PlayerPedId()
+  SetEntityHealth(ped, math.max(0, GetEntityHealth(ped) - dmg))
+end)
+
 -- ── survival tick: sensor reports decay factors; server applies ──
 CreateThread(function()
   while true do
