@@ -70,6 +70,7 @@ Removed by this pass: noise's own sampling loop (→ tick subscriber), needs' en
 - `Player(src).state.carriedBy` — carry/drag
 - `Entity(veh).state.veh` — **server-set** read model `{plate, fuel, battery, hotwired, locked, part, claimed, noise}` (vehicles v2)
 - `GlobalState.obTime / obWeather / obBlackout` — world
+- `Player(src).state.obGhost` — director ghost (server-set by `outbreak_dm`); `outbreak_core`'s aggro loop skips ghosted players
 - `GlobalState.obDebug` — debug mode (convar `ob_debug`)
 
 ## Events — canonical list (slice)

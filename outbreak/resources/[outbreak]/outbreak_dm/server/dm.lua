@@ -40,7 +40,13 @@ Actions.repeater = function(src, a) pcall(function() exports.outbreak_radio:setR
 Actions.revive = function(src, a) TriggerClientEvent('outbreak:client:adminRevive', a.target or src) end
 Actions.tp = function(src, a) if a.target then local p = GetEntityCoords(GetPlayerPed(a.target)); TriggerClientEvent('outbreak:dm:tp', src, p) elseif a.pos then TriggerClientEvent('outbreak:dm:tp', src, a.pos) end end
 Actions.bring = function(src, a) if a.target then TriggerClientEvent('outbreak:dm:tp', a.target, posOf(src)) end end
-Actions.ghost = function(src, a) TriggerClientEvent('outbreak:dm:ghost', src, a.on) end
+Actions.ghost = function(src, a)
+  local on = a.on and true or false
+  -- outbreak_core does its own targeting, so GTA invisibility alone does not stop the
+  -- horde. The statebag is what the aggro loop actually reads.
+  Player(src).state:set('obGhost', on, true)
+  TriggerClientEvent('outbreak:dm:ghost', src, on)
+end
 Actions.wait = function(src, a) Wait((a.seconds or 10) * 1000) end
 
 RegisterNetEvent('outbreak:dm:do', function(action, a)

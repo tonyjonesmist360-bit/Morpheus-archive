@@ -213,10 +213,22 @@ local function currentNoise()
   return ok and n or 20
 end
 
+local wasGhost = false
 CreateThread(function()
   while true do
     Wait(1500)
     local me = PlayerPedId()
+    -- Director ghost (outbreak_dm): skip targeting entirely, and on the way in let go of
+    -- anything already locked on, or the pack keeps chasing a player who is 'not here'.
+    local isGhost = LocalPlayer.state.obGhost == true
+    if isGhost ~= wasGhost then
+      wasGhost = isGhost
+      if isGhost then
+        for ped in pairs(zombies) do
+          if DoesEntityExist(ped) and not IsEntityDead(ped) then ClearPedTasks(ped); TaskWanderStandard(ped, 10.0, 10) end
+        end
+      end
+    end
     local ppos = GetEntityCoords(me)
     local wm = weatherMods()
     local noise = currentNoise() * wm.noiseMult
@@ -229,7 +241,7 @@ CreateThread(function()
         local d = #(GetEntityCoords(ped) - ppos)
         local sees = d < OutbreakCfg.AggroRadius and HasEntityClearLosToEntity(ped, me, 17)
         local hears = d < hearRadius and noise > 25
-        if sees or hears or (frenzy and d < 80.0) then
+        if not isGhost and (sees or hears or (frenzy and d < 80.0)) then
           TaskCombatPed(ped, me, 0, 16)
           onZombieAggro(ped)
         end
