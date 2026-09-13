@@ -117,6 +117,25 @@ XAMPP is explicitly unsupported by Qbox and by this pack. Install the real servi
 > oxmysql has a single connection. Qbox's own tables (`players`, `bans`, …) and our `outbreak_*` tables
 > live in **the same** database. In Part 4 you point the recipe at `outbreak`, and the recipe fills it.
 
+- [ ] 3.6 **Force `mysql_native_password` — current MariaDB will block txAdmin and oxmysql otherwise.**
+      MariaDB 11.6+ ships the PARSEC auth plugin, and 12.x installers may not put root on
+      `mysql_native_password`. Both txAdmin and oxmysql use node `mysql2`, which speaks only
+      `mysql_native_password` and `caching_sha2_password`. The symptom is txAdmin's recipe step
+      failing with *"Database connection failed: Your database does not accept the required
+      authentication method"* — while HeidiSQL connects fine, because it uses `libmariadb.dll`.
+      That split is the tell.
+  ```sql
+  SELECT VERSION();
+  SELECT user, host, plugin FROM mysql.user WHERE user = 'root';
+
+  ALTER USER IF EXISTS 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD('your-password');
+  ALTER USER IF EXISTS 'root'@'127.0.0.1' IDENTIFIED VIA mysql_native_password USING PASSWORD('your-password');
+  ALTER USER IF EXISTS 'root'@'::1'       IDENTIFIED VIA mysql_native_password USING PASSWORD('your-password');
+  FLUSH PRIVILEGES;
+  ```
+      Then `Restart-Service MariaDB` and re-check the `plugin` column. (MySQL syntax differs:
+      `IDENTIFIED WITH mysql_native_password BY '...'`.)
+
 - [ ] 3.6 *(optional but worth it)* Install [HeidiSQL](https://www.heidisql.com/) — it usually ships with the MariaDB MSI.
       Part 7.3 is much less painful with a GUI.
 

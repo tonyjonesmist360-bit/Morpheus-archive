@@ -18,7 +18,10 @@ resources/[outbreak]/              the slice + services (ensured)
 resources/[outbreak_extended]/     held (commented out) — vehicles v2, craft, military, stations, raiders, camps, broadcast, map
 resources/[outbreak_progression]/  held — outbreak_intel, outbreak_opportunities (5 chains)
 sql/migrations/001..007            apply in order, idempotent
-tools_diag.py, tools_diag2.py      static analyzers — run BOTH after every patch: `python tools_diag.py && python tools_diag2.py`
+tools_diag*.py                     static analyzers — run ALL THREE after every patch:
+                                   `python tools_diag.py && python tools_diag2.py && python tools_diag3.py`
+                                   (pass 3 covers undefined helpers, client-only natives on the server,
+                                    and manifest includes — the classes that let the 2026-09-13 bugs through)
 ops/                               backup/restore
 ```
 Live server files live in `C:\FXServer\txData\<recipe>.base\` (resources/ and server.cfg). The pack folder is the source of truth; copy resources into the live tree, don't edit the live tree only.
@@ -26,7 +29,7 @@ Live server files live in `C:\FXServer\txData\<recipe>.base\` (resources/ and se
 ## Hard rules
 - **Patch, don't rewrite.** Smallest change that fixes the failure. Preserve the ownership contract, the single tick loop, and server authority. If a fix needs a second polling loop or a client deciding an outcome, stop and say so.
 - **Anchor-safe edits.** When editing Lua, confirm the exact anchor text exists once before replacing. Never regenerate a whole file to fix one line.
-- **Every patch:** (1) make the change in the pack folder, (2) run both analyzers, (3) copy to the live tree, (4) `restart <resource>` in txAdmin console, (5) tell Tony what to retry and which smoke step.
+- **Every patch:** (1) make the change in the pack folder, (2) run all three analyzers, (3) copy to the live tree, (4) `restart <resource>` in txAdmin console, (5) tell Tony what to retry and which smoke step.
 - **Log discipline.** Tail `txData\logs\fxserver.log` (or the txAdmin live console) for `outbreak_` lines. Read `resources/[outbreak]/outbreak_debug/shakedown.log` (JSON lines) for Tony's pass/fail marks and notes — that is the shared record. Append your own findings to `SHAKEDOWN-NOTES.md` in the pack root: step, symptom, root cause, patch, status.
 - **Ordering.** Boot → instrumentation (`/ob_animcheck`, `/ob_models`, `/ob_walk`) → fix name classes in one pass each → then the rest of the script. Don't chase a wound bug while three anim dictionaries are still wrong.
 - **Framework API.** qbx_core runs a qb-core bridge; we call `exports['qb-core']:GetCoreObject()`. If the bridge is off, the fix is enabling it in qbx config, not rewriting resources. `exports.qbx_core:Logout`, `illenium-appearance` exports, `mm_radio` exports, `pma-voice` `getRadioChannel`/`setTalkingOnRadio` are the likeliest wrong names — check their actual source in `resources/` before guessing.
