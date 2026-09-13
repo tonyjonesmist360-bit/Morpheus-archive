@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  /* Field-gear HUD: stenciled bone-on-olive, worn and quiet.
+     One bold element: the moodle column. Everything else stays thin. */
+  :root {
+    --bone:   #d8d2c0;
+    --olive:  #3c4230;
+    --rust:   #b4552d;
+    --blood:  #8e2f2f;
+    --smoke:  rgba(24, 26, 19, 0.72);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { overflow: hidden; font-family: 'Trebuchet MS', 'Segoe UI', sans-serif; }
+
+  /* Vitals strip — bottom left, four thin stacked bars with stencil tags */
+  #vitals {
+    position: fixed; left: 18px; bottom: 18px; width: 210px;
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .bar { display: flex; align-items: center; gap: 7px; }
+  .tag {
+    width: 26px; font-size: 10px; letter-spacing: 1px; color: var(--bone);
+    text-shadow: 0 1px 2px rgba(0,0,0,.8); font-weight: bold;
+  }
+  .track {
+    flex: 1; height: 7px; background: var(--smoke);
+    border: 1px solid rgba(216, 210, 192, .25);
+  }
+  .fill { height: 100%; transition: width .6s ease, background .6s; }
+  #f-health .fill { background: var(--bone); }
+  #f-hunger .fill { background: #c98f3d; }
+  #f-thirst .fill { background: #5f8fa3; }
+  #f-fatigue .fill { background: #7d8a5c; }
+  .fill.low { background: var(--rust) !important; animation: throb 1.2s infinite; }
+  @keyframes throb { 50% { opacity: .45; } }
+
+  /* Moodle column — right edge, Zomboid homage */
+  #moodles {
+    position: fixed; right: 16px; top: 30%;
+    display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
+  }
+  .moodle {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--smoke); border: 1px solid rgba(216,210,192,.3);
+    border-radius: 999px 4px 4px 999px;
+    padding: 4px 12px 4px 4px; color: var(--bone); font-size: 12px;
+    animation: slidein .35s ease;
+  }
+  .moodle .dot {
+    width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 15px; background: var(--olive); border: 1px solid rgba(216,210,192,.35);
+  }
+  .moodle.danger { border-color: var(--blood); }
+  .moodle.danger .dot { background: var(--blood); }
+  @keyframes slidein { from { transform: translateX(30px); opacity: 0; } }
+
+  /* Noise ripple — sits above the vitals strip. Quiet = a dot. Loud = spreading rings. */
+  #noise {
+    position: fixed; left: 18px; bottom: 78px; width: 44px; height: 44px;
+    display: grid; place-items: center;
+  }
+  #ndot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--bone); grid-area: 1/1;
+    transition: background .4s;
+  }
+  #noise .ring {
+    grid-area: 1/1; border-radius: 50%; border: 1.5px solid var(--bone);
+    opacity: 0; width: 10px; height: 10px;
+  }
+  #noise.loud .ring { animation: ripple 1.6s infinite; }
+  #noise.loud .r2 { animation-delay: .5s; }
+  #noise.loud .r3 { animation-delay: 1s; }
+  #noise.danger #ndot { background: var(--rust); }
+  #noise.danger .ring { border-color: var(--rust); }
+  @keyframes ripple {
+    from { width: 10px; height: 10px; opacity: .8; }
+    to   { width: 44px; height: 44px; opacity: 0; }
+  }
+</style>
+</head>
+<body>
+  <div id="vitals">
+    <div class="bar" id="f-health"><span class="tag">VIT</span><div class="track"><div class="fill" style="width:100%"></div></div></div>
+    <div class="bar" id="f-hunger"><span class="tag">FOOD</span><div class="track"><div class="fill" style="width:100%"></div></div></div>
+    <div class="bar" id="f-thirst"><span class="tag">H2O</span><div class="track"><div class="fill" style="width:100%"></div></div></div>
+    <div class="bar" id="f-fatigue"><span class="tag">REST</span><div class="track"><div class="fill" style="width:100%"></div></div></div>
+  </div>
+  <div id="moodles"></div>
+  <div id="noise"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><span id="ndot"></span></div>
+<script>
+  const set = (id, v) => {
+    const el = document.querySelector(id + ' .fill');
+    el.style.width = Math.max(0, Math.min(100, v)) + '%';
+    el.classList.toggle('low', v < 25);
+  };
+  const moodleDefs = [
+    { key: 'hungry',   test: d => d.hunger  < 30, icon: '🥫', text: 'Hungry',   danger: d => d.hunger  <= 5 },
+    { key: 'thirsty',  test: d => d.thirst  < 30, icon: '💧', text: 'Thirsty',  danger: d => d.thirst  <= 5 },
+    { key: 'tired',    test: d => d.fatigue < 30, icon: '💤', text: 'Exhausted',danger: d => d.fatigue <= 5 },
+    { key: 'bleeding', test: d => d.bleeding,     icon: '🩸', text: 'Bleeding', danger: () => true },
+    { key: 'wounded',  test: d => Object.values(d.wounds||{}).some(w => !w.treated), icon: '🩹', text: d => { const n = Object.values(d.wounds||{}).filter(w=>!w.treated).length; return n + (n===1?' open wound':' open wounds'); }, danger: d => Object.values(d.wounds||{}).some(w => !w.treated && (w.kind==='gunshot'||w.kind==='fracture')) },
+    { key: 'infected', test: d => !!d.infection,  icon: '🦠', text: d => d.infection, danger: d => d.infection === 'Fever' || d.infection === 'Critical' },
+  ];
+  window.addEventListener('message', ({ data }) => {
+    if (data.action === 'noise') {
+      const n = document.getElementById('noise');
+      n.classList.toggle('loud', data.value > 25);
+      n.classList.toggle('danger', data.value > 60);
+      return;
+    }
+    if (data.action !== 'needs') return;
+    const d = data.data;
+    set('#f-health',  d.health);
+    set('#f-hunger',  d.hunger);
+    set('#f-thirst',  d.thirst);
+    set('#f-fatigue', d.fatigue);
+    const box = document.getElementById('moodles');
+    box.innerHTML = '';
+    for (const m of moodleDefs) {
+      if (!m.test(d)) continue;
+      const el = document.createElement('div');
+      el.className = 'moodle' + (m.danger(d) ? ' danger' : '');
+      const text = typeof m.text === 'function' ? m.text(d) : m.text;
+      el.innerHTML = `<span class="dot">${m.icon}</span>${text}`;
+      box.appendChild(el);
+    }
+  });
+</script>
+</body>
+</html>

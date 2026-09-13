@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8">
+<style>
+  :root { --bone:#d8d2c0; --olive:#3c4230; --rust:#b4552d; --blood:#8e2f2f; --smoke:rgba(24,26,19,.85); }
+  body { margin:0; overflow:hidden; font-family:'Trebuchet MS','Segoe UI',sans-serif; }
+  #stage {
+    position:fixed; left:50%; top:58%; transform:translate(-50%,-50%);
+    display:none; flex-direction:column; align-items:center; gap:10px;
+  }
+  #stage.on { display:flex; }
+  #title { color:var(--bone); font-size:13px; letter-spacing:2px; background:var(--smoke);
+           padding:4px 14px; border:1px solid rgba(216,210,192,.3); }
+  canvas { background:var(--smoke); border:1px solid rgba(216,210,192,.3); }
+  #hint { color:var(--bone); opacity:.75; font-size:11px; }
+</style></head>
+<body>
+<div id="stage">
+  <div id="title"></div>
+  <canvas id="cv" width="300" height="300"></canvas>
+  <div id="hint"></div>
+</div>
+<script>
+const stage = document.getElementById('stage'), cv = document.getElementById('cv'),
+      ctx = cv.getContext('2d'), title = document.getElementById('title'),
+      hint = document.getElementById('hint');
+const BONE='#d8d2c0', OLIVE='#3c4230', RUST='#b4552d', BLOOD='#8e2f2f';
+let raf=null, keyHandler=null, running=false;
+
+function finish(success){
+  if(!running) return; running=false;
+  cancelAnimationFrame(raf);
+  if(keyHandler){ window.removeEventListener('keydown', keyHandler); keyHandler=null; }
+  // flash verdict
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle = success ? BONE : BLOOD;
+  ctx.font='bold 26px Trebuchet MS'; ctx.textAlign='center';
+  ctx.fillText(success?'OPEN':'JAMMED', cv.width/2, cv.height/2+8);
+  setTimeout(()=>{
+    stage.className='';
+    fetch(`https://${GetParentResourceName()}/result`,{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({success})});
+  }, 650);
+}
+
+/* ── PIN SWEEP: marker orbits a lock face; tap E inside the notch. Each pin: smaller notch, faster. */
+function pinsweep(o){
+  const pins=o.pins||3; let pin=0, ang=0, dir=1;
+  let speed=(o.speed||1.0)*1.9;
+  let notchAt=Math.random()*Math.PI*2, notchW=0.85;
+  title.textContent='PIN '+(pin+1)+' / '+pins; hint.textContent='Press E in the notch';
+  function nextPin(){
+    pin++; if(pin>=pins){ finish(true); return; }
+    title.textContent='PIN '+(pin+1)+' / '+pins;
+    notchAt=Math.random()*Math.PI*2; notchW*=0.72; speed*=1.18; dir=Math.random()<.4?-dir:dir;
+  }
+  keyHandler=(e)=>{
+    if(e.key!=='e'&&e.key!=='E') return;
+    const d=Math.abs(((ang-notchAt)%(Math.PI*2)+Math.PI*3)%(Math.PI*2)-Math.PI);
+    if(d<notchW/2) nextPin(); else finish(false);
+  };
+  window.addEventListener('keydown', keyHandler);
+  let last=performance.now();
+  (function loop(t){
+    if(!running) return;
+    const dt=(t-last)/1000; last=t; ang=(ang+dir*speed*dt)%(Math.PI*2);
+    ctx.clearRect(0,0,300,300);
+    const cx=150, cy=150, r=95;
+    ctx.lineWidth=14; ctx.strokeStyle=OLIVE;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle=BONE; // notch
+    ctx.beginPath(); ctx.arc(cx,cy,r,notchAt-notchW/2,notchAt+notchW/2); ctx.stroke();
+    ctx.fillStyle=RUST; // marker
+    ctx.beginPath(); ctx.arc(cx+Math.cos(ang)*r, cy+Math.sin(ang)*r, 8, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle=BONE; ctx.font='12px Trebuchet MS'; ctx.textAlign='center';
+    for(let i=0;i<pins;i++){ ctx.fillStyle=i<pin?BONE:'rgba(216,210,192,.25)';
+      ctx.beginPath(); ctx.arc(cx-((pins-1)*9)+i*18, cy, 5, 0, Math.PI*2); ctx.fill(); }
+    raf=requestAnimationFrame(loop);
+  })(last);
+}
+
+/* ── PRY METER: cursor sweeps a bar; sweet spot drifts. Land E inside it, 3 pulls, 2 misses allowed. */
+function pry(o){
+  const need=o.pulls||3; let pulls=0, misses=0;
+  const W=(o.width||18)/100; let pos=0, v=1.35, zone=Math.random()*(1-W), zdir=0.12;
+  title.textContent='PRY  '+pulls+' / '+need; hint.textContent='Press E in the sweet spot';
+  keyHandler=(e)=>{
+    if(e.key!=='e'&&e.key!=='E') return;
+    if(pos>=zone&&pos<=zone+W){ pulls++; title.textContent='PRY  '+pulls+' / '+need;
+      if(pulls>=need){ finish(true); return; } v*=1.25; zone=Math.random()*(1-W); }
+    else { misses++; if(misses>1) finish(false); else hint.textContent='It slips! One more miss and it jams.'; }
+  };
+  window.addEventListener('keydown', keyHandler);
+  let last=performance.now();
+  (function loop(t){
+    if(!running) return;
+    const dt=(t-last)/1000; last=t;
+    pos+=v*dt; if(pos>1||pos<0){ v=-v; pos=Math.max(0,Math.min(1,pos)); }
+    zone+=zdir*dt; if(zone>1-W||zone<0){ zdir=-zdir; zone=Math.max(0,Math.min(1-W,zone)); }
+    ctx.clearRect(0,0,300,300);
+    const bx=40, bw=220, by=130, bh=40;
+    ctx.fillStyle=OLIVE; ctx.fillRect(bx,by,bw,bh);
+    ctx.fillStyle='rgba(216,210,192,.85)'; ctx.fillRect(bx+zone*bw,by,W*bw,bh);
+    ctx.fillStyle=RUST; ctx.fillRect(bx+pos*bw-3,by-8,6,bh+16);
+    raf=requestAnimationFrame(loop);
+  })(last);
+}
+
+/* ── WIRE SPLICE: memorize the wire order, then key it back with 1-4. */
+function splice(o){
+  const len=o.length||5, showMs=o.showMs||1800;
+  const names=['1','2','3','4'], colors=['#c98f3d','#5f8fa3','#7d8a5c','#8e2f2f'];
+  const seq=[]; for(let i=0;i<len;i++) seq.push(Math.floor(Math.random()*4));
+  let idx=0, showing=true;
+  title.textContent='SPLICE'; hint.textContent='Memorize the wires';
+  function draw(){
+    ctx.clearRect(0,0,300,300);
+    for(let i=0;i<len;i++){
+      const y=60+i*(180/len);
+      ctx.strokeStyle = showing? colors[seq[i]] : (i<idx? colors[seq[i]] : 'rgba(216,210,192,.25)');
+      ctx.lineWidth=8; ctx.beginPath(); ctx.moveTo(50,y);
+      ctx.bezierCurveTo(130,y-12,170,y+12,250,y); ctx.stroke();
+      if(showing){ ctx.fillStyle=BONE; ctx.font='bold 13px Trebuchet MS'; ctx.fillText(names[seq[i]], 30, y+4); }
+    }
+  }
+  draw();
+  setTimeout(()=>{ if(!running) return; showing=false; hint.textContent='Key the order: 1 2 3 4'; draw(); }, showMs);
+  keyHandler=(e)=>{
+    if(showing) return;
+    const k=parseInt(e.key); if(!(k>=1&&k<=4)) return;
+    if(k-1===seq[idx]){ idx++; draw(); if(idx>=len) finish(true); }
+    else finish(false);
+  };
+  window.addEventListener('keydown', keyHandler);
+}
+
+window.addEventListener('message', ({data})=>{
+  if(data.action==='abort'){ running=false; stage.className=''; cancelAnimationFrame(raf);
+    if(keyHandler){ window.removeEventListener('keydown', keyHandler); keyHandler=null; } return; }
+  if(data.action!=='start') return;
+  stage.className='on'; running=true;
+  const o=data.opts||{};
+  if(data.game==='pinsweep') pinsweep(o);
+  else if(data.game==='pry') pry(o);
+  else if(data.game==='splice') splice(o);
+  else finish(false);
+});
+</script>
+</body>
+</html>

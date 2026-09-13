@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  :root { --bone:#d8d2c0; --olive:#3c4230; --rust:#b4552d; --smoke:rgba(24,26,19,.94); --ok:#5e8a4c; --bad:#8e2f2f; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { overflow:hidden; font-family:'Trebuchet MS','Segoe UI',sans-serif; color:var(--bone); }
+  #panel { position:fixed; right:16px; top:60px; width:420px; max-height:82vh; background:var(--smoke); border:1px solid rgba(216,210,192,.3); display:none; flex-direction:column; }
+  #panel.on { display:flex; }
+  #head { padding:8px 12px; border-bottom:1px solid rgba(216,210,192,.25); display:flex; justify-content:space-between; align-items:center; font-size:11px; letter-spacing:2.5px; text-transform:uppercase; }
+  #head .prog { opacity:.7; }
+  #list { overflow-y:auto; flex:1; }
+  .sec { padding:6px 12px 2px; font-size:10px; letter-spacing:2px; text-transform:uppercase; opacity:.55; border-top:1px solid rgba(216,210,192,.1); }
+  .step { display:grid; grid-template-columns:1fr auto; gap:6px; padding:5px 12px; font-size:12px; align-items:center; }
+  .step.sel { background:rgba(216,210,192,.08); border-left:3px solid var(--rust); }
+  .step .st { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; padding:2px 6px; border:1px solid rgba(216,210,192,.3); min-width:52px; text-align:center; }
+  .step.pass .st { background:var(--ok); border-color:var(--ok); } .step.fail .st { background:var(--bad); border-color:var(--bad); }
+  .step .note { grid-column:1 / -1; font-size:11px; opacity:.75; font-style:italic; }
+  #foot { padding:8px 12px; border-top:1px solid rgba(216,210,192,.25); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; opacity:.7; }
+  #cur { font-size:12px; text-transform:none; letter-spacing:0; opacity:1; margin-bottom:4px; }
+</style></head>
+<body>
+<div id="panel">
+  <div id="head"><span>SHAKEDOWN</span><span class="prog" id="prog"></span></div>
+  <div id="list"></div>
+  <div id="foot"><div id="cur"></div>▲▼ step · P pass · F fail · N note · L send log · F9 close</div>
+</div>
+<script>
+let S = { steps:[], sel:0 };
+function render(){
+  const l=document.getElementById('list'); let html='', lastSec=null;
+  S.steps.forEach((s,i)=>{ if(s.sec!==lastSec){ html+=`<div class="sec">${s.sec}</div>`; lastSec=s.sec; }
+    html+=`<div class="step ${i===S.sel?'sel':''} ${s.status||''}" id="s${i}"><span>${s.id} ${s.label}</span><span class="st">${s.status||'—'}</span>${s.note?`<div class="note">${s.note}</div>`:''}</div>`; });
+  l.innerHTML=html;
+  const done=S.steps.filter(s=>s.status).length, fails=S.steps.filter(s=>s.status==='fail').length;
+  document.getElementById('prog').textContent=`${done}/${S.steps.length} · ${fails} fail`;
+  const c=S.steps[S.sel]; document.getElementById('cur').textContent=c?`${c.id}: ${c.cmd||''} → ${c.expect||''}`:'';
+  const el=document.getElementById('s'+S.sel); if(el) el.scrollIntoView({block:'nearest'});
+}
+window.addEventListener('message',({data})=>{
+  if(data.action==='open'){ S.steps=data.steps; S.sel=data.sel||0; document.getElementById('panel').className='on'; render(); }
+  else if(data.action==='close'){ document.getElementById('panel').className=''; }
+  else if(data.action==='update'){ S.steps=data.steps; render(); }
+  else if(data.action==='nav'){ if(data.key==='up')S.sel=Math.max(0,S.sel-1); if(data.key==='down')S.sel=Math.min(S.steps.length-1,S.sel+1); render(); }
+});
+</script>
+</body></html>

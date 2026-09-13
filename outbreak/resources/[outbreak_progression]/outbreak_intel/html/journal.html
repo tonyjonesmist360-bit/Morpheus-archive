@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  :root { --bone:#d8d2c0; --olive:#3c4230; --rust:#b4552d; --blood:#8e2f2f; --smoke:rgba(24,26,19,.92); --ink:#1a1c14; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { overflow:hidden; font-family:'Trebuchet MS','Segoe UI',sans-serif; color:var(--bone); }
+  #book { position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.45); }
+  #book.on { display:grid; }
+  #page { width:860px; height:560px; background:var(--smoke); border:1px solid rgba(216,210,192,.3); display:grid; grid-template-rows:44px 1fr 30px; }
+  #tabs { display:flex; border-bottom:1px solid rgba(216,210,192,.25); }
+  .tab { flex:1; display:grid; place-items:center; font-size:11px; letter-spacing:2.5px; text-transform:uppercase; opacity:.55; border-right:1px solid rgba(216,210,192,.15); }
+  .tab.sel { opacity:1; background:rgba(216,210,192,.08); box-shadow:inset 0 -3px 0 var(--rust); }
+  #body { display:grid; grid-template-columns:300px 1fr; min-height:0; }
+  #list { overflow-y:auto; border-right:1px solid rgba(216,210,192,.2); }
+  .row { padding:10px 14px; border-bottom:1px solid rgba(216,210,192,.08); font-size:13px; cursor:pointer; display:flex; justify-content:space-between; gap:8px; }
+  .row.sel { background:rgba(216,210,192,.1); border-left:3px solid var(--rust); }
+  .row .rel { font-size:9px; letter-spacing:1.5px; opacity:.6; text-transform:uppercase; align-self:center; }
+  .row.obsolete { opacity:.4; text-decoration:line-through; }
+  #detail { padding:18px 22px; overflow-y:auto; }
+  #detail h2 { font-size:18px; letter-spacing:1px; margin-bottom:6px; }
+  #detail .meta { font-size:10px; letter-spacing:2px; text-transform:uppercase; opacity:.6; margin-bottom:14px; }
+  #detail .clue { font-size:14px; line-height:1.55; border-left:3px solid var(--olive); padding-left:12px; margin-bottom:14px; font-style:italic; }
+  #detail .where { font-size:12px; opacity:.8; margin-bottom:12px; }
+  #detail .photo { width:100%; height:180px; background:repeating-linear-gradient(45deg, #2a2d22 0 8px, #22251c 8px 16px); display:grid; place-items:center; font-size:11px; letter-spacing:2px; opacity:.7; margin-bottom:12px; }
+  .stage { font-size:12px; padding:6px 0; border-bottom:1px dashed rgba(216,210,192,.15); display:flex; justify-content:space-between; }
+  .stage.done { opacity:.5; } .stage.now { color:var(--rust); }
+  .sol { margin-top:12px; padding:9px 12px; border:1px solid rgba(216,210,192,.25); font-size:12px; cursor:pointer; }
+  .sol.sel { border-color:var(--rust); background:rgba(180,85,45,.12); }
+  .sol .t { letter-spacing:1.5px; text-transform:uppercase; font-size:10px; opacity:.7; }
+  .empty { padding:24px; font-size:13px; opacity:.55; font-style:italic; }
+  #foot { display:flex; align-items:center; justify-content:space-between; padding:0 14px; font-size:10px; letter-spacing:1.5px; opacity:.6; text-transform:uppercase; }
+  .stub { color:var(--rust); }
+</style></head>
+<body>
+<div id="book"><div id="page">
+  <div id="tabs"></div>
+  <div id="body"><div id="list"></div><div id="detail"></div></div>
+  <div id="foot"><span>◄ ► tabs · ▲ ▼ entries · A / Enter act · B / Esc close</span><span id="count"></span></div>
+</div></div>
+<script>
+const TABS = [
+  { id:'rumors',    label:'Rumors',              filter: r => ['rumor','partial'].includes(r.state) },
+  { id:'confirmed', label:'Confirmed locations', filter: r => r.state === 'confirmed' },
+  { id:'active',    label:'Active opportunities',filter: null },
+  { id:'done',      label:'Completed discoveries', filter: r => ['completed','failed','obsolete'].includes(r.state) },
+];
+let S = { intel:{}, opps:{}, catalog:{}, tab:2, row:0, sol:-1, focus:'list' };
+
+function entries() {
+  const t = TABS[S.tab];
+  if (t.id === 'active') return Object.values(S.opps || {}).filter(o => o.state === 'active' || o.state === 'available').map(o => ({ opp:o }));
+  return Object.entries(S.intel).filter(([id,r]) => t.filter(r)).map(([id,r]) => ({ id, r, def:S.catalog[id] || {title:id} }));
+}
+function render() {
+  document.getElementById('tabs').innerHTML = TABS.map((t,i)=>`<div class="tab ${i===S.tab?'sel':''}">${t.label}</div>`).join('');
+  const es = entries(); if (S.row >= es.length) S.row = Math.max(0, es.length-1);
+  document.getElementById('count').textContent = es.length + ' entries';
+  document.getElementById('list').innerHTML = es.length ? es.map((e,i)=>{
+    if (e.opp) return `<div class="row ${i===S.row?'sel':''}"><span>${e.opp.title}</span><span class="rel">${e.opp.stub?'<span class="stub">unbuilt</span>':e.opp.state}</span></div>`;
+    return `<div class="row ${i===S.row?'sel':''} ${e.r.state==='obsolete'?'obsolete':''}"><span>${e.def.title}</span><span class="rel">${e.r.reliability||''}</span></div>`;
+  }).join('') : `<div class="empty">Nothing here yet. ${TABS[S.tab].id==='rumors'?'Listen to the radio. Read what you find.':''}</div>`;
+  const e = es[S.row]; const d = document.getElementById('detail');
+  if (!e) { d.innerHTML = ''; return; }
+  if (e.opp) {
+    const o = e.opp;
+    d.innerHTML = `<h2>${o.title}</h2><div class="meta">${o.state}${o.deadline?` · ${fmt(o.remaining)} remaining`:''}${o.stub?' · <span class="stub">not built yet</span>':''}</div>
+      <div class="clue">${o.summary||''}</div>
+      ${(o.stages||[]).map((s,i)=>`<div class="stage ${i<o.stage?'done':(i===o.stage?'now':'')}"><span>${s.label}</span><span>${i<o.stage?'✓':(i===o.stage?'now':'')}</span></div>`).join('')}
+      ${(o.solutions||[]).map((s,i)=>`<div class="sol ${i===S.sol?'sel':''} ${o.chosen===s.id?'sel':''}"><div class="t">${o.chosen===s.id?'chosen · ':''}${s.solo?'solo-friendly · ':''}${s.id}</div>${s.label}<br><small>${s.desc||''}</small></div>`).join('')}
+      ${o.contrib?`<div class="where" style="margin-top:12px">Delivered: ${Object.entries(o.contrib).map(([k,v])=>k+' ×'+v).join(', ')||'nothing yet'}</div>`:''}`;
+  } else {
+    const def = e.def, r = e.r;
+    let where = '';
+    if (def.coords) where = 'Exact position known — marked on your map.';
+    else if (def.area) where = `Somewhere in a ${Math.round(def.area.radius)} m area — search zone shown, no marker.`;
+    else if (def.landmark) where = 'Landmark: ' + def.landmark;
+    else if (def.frequency) where = 'Radio frequency: channel ' + def.frequency;
+    d.innerHTML = `<h2>${def.title}</h2><div class="meta">${def.category||''} · ${r.state} · ${r.reliability||''} · via ${r.source||'?'}</div>
+      ${def.photo?`<div class="photo">PHOTOGRAPH · ${def.photo}</div>`:''}
+      ${def.clue?`<div class="clue">${def.clue}</div>`:''}
+      ${where?`<div class="where">${where}</div>`:''}
+      ${def.stub?'<div class="where stub">This lead belongs to a chain that is not built yet.</div>':''}`;
+  }
+}
+const fmt = s => s==null?'':`${Math.floor(s/60)}m ${String(Math.floor(s%60)).padStart(2,'0')}s`;
+function nav(k) {
+  const es = entries(); const e = es[S.row];
+  if (k==='left') { S.tab=(S.tab+TABS.length-1)%TABS.length; S.row=0; S.sol=-1; }
+  else if (k==='right') { S.tab=(S.tab+1)%TABS.length; S.row=0; S.sol=-1; }
+  else if (k==='up') { if (e&&e.opp&&S.sol>=0) S.sol=Math.max(-1,S.sol-1); else S.row=Math.max(0,S.row-1); }
+  else if (k==='down') { if (e&&e.opp&&e.opp.solutions&&e.opp.solutions.length&&S.sol<e.opp.solutions.length-1&&(S.sol>=0||S.row===es.length-1||true)) { if (S.sol>=0||es.length===1) S.sol++; else S.row=Math.min(es.length-1,S.row+1); } else S.row=Math.min(es.length-1,S.row+1); }
+  else if (k==='enter') { if (e&&e.opp) { if (S.sol>=0) post('choose',{opp:e.opp.id,solution:e.opp.solutions[S.sol].id}); else post('join',{opp:e.opp.id}); } }
+  else if (k==='back') { if (S.sol>=0) S.sol=-1; else { post('close',{}); return; } }
+  render();
+}
+const post = (n,b) => fetch(`https://${GetParentResourceName()}/${n}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+window.addEventListener('keydown', e => {
+  const m = { ArrowLeft:'left', ArrowRight:'right', Tab:'right', ArrowUp:'up', ArrowDown:'down', Enter:'enter', Escape:'back', Backspace:'back' }[e.key];
+  if (m) { e.preventDefault(); nav(m); }
+});
+window.addEventListener('message', ({data}) => {
+  if (data.action==='open') { S.intel=data.intel||{}; S.opps=data.opps||{}; S.catalog=data.catalog||{}; document.getElementById('book').className='on'; render(); }
+  else if (data.action==='data') { S.intel=data.intel||{}; S.opps=data.opps||{}; S.catalog=data.catalog||{}; render(); }
+  else if (data.action==='close') document.getElementById('book').className='';
+  else if (data.action==='nav') nav(data.key);
+});
+setInterval(()=>{ for (const o of Object.values(S.opps||{})) if (o.remaining!=null&&o.remaining>0) o.remaining--; if (document.getElementById('book').className==='on' && TABS[S.tab].id==='active') render(); }, 1000);
+</script>
+</body></html>

@@ -1,0 +1,74 @@
+-- outbreak_items/server/items.lua — the ONLY place useables are registered
+local QBCore = exports['qb-core']:GetCoreObject()
+local N = function() return exports.outbreak_needs end
+
+local Useables = {
+  canned_beans = { requires = 'can_opener', effects = { hunger = 35 }, anim = 'eat' },
+  rotten_meat  = { effects = { hunger = 15, thirst = -10 }, sick = true, anim = 'eat' },
+  water_clean  = { effects = { thirst = 45 }, anim = 'drink' },
+  water_dirty  = { effects = { thirst = 25 }, sick = true, anim = 'drink' },
+  mre          = { effects = { hunger = 60, thirst = 10 }, anim = 'eat' },
+  painkillers  = { effects = { fatigue = 10 }, anim = 'eat' },
+  antibiotics  = { effects = { antibiotics = true }, anim = 'eat' },
+  -- shelf goods: small, fast, everywhere until the shelves are bare
+  chocolate_bar = { effects = { hunger = 10, fatigue = 4 }, anim = 'eat' },
+  chips         = { effects = { hunger = 12, thirst = -4 }, anim = 'eat', noise = 25 },
+  bread         = { effects = { hunger = 20 }, anim = 'eat', sick = true },        -- stale roll
+  noodle_bowl   = { effects = { hunger = 28, thirst = 6 }, anim = 'eat' },
+  soda          = { effects = { thirst = 18, fatigue = 6 }, anim = 'drink' },
+  beer          = { effects = { thirst = 10, fatigue = -6 }, anim = 'drink' },
+}
+
+for item, def in pairs(Useables) do
+  QBCore.Functions.CreateUseableItem(item, function(src)
+    if def.requires and exports.ox_inventory:GetItemCount(src, def.requires) < 1 then
+      TriggerClientEvent('ox_lib:notify', src, { title = 'You need a ' .. def.requires:gsub('_', ' '), type = 'error' }) return
+    end
+    if exports.ox_inventory:RemoveItem(src, item, 1) then
+      TriggerClientEvent('outbreak:anim:play', src, def.anim, 3000)
+      if def.noise then TriggerClientEvent('outbreak:client:noiseSpike', src, def.noise) end
+      local fx = {}
+      for k, v in pairs(def.effects) do fx[k] = v end
+      if def.sick then
+        local mult = 0.4
+        pcall(function() if exports.outbreak_skills:hasTrait(src, 'weak_stomach') then mult = 0.8 end end)
+        if math.random() < mult then fx.thirst = (fx.thirst or 0) - 15; TriggerClientEvent('ox_lib:notify', src, { title = 'That tasted... wrong.', type = 'error' }) end
+      end
+      N():consume(src, fx)
+    end
+  end)
+end
+
+QBCore.Functions.CreateUseableItem('purify_tabs', function(src)
+  if exports.ox_inventory:GetItemCount(src, 'water_dirty') < 1 then
+    TriggerClientEvent('ox_lib:notify', src, { title = 'Nothing to purify.', type = 'error' }) return end
+  exports.ox_inventory:RemoveItem(src, 'purify_tabs', 1); exports.ox_inventory:RemoveItem(src, 'water_dirty', 1)
+  exports.ox_inventory:AddItem(src, 'water_clean', 1)
+  TriggerClientEvent('ox_lib:notify', src, { title = 'Water purified.', type = 'success' })
+end)
+
+-- Treatment: bandages/sheets/splints are NOT generic useables. They target a body part via the wheel.
+-- Client: TriggerServerEvent('outbreak:server:treat', part, item)  (self)  or ('outbreak:server:treatOther', targetSrc, part, item)
+local function treat(src, target, part, item)
+  if not ({ bandage = true, ripped_sheet = true, splint = true })[item] then return end
+  if exports.ox_inventory:GetItemCount(src, item) < 1 then
+    TriggerClientEvent('ox_lib:notify', src, { title = 'You don\'t have one.', type = 'error' }) return end
+  if item == 'ripped_sheet' and math.random() < 0.3 then
+    exports.ox_inventory:RemoveItem(src, item, 1)
+    TriggerClientEvent('ox_lib:notify', src, { title = 'It falls apart.', type = 'error' }) return
+  end
+  if N():treatWound(target, part, item) then
+    exports.ox_inventory:RemoveItem(src, item, 1)
+    pcall(function() exports.outbreak_skills:grantXP(src, item == 'splint' and 'splint' or 'bandage') end)
+    TriggerClientEvent('ox_lib:notify', src, { title = ('Treated: %s'):format(part:gsub('_', ' ')), type = 'success' })
+    if target ~= src then TriggerClientEvent('ox_lib:notify', target, { title = 'Someone patches you up.', type = 'success' }) end
+  else
+    TriggerClientEvent('ox_lib:notify', src, { title = 'That won\'t help there.', type = 'error' })
+  end
+end
+RegisterNetEvent('outbreak:server:treat', function(part, item) treat(source, source, part, item) end)
+RegisterNetEvent('outbreak:server:treatOther', function(target, part, item)
+  local tp = GetPlayerPed(target); if tp == 0 then return end
+  if #(GetEntityCoords(GetPlayerPed(source)) - GetEntityCoords(tp)) > 3.0 then return end
+  treat(source, target, part, item)
+end)

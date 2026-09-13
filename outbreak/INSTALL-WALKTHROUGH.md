@@ -13,6 +13,36 @@
 
 ---
 
+## The short version — scripts do Parts 6 and 7
+
+Parts 1–5 need your hands (installers, a licence key, txAdmin clicks). Parts 6 and 7 are all file work,
+and `setup\` does them:
+
+```powershell
+cd C:\outbreak-pack
+powershell -ExecutionPolicy Bypass -File .\setup\00-preflight.ps1              # read-only: where am I?
+powershell -ExecutionPolicy Bypass -File .\setup\RUN-ALL.ps1 -DryRun           # preview every change
+powershell -ExecutionPolicy Bypass -File .\setup\RUN-ALL.ps1                   # do it
+```
+
+| Script | Does | Part |
+|---|---|---|
+| `00-preflight.ps1` | Read-only status of all five setup questions. Changes nothing. | — |
+| `01-disable-competing.ps1` | Moves the nine resources to `[disabled]`, comments the three npwd lines. `-Revert` undoes it. | 6 |
+| `02-copy-resources.ps1` | Copies the three resource groups in, verifies 21 slice resources and both pre-boot fixes. | 7.1 |
+| `03-apply-migrations.ps1` | Applies 001–007, verifies 21 tables. | 7.3 |
+| `04-paste-ins.ps1` | items.lua + jobs.lua, marker-guarded and brace-checked. | 7.4 |
+| `05-append-cfg.ps1` | Appends the start order, verifies it landed after `ensure [qbx]`. | 7.5 |
+| `RUN-ALL.ps1` | 01→05 in order, then preflight. | 6–7 |
+
+Every script: `-Base <path>` if auto-detect can't pick your `.base`, `-DryRun` to preview, a timestamped
+`.bak` before touching any file, and safe to re-run — `02` is also how you deploy a patch mid-shakedown.
+
+**Read the rest of this file anyway.** The scripts do the typing; they don't do the understanding, and
+when one refuses (it will, if your recipe differs) the manual steps below are what you fall back to.
+
+---
+
 ## Part 0 · Before you start
 
 - [ ] Windows 10/11, ~20 GB free on `C:`
@@ -189,24 +219,35 @@ folder out of the group. A folder that is never `ensure`d never starts.
 
 ### 6b · Move these nine folders into it
 
+> ### PowerShell and square brackets — read this or the next five commands fail
+>
+> `[qbx]` is a **wildcard character class** to PowerShell, not a literal folder name. `-Path` globs;
+> `[qbx]` means "any one of q, b, x". Every command below would die with *"Cannot find path"* if written
+> the obvious way. **Use `-LiteralPath` on every path containing brackets** — that is the whole fix,
+> and it applies to `Copy-Item`, `Move-Item`, `Get-ChildItem`, `Test-Path` and `Select-String` alike.
+> `-Destination` is not globbed, so it can stay a plain string.
+>
+> `setup\01-disable-competing.ps1` does all of this for you, correctly. The manual form is here so you
+> can see what it does.
+
 ```powershell
 $B = "C:\FXServer\txData\outbreak.base\resources"   # <-- your <BASE>
-New-Item -ItemType Directory -Force "$B\[disabled]"
+New-Item -ItemType Directory -Force -Path "$B\[disabled]"
 
 # from [qbx]
-Move-Item "$B\[qbx]\qbx_spawn"        "$B\[disabled]\"
-Move-Item "$B\[qbx]\qbx_properties"   "$B\[disabled]\"
-Move-Item "$B\[qbx]\qbx_hud"          "$B\[disabled]\"
-Move-Item "$B\[qbx]\qbx_medical"      "$B\[disabled]\"
-Move-Item "$B\[qbx]\qbx_ambulancejob" "$B\[disabled]\"
-Move-Item "$B\[qbx]\qbx_police"       "$B\[disabled]\"
-Move-Item "$B\[qbx]\qbx_density"      "$B\[disabled]\"
+Move-Item -LiteralPath "$B\[qbx]\qbx_spawn"        -Destination "$B\[disabled]\qbx_spawn"
+Move-Item -LiteralPath "$B\[qbx]\qbx_properties"   -Destination "$B\[disabled]\qbx_properties"
+Move-Item -LiteralPath "$B\[qbx]\qbx_hud"          -Destination "$B\[disabled]\qbx_hud"
+Move-Item -LiteralPath "$B\[qbx]\qbx_medical"      -Destination "$B\[disabled]\qbx_medical"
+Move-Item -LiteralPath "$B\[qbx]\qbx_ambulancejob" -Destination "$B\[disabled]\qbx_ambulancejob"
+Move-Item -LiteralPath "$B\[qbx]\qbx_police"       -Destination "$B\[disabled]\qbx_police"
+Move-Item -LiteralPath "$B\[qbx]\qbx_density"      -Destination "$B\[disabled]\qbx_density"
 
 # from [ox]
-Move-Item "$B\[ox]\ox_fuel"           "$B\[disabled]\"
+Move-Item -LiteralPath "$B\[ox]\ox_fuel"           -Destination "$B\[disabled]\ox_fuel"
 
 # from [standalone]
-Move-Item "$B\[standalone]\Renewed-Weathersync" "$B\[disabled]\"
+Move-Item -LiteralPath "$B\[standalone]\Renewed-Weathersync" -Destination "$B\[disabled]\Renewed-Weathersync"
 ```
 
 Why each one, so you can argue with it later:
@@ -258,14 +299,15 @@ Server **stopped** for all of this.
 - [ ] Copy `C:\outbreak-pack\resources\[outbreak]\` → `<BASE>\resources\[outbreak]\`
 
 ```powershell
-Copy-Item -Recurse -Force "C:\outbreak-pack\resources\[outbreak]" "$B\"
+Copy-Item -LiteralPath "C:\outbreak-pack\resources\[outbreak]" -Destination "$B\[outbreak]" -Recurse -Force
 ```
 
-- [ ] Copy `[outbreak_extended]` and `[outbreak_progression]` across **too**. They are commented out in the
-      cfg and will not start — having them on disk now saves a copy later.
+- [ ] Copy `[outbreak_extended]` and `[outbreak_progression]` across **too**. They are commented out in
+      the cfg and will not start, but six `pcall`-guarded call sites in the slice reach into them — having
+      them on disk now means those light up the moment you uncomment, with no second copy step.
 - [ ] Verify 21 folders landed:
   ```powershell
-  (Get-ChildItem "$B\[outbreak]" -Directory).Count
+  (Get-ChildItem -LiteralPath "$B\[outbreak]" -Directory).Count
   ```
   Expect **21** (17 slice services + hud + wheel + dm + debug).
 
@@ -320,7 +362,7 @@ These are **fragments, not loadable files** — both analyzers flag them as INFO
       Copy everything below the two comment lines. Paste into
       `<BASE>\resources\[ox]\ox_inventory\data\items.lua`, **inside** the `return { … }` table,
       just before the closing brace. 63 items.
-      Verify: `Select-String "$B\[ox]\ox_inventory\data\items.lua" -Pattern "canned_beans"` → one hit.
+      Verify: `Select-String -LiteralPath "$B\[ox]\ox_inventory\data\items.lua" -Pattern "canned_beans"` → one hit.
 
 - [ ] **Weapons** — open `…\outbreak_weapons\data\weapons_snippet.lua`.
       **Read it before pasting: every weapon line in it is commented out.** It documents the durability and
@@ -332,7 +374,7 @@ These are **fragments, not loadable files** — both analyzers flag them as INFO
 - [ ] **Jobs** — open `…\outbreak_faction\data\jobs_snippet.lua`.
       In `<BASE>\resources\[qbx]\qbx_core\shared\jobs.lua`, **replace the `police` entry** with the
       `military` and `raider` entries from the snippet. Keep the surrounding table syntax intact.
-      Verify: `Select-String "$B\[qbx]\qbx_core\shared\jobs.lua" -Pattern "Military Remnant"` → one hit.
+      Verify: `Select-String -LiteralPath "$B\[qbx]\qbx_core\shared\jobs.lua" -Pattern "Military Remnant"` → one hit.
 
 > `CLAUDE.md` hard rule: these three paste-ins are the **only** edits you make to ox_inventory or qbx_core.
 > Nothing else in those resources gets touched.
@@ -348,7 +390,7 @@ Get-Content "C:\outbreak-pack\server.cfg.additions" | Add-Content "$B\server.cfg
 
 - [ ] Confirm it landed after the recipe's block:
   ```powershell
-  Select-String "$B\server.cfg" -Pattern "ensure outbreak_core|ensure \[qbx\]" | Select LineNumber,Line
+  Select-String -LiteralPath "$B\server.cfg" -Pattern "ensure outbreak_core|ensure \[qbx\]" | Select LineNumber,Line
   ```
   `ensure [qbx]` must have a **lower** line number than `ensure outbreak_core`. The additions file is ordered
   by dependency — **do not reorder it.**
