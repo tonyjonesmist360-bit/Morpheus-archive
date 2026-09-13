@@ -39,7 +39,7 @@ Record PASS / FAIL / NOTES per line. Copy console errors verbatim.
 - [ ] Z2 Crouch-walk past one at 15 m: not noticed. Sprint past: chased
 - [ ] Z3 Fire a gun: noise ripple goes red, zombies converge
 - [ ] Z4 `/ob_zombie 3` spawns three next to you
-- [ ] Z5 `/listen` (or wheel) reports count and direction
+- [ ] Z5 Wheel (**G**) → Listen reports count and direction  *(there is no `/listen` command — the wheel is the only path)*
 
 ## 6. Wounds
 - [ ] W1 Get scratched/bitten → "Scratch — left arm" style notify, Bleeding + open-wound moodles
