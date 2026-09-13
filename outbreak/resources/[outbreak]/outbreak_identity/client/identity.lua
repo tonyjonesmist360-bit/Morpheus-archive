@@ -7,7 +7,10 @@ end
 
 RegisterNetEvent('outbreak:client:createSurvivor', function()
   -- 1) face + body + clothes in illenium's creator
-  pcall(function() exports['illenium-appearance']:startPlayerCustomization(function() end, { ped = true, headBlend = true, faceFeatures = true, headOverlays = true, components = true, props = true, tattoos = false }) end)
+  -- No config table: illenium builds its own from its config.lua. Passing a flat
+  -- { components = true, props = true } made its NUI read .masks/.hats off undefined
+  -- and crash, leaving the player frozen in the creator with no UI. See SHAKEDOWN-NOTES FB-7.
+  pcall(function() exports['illenium-appearance']:startPlayerCustomization(function() end) end)
   Wait(500)
   while IsNuiFocused() do Wait(500) end
   -- 2) who you were
@@ -66,7 +69,7 @@ end)
 
 -- Safehouse wardrobe: free clothing changes, no shop, no money (target lives in outbreak_housing)
 RegisterCommand('wardrobe', function()
-  pcall(function() exports['illenium-appearance']:startPlayerCustomization(function() end, { components = true, props = true }) end)
+  pcall(function() exports['illenium-appearance']:startPlayerCustomization(function() end) end)
 end, false)
 
 -- Shakedown tool: cycle clothing combos slowly to spot clipping

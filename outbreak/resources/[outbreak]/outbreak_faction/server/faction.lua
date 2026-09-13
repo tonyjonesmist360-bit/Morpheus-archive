@@ -6,6 +6,11 @@ local function jobOf(src)
   return p and p.PlayerData.job and p.PlayerData.job.name or 'unemployed'
 end
 
+local function cid(src)
+  local p = QBCore.Functions.GetPlayer(src)
+  return p and p.PlayerData.citizenid
+end
+
 CreateThread(function()
   local M, R = FactionCfg.Military, FactionCfg.Raider
   exports.ox_inventory:RegisterStash(M.Armory.stash, 'Zancudo Armory', M.Armory.slots, M.Armory.weight, nil)
