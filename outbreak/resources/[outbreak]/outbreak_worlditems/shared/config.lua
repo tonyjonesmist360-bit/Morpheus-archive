@@ -4,9 +4,9 @@ WorldItemsCfg = {
   Models = {
     canned_beans = 'prop_cs_beer_bot_40oz', water_clean = 'prop_ld_flow_bottle_01', water_dirty = 'prop_ld_flow_bottle_02', mre = 'prop_food_bs_bag_01',
     bandage = 'prop_ld_health_pack', antibiotics = 'prop_cs_pills', radio_handheld = 'prop_cs_hand_radio', radio_base = 'prop_radio_01',
-    plank = 'prop_ld_planks01', nails = 'prop_tool_box_02', hammer_tool = 'prop_tool_hammer', crowbar_tool = 'prop_ld_crowbar', gas_can_small = 'prop_jerrycan_01a',
+    plank = 'prop_woodpile_01a', nails = 'prop_tool_box_02', hammer_tool = 'prop_tool_hammer', crowbar_tool = 'prop_ld_crowbar', gas_can_small = 'prop_jerrycan_01a',
     car_battery = 'prop_car_battery_01', engine_parts = 'prop_car_engine_01', hose_kit = 'prop_hose_1', map_scrap = 'prop_cs_paper_01', document = 'prop_cs_documents_01',
-    lantern = 'prop_gaslamp_01', sandbag = 'prop_sandbag_wall', crate = 'prop_box_wood02a', duffel_bag = 'prop_ld_bag_01', note = 'prop_cs_paper_02', chair = 'prop_chair_01a',
+    lantern = 'prop_worklight_01a', sandbag = 'prop_sandbag_wall', crate = 'prop_box_wood02a', duffel_bag = 'prop_ld_bag_01', note = 'prop_cs_paper_02', chair = 'prop_chair_01a',
     padlock = 'prop_ld_padlock', dog_tags = 'prop_cs_dogtag',
   },
   -- Placeable STORAGE: becomes an ox stash bound to the placed object. Lockable with a padlock; forcing = pin sweep (pins).
@@ -14,8 +14,8 @@ WorldItemsCfg = {
   -- Curated MAP props you can take. Removal is persisted with CreateModelHide for everyone. model -> { item, count, weight-ish delay }
   Takeables = {
     [`prop_chair_01a`] = { item = 'chair', count = 1, seconds = 3 },
-    [`prop_ld_planks01`] = { item = 'plank', count = 2, seconds = 6 },
-    [`prop_gaslamp_01`] = { item = 'lantern', count = 1, seconds = 3 },
+    [`prop_woodpile_01a`] = { item = 'plank', count = 2, seconds = 6 },
+    [`prop_worklight_01a`] = { item = 'lantern', count = 1, seconds = 3 },
     [`prop_sandbag_wall`] = { item = 'sandbag', count = 1, seconds = 8 },
     [`prop_jerrycan_01a`] = { item = 'gas_can_small', count = 1, seconds = 3 },
     [`prop_tool_box_02`] = { item = 'nails', count = 1, seconds = 3 },

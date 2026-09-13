@@ -17,7 +17,7 @@ end
 local function renderBarricade(houseId, door, level)
   for _, p in ipairs(barricadeProps[houseId] or {}) do DeleteEntity(p) end
   barricadeProps[houseId] = {}
-  local model = `prop_ld_planks01`
+  local model = `prop_woodpile_01a`
   RequestModel(model); local t = GetGameTimer()
   while not HasModelLoaded(model) and GetGameTimer() - t < 2000 do Wait(10) end
   if not HasModelLoaded(model) then model = `prop_mb_crate_01a`; RequestModel(model); while not HasModelLoaded(model) do Wait(10) end end
