@@ -12,7 +12,12 @@ RegisterNetEvent('outbreak:client:createSurvivor', function()
   -- and crash, leaving the player frozen in the creator with no UI. See SHAKEDOWN-NOTES FB-7.
   pcall(function() exports['illenium-appearance']:startPlayerCustomization(function() end) end)
   Wait(500)
-  while IsNuiFocused() do Wait(500) end
+  -- Bounded wait: illenium's creator NUI can hang (see SHAKEDOWN-NOTES FB-7), and an
+  -- unbounded loop here traps the player with no dialog and no way out. After 90s we
+  -- give up on the creator and go straight to the identity dialog.
+  local waited = 0
+  while IsNuiFocused() and waited < 90000 do Wait(500); waited = waited + 500 end
+  if waited >= 90000 then SetNuiFocus(false, false) end
   -- 2) who you were
   local input = lib.inputDialog('WHO WERE YOU', {
     { type = 'input', label = 'Callsign / what people call you', required = true, max = 20 },

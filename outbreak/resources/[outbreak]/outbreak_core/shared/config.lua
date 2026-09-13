@@ -8,7 +8,7 @@ OutbreakCfg = {
   InfectionChancePerHit = 0.15, -- Zomboid-style: every hit rolls
   AggroRadius = 30.0,           -- sight range
   HearGunshotRadius = 90.0,     -- gunfire pulls zombies
-  WalkStyles = { 'move_m@drunk@verydrunk' },  -- BISECT: 'move_m@injured' removed, suspected bad clipset
+  WalkStyles = { 'move_m@injured' },  -- BISECT 2: verydrunk alone did NOT lurch, so it is the bad name
   Hordes = { enabled = true, minInterval = 20, maxInterval = 45, size = 25, announceOnRadio = true },
   -- Variants: weight = spawn share. Runners only after dark.
   Variants = {
