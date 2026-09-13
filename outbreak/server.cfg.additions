@@ -61,4 +61,9 @@ sv_maxclients 20
 # silently revokes outbreak.debug / outbreak.admin / outbreak.dm. Localhost-only comes
 # from not forwarding port 30120, not from sv_lan.
 set sv_lan 0
+# Do not register with the Cfx master server list. This is a private server and 30120 is
+# not forwarded, so registration only produces a "Server list query returned an error"
+# retry loop in the console every few seconds - noise in the log you read during a
+# shakedown. Direct connect is unaffected. Delete this line to be publicly listed.
+set sv_master1 ""
 sets sv_projectName "^1DEAD STATE^7 — end of the world RP"
