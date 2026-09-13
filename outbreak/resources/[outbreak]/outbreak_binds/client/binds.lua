@@ -9,6 +9,7 @@ local function bind(cmd, desc, key, pad)
   if pad then RegisterKeyMapping(cmd, desc .. ' (pad)', 'pad_digitalbuttonany', pad) end
 end
 -- commands that already exist in their owner resources; we only map keys to them
+bind('ob_status',  'Status - everything at once','F1',     'SELECT_INDEX')
 bind('ob_wheel',   'Survival wheel',            'G',      'LDOWN_INDEX')
 bind('inv',        'Inventory',                 'TAB',    'LUP_INDEX')          -- ox_inventory's own command
 bind('handsup',    'Hands up (reflex)',         'T',      nil)

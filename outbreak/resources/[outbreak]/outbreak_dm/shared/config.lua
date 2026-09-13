@@ -1,5 +1,20 @@
 DMCfg = {
   Ace = 'outbreak.dm',
+  -- NAMED NPCs. Story-mode and unique models, so a recurring character is recognisable
+  -- instead of being another random citizen. Spawn via Director -> Spawn -> Survivors.
+  -- EVERY model here is unverified until /ob_models says otherwise - check before trusting.
+  NamedNPCs = {
+    { id = 'quartermaster', label = 'The Quartermaster',  model = 's_m_m_armoured_01', role = 'barter at Sandy airfield' },
+    { id = 'doc',           label = 'The Doctor',         model = 's_m_m_doctor_01',   role = 'station treatment' },
+    { id = 'mechanic',      label = 'The Mechanic',       model = 's_m_y_xmech_02',    role = 'vehicle repair' },
+    { id = 'fixer',         label = 'The Fixer',          model = 'ig_lestercrest',    role = 'intel and leads' },
+    { id = 'preacher',      label = 'The Preacher',       model = 'ig_priest',         role = 'camp morale' },
+    { id = 'raider_boss',   label = 'Raider Warlord',     model = 'g_m_y_lost_01',     role = 'antagonist' },
+    { id = 'colonel',       label = 'The Colonel',        model = 's_m_y_marine_03',   role = 'military remnant' },
+    { id = 'scavenger',     label = 'Old Scavenger',      model = 'a_m_o_tramp_01',    role = 'rumours, trades scrap' },
+    { id = 'nurse',         label = 'Field Nurse',        model = 's_f_y_scrubs_01',   role = 'camp medic' },
+    { id = 'radio_op',      label = 'Radio Operator',     model = 's_m_m_scientist_01',role = 'repeater chain' },
+  },
   Peds = { survivor = { 'a_m_y_hipster_01', 'a_f_y_tourist_01', 'a_m_m_farmer_01' }, raider = { 'g_m_y_lost_01', 'g_m_y_lost_02', 'g_m_y_salvagoon_01' }, military = { 's_m_y_marine_01', 's_m_y_marine_03' } },
   Vehicles = { 'rebel', 'bodhi2', 'barracks', 'crusader', 'ambulance', 'towtruck', 'pbus', 'dloader', 'sanchez', 'dinghy' },
   Weathers = { 'CLEAR', 'CLOUDS', 'OVERCAST', 'FOGGY', 'RAIN', 'THUNDER', 'CLEARING' },

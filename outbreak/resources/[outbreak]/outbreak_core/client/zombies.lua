@@ -111,8 +111,36 @@ end
 
 local variantOf = {} -- ped -> variant name
 
+-- MOB AREAS: the zone the player is standing in, or nil. Read by the spawner (density)
+-- and by pickVariant (which variant this place tends to produce).
+local zoneBias = nil
+local function hotZone(pos)
+  for _, z in ipairs(OutbreakCfg.HotZones or {}) do
+    if #(pos - z.pos) < z.radius then return z end
+  end
+end
+
+-- ZombieModels entries are 'model' or { model = '...', weight = n }. Weight defaults to 10.
+local function pickModel(list)
+  local total = 0
+  for _, e in ipairs(list) do total = total + (type(e) == 'table' and (e.weight or 10) or 10) end
+  local r = math.random() * total
+  for _, e in ipairs(list) do
+    local w = type(e) == 'table' and (e.weight or 10) or 10
+    r = r - w
+    if r <= 0 then return type(e) == 'table' and e.model or e end
+  end
+  local last = list[#list]
+  return type(last) == 'table' and last.model or last
+end
+
 local function pickVariant()
   local night = isNight()
+  -- A biased zone produces its signature variant most of the time, but never all of it.
+  if zoneBias then
+    local v = OutbreakCfg.Variants[zoneBias]
+    if v and not (v.nightOnly and not night) and math.random() < 0.6 then return zoneBias, v end
+  end
   local total, pool = 0, {}
   for name, v in pairs(OutbreakCfg.Variants) do
     if not (v.nightOnly and not night) then total = total + v.weight; pool[#pool + 1] = { name, v } end
@@ -131,13 +159,19 @@ end
 spawnZombie = function(pos, combatTarget)
   local vname, v = pickVariant()
   local models = v.models or OutbreakCfg.ZombieModels
-  local model = joaat(models[math.random(#models)])
+  local model = joaat(pickModel(models))
   RequestModel(model)
   local t = GetGameTimer()
   while not HasModelLoaded(model) and GetGameTimer() - t < 3000 do Wait(10) end
   if not HasModelLoaded(model) then return end
   local ped = CreatePed(4, model, pos.x, pos.y, pos.z, math.random(0, 359) + 0.0, false, true)
   zombify(ped)
+  -- Blood and wounds are what actually sell "infected" on a human ped model. An unknown
+  -- pack name is a silent no-op in GTA, so a wrong entry costs appearance, never stability.
+  local packs = OutbreakCfg.DamagePacks
+  if packs and #packs > 0 then
+    pcall(function() ApplyPedDamagePack(ped, packs[math.random(#packs)], 0.0, 1.0) end)
+  end
   variantOf[ped] = vname
   if v.moveRate then SetPedMoveRateOverride(ped, v.moveRate) end
   if v.health then SetEntityMaxHealth(ped, v.health); SetEntityHealth(ped, v.health) end
@@ -189,6 +223,9 @@ CreateThread(function()
       end
     end
     target = math.ceil(target * weatherMods().spawnMult / nearby)
+    local hz = hotZone(ppos)
+    zoneBias = hz and hz.bias or nil
+    if hz then target = math.max(0, math.ceil(target * hz.mult)) end
     local count = 0
     for ped in pairs(zombies) do
       if not DoesEntityExist(ped) or IsEntityDead(ped) then

@@ -33,6 +33,7 @@ ensure outbreak_worlditems      # mutable world: place/take/storage/notes + entr
 ensure outbreak_dm              # director menu (007_dm.sql) - ace outbreak.dm
 ## Layer 2 — presentation that reads everything
 ensure outbreak_hud
+ensure outbreak_status       # F1 status panel (reads client exports only)
 ensure outbreak_wheel
 ## Debug — REMOVE for the crew
 ensure outbreak_debug

@@ -1,0 +1,164 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Outbreak — Status</title>
+<style>
+  :root{
+    --bg:rgba(8,9,11,.82); --card:#121417; --line:#22262c;
+    --ink:#e8e6e1; --dim:#8a8f98; --faint:#5b616b;
+    --ok:#7bb86f; --warn:#d9a441; --bad:#c8553d; --crit:#e0483a;
+    --accent:#c9a227;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font:13px/1.45 "Segoe UI",system-ui,sans-serif; color:var(--ink);
+    background:transparent; display:none; overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  body.on{display:block}
+  #veil{position:fixed;inset:0;background:var(--bg);backdrop-filter:blur(3px);
+        display:flex;align-items:center;justify-content:center;padding:24px}
+  #panel{width:min(1080px,96vw);max-height:92vh;display:flex;flex-direction:column;
+         border:1px solid var(--line);background:#0e1013;
+         box-shadow:0 24px 80px rgba(0,0,0,.7);animation:rise .13s ease-out}
+  @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  header{display:flex;align-items:baseline;gap:14px;padding:16px 20px;border-bottom:1px solid var(--line)}
+  h1{font-size:19px;font-weight:650;letter-spacing:.3px}
+  h1 em{font-style:normal;color:var(--faint);font-weight:400}
+  .former{color:var(--dim);font-size:12.5px}
+  .chips{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+  .chip{font-size:10.5px;letter-spacing:.7px;text-transform:uppercase;
+        padding:3px 9px;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
+  .chip.bad{color:var(--bad);border-color:#4a2a24}
+  .chip.crit{color:#fff;background:var(--crit);border-color:var(--crit)}
+  .chip.warn{color:var(--warn);border-color:#4a3b1c}
+
+  .grid{display:grid;grid-template-columns:1.15fr 1fr 1fr .95fr;gap:1px;background:var(--line);
+        flex:1;min-height:0}
+  section{background:var(--card);padding:15px 17px;overflow:auto;min-height:0}
+  h2{font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--faint);
+     margin-bottom:12px;font-weight:600}
+
+  .bar{margin-bottom:11px}
+  .bar .t{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+  .bar .t b{font-weight:500;color:var(--dim)}
+  .bar .t span{font-variant-numeric:tabular-nums;color:var(--ink)}
+  .track{height:4px;background:#1d2126;overflow:hidden}
+  .fill{height:100%;transition:width .2s}
+
+  .rows{display:flex;flex-direction:column;gap:7px}
+  .row{display:flex;justify-content:space-between;gap:10px;font-size:12.5px}
+  .row b{font-weight:400;color:var(--dim);text-transform:capitalize}
+  .row span{font-variant-numeric:tabular-nums}
+  .group{margin-bottom:13px}
+  .group>.gh{display:flex;justify-content:space-between;font-size:10.5px;letter-spacing:1px;
+             text-transform:uppercase;color:var(--faint);margin-bottom:5px;
+             border-bottom:1px solid #191d22;padding-bottom:3px}
+  .group>.gh span{color:var(--dim)}
+  .none{color:var(--faint);font-size:12px;font-style:italic}
+
+  .sk{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+  .sk b{font-weight:400;color:var(--dim);text-transform:capitalize;width:82px;font-size:12.5px}
+  .pips{display:flex;gap:3px}
+  .pip{width:11px;height:11px;border:1px solid #262b31}
+  .pip.on{background:var(--accent);border-color:var(--accent)}
+  .sk em{font-style:normal;color:var(--faint);font-size:11.5px;margin-left:auto;
+         font-variant-numeric:tabular-nums}
+
+  .wounds{margin-top:14px}
+  .wd{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;
+      border-bottom:1px solid #191d22}
+  .wd b{font-weight:400;color:var(--bad);text-transform:capitalize}
+  .wd span{color:var(--dim);text-transform:capitalize}
+
+  footer{padding:9px 20px;border-top:1px solid var(--line);display:flex;gap:16px;
+         font-size:11px;color:var(--faint)}
+  kbd{border:1px solid var(--line);padding:1px 6px;color:var(--dim);font-family:inherit;font-size:10.5px}
+  @media(max-width:900px){.grid{grid-template-columns:1fr 1fr}}
+</style>
+
+<div id="veil"><div id="panel">
+  <header>
+    <h1 id="who">—</h1><span class="former" id="former"></span>
+    <div class="chips" id="chips"></div>
+  </header>
+  <div class="grid">
+    <section><h2>Condition</h2><div id="cond"></div><div class="wounds" id="wounds"></div></section>
+    <section><h2>Carrying</h2><div id="carry"></div></section>
+    <section><h2>Skills</h2><div id="skills"></div></section>
+    <section><h2>World</h2><div class="rows" id="world"></div></section>
+  </div>
+  <footer><span><kbd>F1</kbd> or <kbd>Esc</kbd> close</span><span id="hint"></span></footer>
+</div></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// Green above 60, amber to 30, red below. Same thresholds everywhere so the
+// colour means one thing across the whole panel.
+const tone = v => v>60?'var(--ok)':v>30?'var(--warn)':'var(--bad)';
+
+function bar(label,v){
+  v = Math.max(0,Math.min(100, v||0));
+  return `<div class="bar"><div class="t"><b>${esc(label)}</b><span>${v}</span></div>
+    <div class="track"><div class="fill" style="width:${v}%;background:${tone(v)}"></div></div></div>`;
+}
+
+function render(d){
+  const id=d.identity||{}, c=d.condition||{}, w=d.world||{};
+  $('who').innerHTML = id.callsign ? esc(id.callsign) : '<em>unnamed survivor</em>';
+  $('former').textContent = id.former ? '· ' + id.former : '';
+
+  const chips=[];
+  if(c.down) chips.push(['crit', c.down]);
+  if(c.infected) chips.push(['bad','infected']);
+  if(c.bleeding) chips.push(['bad','bleeding']);
+  if((c.wounds||[]).length) chips.push(['warn',c.wounds.length+' wound'+(c.wounds.length>1?'s':'')]);
+  if(w.blackout) chips.push(['warn','blackout']);
+  if(!chips.length) chips.push(['','steady']);
+  $('chips').innerHTML = chips.map(([k,t])=>`<span class="chip ${k}">${esc(t)}</span>`).join('');
+
+  $('cond').innerHTML = bar('Hunger',c.hunger)+bar('Thirst',c.thirst)+bar('Fatigue',c.fatigue)
+    + (typeof c.health==='number' ? bar('Health',c.health) : '');
+
+  $('wounds').innerHTML = (c.wounds||[]).length
+    ? '<h2>Wounds</h2>' + c.wounds.map(x=>`<div class="wd"><b>${esc(x.part)}</b><span>${esc(x.kind)}</span></div>`).join('')
+    : '<div class="none">No open wounds.</div>';
+
+  const order=['food','water','meds','tools'];
+  $('carry').innerHTML = order.map(g=>{
+    const grp=(d.carrying||{})[g]||{items:[],total:0};
+    const rows = grp.items.length
+      ? grp.items.map(i=>`<div class="row"><b>${esc(i.name)}</b><span>${i.n}</span></div>`).join('')
+      : '<div class="none">none</div>';
+    return `<div class="group"><div class="gh">${g}<span>${grp.total}</span></div>
+            <div class="rows">${rows}</div></div>`;
+  }).join('');
+
+  $('skills').innerHTML = (d.skills||[]).map(s=>{
+    const lv=Math.max(0,Math.min(10,s.level||0));
+    const pips=Array.from({length:10},(_,i)=>`<span class="pip${i<lv?' on':''}"></span>`).join('');
+    return `<div class="sk"><b>${esc(s.name)}</b><span class="pips">${pips}</span><em>${lv}</em></div>`;
+  }).join('') || '<div class="none">No skills yet.</div>';
+
+  const hh = w.hour==null ? '—' : String(w.hour).padStart(2,'0')+':00';
+  const rows=[['Time',hh],['Weather',w.weather||'—'],['Noise',(w.noise==null?'—':w.noise)],
+              ['Nearby dead',(w.zombies==null?'—':w.zombies)],
+              ['Radio',w.channel?('ch '+w.channel):'off'],['Faction',w.job&&w.job!=='unemployed'?w.job:'—']];
+  $('world').innerHTML = rows.map(([k,v])=>`<div class="row"><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join('');
+
+  $('hint').textContent = c.infected ? 'Antibiotics buy time. They do not cure it.'
+    : c.bleeding ? 'Bleeding. Bandage before you move.'
+    : (c.hunger<30||c.thirst<30) ? 'Running low. Eat or drink soon.' : '';
+}
+
+window.addEventListener('message', e=>{
+  const m=e.data||{};
+  if(m.action==='open'){ render(m.data||{}); document.body.classList.add('on'); }
+  else if(m.action==='close'){ document.body.classList.remove('on'); }
+});
+const shut=()=>fetch(`https://${GetParentResourceName()}/close`,{method:'POST',body:'{}'});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'||e.key==='Backspace') shut(); });
+$('veil').addEventListener('mousedown', e=>{ if(e.target.id==='veil') shut(); });
+</script>
