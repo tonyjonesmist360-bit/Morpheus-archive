@@ -171,7 +171,85 @@ too), `Argument count mismatch (passed 1, wanted 2)`, and txAdmin's `wmic` warni
 
 ---
 
+## Smoke §1 — instrumentation pass (2026-09-13)
+
+### S1-1 · Animation dictionaries — **ALL PASS**
+
+`/ob_animcheck` → **"0 missing"**. Every dictionary in `EmoteCfg.Actions` loads.
+**`KNOWN_LIMITATIONS` #8 is cleared** — the bare-progress-circle fallback is not needed anywhere.
+This was the single biggest name-from-memory risk in the pack and it cost one command to retire.
+
+### S1-2 · Prop models — 4 of 10 INVALID, 2 fixed
+
+`/ob_models` on the ten props from `SMOKE-SCRIPT` §1:
+
+| Model | Result | Used by | Action |
+|---|---|---|---|
+| `prop_cs_hand_radio` | ok | radio item | — |
+| `prop_worklight_03b` | ok | placeable light | — |
+| `prop_mil_crate_01` | ok | cache crate | — |
+| `v_ret_ml_sweet1` | ok | 24/7 shelf | — |
+| `v_ret_ml_chips1` | ok | 24/7 shelf | — |
+| `prop_ecola_can` | ok | takeable can | — |
+| `prop_ld_planks01` | **INVALID** | barricades + takeable plank | → **`prop_woodpile_01a`** |
+| `prop_gaslamp_01` | **INVALID** | placeable lantern | → **`prop_worklight_01a`** |
+| `prop_cs_body_bag` | **INVALID** | corpse marker | **unresolved** |
+| `v_ret_ml_bread01` | **INVALID** | 24/7 shelf bread | **unresolved** |
+
+Replacements were **verified with a second `/ob_models` pass**, not guessed. `v_ret_ml_bread02`
+is referenced in the same config line and is also INVALID.
+
+Candidates tested and rejected — recorded so nobody retries them:
+`prop_byard_plank01`, `prop_plank_01`, `prop_bordwalk_01`, `prop_gaslamp_02`, `prop_lantern_01`,
+`prop_cs_lantern`, `prop_bodybag_01`, `xm_prop_body_bag_01`, `prop_cs_bodybag`, `v_ret_ml_bread`,
+`v_ret_ml_bread02`, `prop_food_bs_bread`, `v_res_tt_bread`, `prop_bread_01`.
+Also confirmed ok but unused: `prop_logpile_01`, `prop_worklight_02a`.
+
+**Working theory on the body bag:** GTA V may ship no vanilla body-bag prop — most servers add a
+custom one. If so the corpse marker should become a duffel or tarp rather than keep hunting.
+
+### S1-3 · Zombie movement clipset — `move_m@drunk@verydrunk` is bad
+
+- **Symptom:** with `WalkStyles = { 'move_m@drunk@verydrunk', 'move_m@injured' }`, roughly half the
+  zombies lurched and half walked normally. Skins were correct throughout.
+- **Why it is silent:** `SetPedMovementClipset` does nothing at all if the animset never loaded.
+  `zombies.lua:90-93` requests it and waits 2 s correctly, so the code is right and the *name* is wrong.
+  Nothing logs. `/ob_animcheck` cannot see this — movement clipsets are not anim dictionaries.
+- **Bisect:** narrowed to `move_m@drunk@verydrunk` alone → zombies did **not** lurch. So that is the
+  bad name and `move_m@injured` is the good one. Now set to `move_m@injured` alone, pending confirmation.
+- **Note for the config pass:** a second good clipset is wanted for variety. Any candidate needs the
+  same bisect treatment — there is no validity check for animsets the way `/ob_models` checks props.
+
+### S1-4 · Client crash during session init — cache, not content
+
+`An exception occurred (c0000005 at 0x141684c8d) during execution of the INIT_SESSION function for
+CExtraContentWrapper.` Game-side crash while mounting DLC content; the server was healthy throughout
+(all 21 resources up). Cleared `FiveM.app\data\{cache,server-cache,server-cache-priv}`. Recurrence
+points at GTA V file integrity rather than the pack — nothing in `[outbreak]` streams assets.
+
+---
+
 ## Deferred
+
+- **illenium-appearance creator hangs and traps the player.** `SMOKE-SCRIPT` §2 / checklist C1.
+  The creator opens, its NUI throws `Cannot read properties of undefined (reading 'masks')` and
+  `(reading 'hats')` in `illenium-appearance/web/dist/assets/index.*.js`, no UI renders, the
+  callback never fires. Dropping our config table did **not** help, so the argument shape is not the
+  cause — it is inside illenium or its Qbox configuration. Contained in `identity.lua` by bounding
+  the `IsNuiFocused()` wait at 90 s so a hang can no longer strand a player; the creator itself is
+  still broken. **Next step:** stop `outbreak_identity` and trigger illenium's own creator standalone
+  to establish whether our call is involved at all; then check `illenium-appearance/config.lua`
+  against `outbreak_identity/data/illenium_config_notes.md`, which the pack never applied.
+- **`outbreak_binds` registers invalid controller keys.** `Invalid key name DPAD_DOWN / DPAD_UP /
+  BUTTON_B / DPAD_LEFT / DPAD_RIGHT` on every client start, so no pad binding registers.
+  `SMOKE-SCRIPT` §13 / checklist G2. Keyboard binds are unaffected.
+- **Restarting `outbreak_core` stops 14 dependents and restarts only core.** Anything declaring it
+  as a dependency is left stopped. Restart the whole server instead; only leaf resources
+  (`outbreak_hud`, `outbreak_wheel`, `outbreak_debug`, `outbreak_dm`, `outbreak_faction`,
+  `outbreak_identity`, `outbreak_skills`) are safe to restart individually.
+- **`server.cfg.additions` is fixed in the pack but not in the live tree.** The `sv_lan` and
+  semicolon fixes only reach the server on the next deploy, since `05-append-cfg.ps1` is
+  marker-guarded and will not re-append.
 
 - **`illenium-appearance` export names — UNVERIFIED.** `startPlayerCustomization` (2 sites) and
   `setPlayerOutfit` (1 site). Could not confirm the export registrations in current upstream;
