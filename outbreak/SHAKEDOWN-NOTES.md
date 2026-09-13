@@ -229,6 +229,62 @@ points at GTA V file integrity rather than the pack — nothing in `[outbreak]` 
 
 ---
 
+## External API verification pass (2026-09-13, static, against upstream source)
+
+Checked every third-party name the pack calls, against the actual upstream repository rather
+than memory. This retires several `KNOWN_LIMITATIONS` entries outright.
+
+| API | Uses | Verdict |
+|---|---|---|
+| `ox_target:addSphereZone` | 16 | **OK** — `function(data)` |
+| `ox_target:addLocalEntity` | 6 | **OK** — `(arr, options)` |
+| `ox_target:addModel` | 4 | **OK** — `(arr, options)` |
+| `ox_target:addGlobalVehicle` | 1 | **OK** |
+| `ox_target:addGlobalPlayer` | 1 | **OK** |
+| `lib.notify` | 81 | **OK** |
+| `lib.inputDialog` | 24 | **OK** |
+| `lib.registerContext` / `showContext` | 25 | **OK** |
+| `lib.progressCircle` | 9 | **OK** |
+| `lib.callback.register` / `await` | 16 | **OK** |
+| `lib.showTextUI` / `hideTextUI` | 9 | **OK** |
+| `lib.registerRadial` / `showRadial` | 3 | **OK**, and see below |
+| `ox_inventory` server exports | 60+ | **OK** — incl. `GetItemCount`, `forceOpenInventory` |
+| `qbx_core` bridge + `Logout` + `SetJob` | 16 | **OK** (see PB-3) |
+| `pma-voice:setRadioChannel` | 4 | **OK** |
+| `pma-voice:getRadioChannel` | 4 | **DOES NOT EXIST** — guarded, see PB-2 |
+| `illenium-appearance:startPlayerCustomization` | 2 | name **OK**, call is wrong — see EV-1 |
+| `illenium-appearance:setPlayerOutfit` | 1 | **UNVERIFIED**, pcall-guarded |
+| `mm_radio:openRadio` | 1 | **UNVERIFIED**, could not reach source |
+
+### Retired: `lib.registerRadial` payload shape
+
+`KNOWN_LIMITATIONS` listed this as unverified. It is **correct as written**. ox_lib defines
+`RadialMenuProps = { id, items }` and `RadialItem = { icon, label, menu?, onSelect?, keepOpen? }`.
+Only `lib.addRadialItem` requires a per-item `id`; items passed inside `registerRadial` do not.
+`outbreak_wheel` uses the latter, with `label` + `icon` + `onSelect`/`menu`. No change needed.
+
+### EV-1 · The creator callback throws the appearance away — **unresolved, do not guess**
+
+illenium's documented usage is:
+
+```lua
+exports['illenium-appearance']:startPlayerCustomization(function(appearance)
+  if appearance then --[[ caller persists it ]] else --[[ cancelled ]] end
+end, config)
+```
+
+The caller is responsible for saving the returned appearance. `outbreak_identity` passes
+`function() end` at **both** call sites, so even once the NUI hang is fixed the chosen face and
+clothes are **never persisted** — checklist C1 ("closing saves") cannot pass as written, and C4
+("relog: no creator") would re-trigger the creator forever.
+
+**Not patched**, because the correct save path is exactly the kind of guess that has cost us time
+tonight: it may be a `illenium-appearance:server:*` event, an export, or handled internally
+depending on framework config. Identify it from the running resource first — the pack ships
+`outbreak_identity/data/illenium_config_notes.md`, which was never applied and is the place to start.
+
+---
+
 ## Deferred
 
 - **illenium-appearance creator hangs and traps the player.** `SMOKE-SCRIPT` §2 / checklist C1.

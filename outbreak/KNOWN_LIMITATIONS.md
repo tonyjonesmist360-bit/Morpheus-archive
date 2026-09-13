@@ -15,6 +15,7 @@
 13. **No anti-spam on `outbreak:server:needsTick`** beyond trusting one call per 15 s; a client could accelerate decay on itself only (self-harm, not exploit).
 14. **Carried-into-vehicle flow is fragile**: `TaskWarpPedIntoVehicle` on a ragdolled/anim-locked ped and re-entering the down anim after `TaskLeaveVehicle` are both unverified; expect a tuning pass.
 15. **Station coordinates** (Pillbox/Sandy/Paleto) are approximate; the recipe's `pillbox` MLO may move the triage point indoors.
+16. ~~**ox_lib `registerRadial` payload shape**~~ **VERIFIED CORRECT 2026-09-13** against ox_lib source: items inside `registerRadial` are `RadialItem` (`icon`, `label`, optional `menu`/`onSelect`); only `addRadialItem` needs a per-item `id`. `outbreak_wheel` is right as written.
 16. **Radio range depends on pma-voice internals**: the client listens for `pma-voice:setTalkingOnRadio` and uses `MumbleSetVolumeOverrideByServerId`; the event name/signature varies by pma-voice version. If it doesn't fire, range silently does nothing (voice stays global) while text transmissions still garble correctly.
 17. **Tower damage during the repeater boot is client-reported** (5-second chunks, server-capped) — same trust class as kill reports.
 18. **ox_inventory weapon API names** (`getCurrentWeapon` client, `GetCurrentWeapon`/`SetDurability` server) are from memory; the repair path falls back to the first weapon slot if the server export is absent.
