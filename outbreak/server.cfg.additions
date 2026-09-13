@@ -30,15 +30,15 @@ ensure outbreak_down            # needs needs, emotes, housing
 ensure outbreak_faction         # reputation service
 ensure outbreak_weapons         # catalog + rules on ox_inventory durability (merge data/weapons_snippet.lua)
 ensure outbreak_worlditems      # mutable world: place/take/storage/notes + entropy (006_worlditems.sql)
-ensure outbreak_dm              # director menu (007_dm.sql); ace outbreak.dm
+ensure outbreak_dm              # director menu (007_dm.sql) - ace outbreak.dm
 ## Layer 2 — presentation that reads everything
 ensure outbreak_hud
 ensure outbreak_wheel
 ## Debug — REMOVE for the crew
 ensure outbreak_debug
 
-## ── VEHICLES v2 (server-authoritative; prerequisite for chain 2 and war rigs) ───
-# ensure outbreak_vehicles          # after outbreak_core, ox_inventory, outbreak_minigames, outbreak_emotes; apply 004_vehicles.sql
+## ── VEHICLES v2 (server-authoritative - prerequisite for chain 2 and war rigs) ───
+# ensure outbreak_vehicles          # after outbreak_core, ox_inventory, outbreak_minigames, outbreak_emotes - apply 004_vehicles.sql
 
 ## ── PROGRESSION (HELD until DESIGN-progression.md review + slice pass) ─────────
 # ensure outbreak_intel            # after outbreak_core, outbreak_radio, outbreak_items
@@ -55,5 +55,10 @@ ensure outbreak_debug
 # ensure outbreak_map
 
 sv_maxclients 20
-set sv_lan 1
+# sv_lan MUST stay 0: sv_lan 1 stops FiveM issuing identifiers, so txAdmin refuses
+# every connection ("requires every player to have at least one identifier") and the
+# add_principal identifier.license:... line in permissions.cfg can never match, which
+# silently revokes outbreak.debug / outbreak.admin / outbreak.dm. Localhost-only comes
+# from not forwarding port 30120, not from sv_lan.
+set sv_lan 0
 sets sv_projectName "^1DEAD STATE^7 — end of the world RP"

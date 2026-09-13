@@ -96,6 +96,81 @@ This is the class of bug `tools_diag*.py` explicitly cannot see.
 
 ---
 
+## First boot (2026-09-13) — B1/B2/B3 PASS on the third attempt
+
+Environment as built: FXServer b35245, txAdmin v8.1.1, MariaDB **12.3.3**, base folder
+`C:\FXServer\txData` (the recipe deployed straight into txData, no `.base` subfolder — works,
+but every setup script needs `-Base "C:\FXServer\txData"`), live database
+**`QboxProject_A70B55`** (not `outbreak`).
+
+### FB-1 · MariaDB 12.3 auth plugin blocks txAdmin and oxmysql — **FIXED (environment)**
+
+- **Symptom:** txAdmin recipe deploy: *"Database connection failed: Your database does not accept
+  the required authentication method."* HeidiSQL connected fine (it uses `libmariadb.dll`), which is
+  what localised it to the driver rather than the credentials.
+- **Root cause:** MariaDB 11.6+ ships PARSEC, and 12.3 didn't put root on `mysql_native_password`.
+  txAdmin and oxmysql both use node `mysql2`, which speaks only `mysql_native_password` and
+  `caching_sha2_password`.
+- **Fix:** `ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD('…')`
+  then restart the service. **Add this to INSTALL-WALKTHROUGH Part 3** — anyone installing current
+  MariaDB hits it.
+
+### FB-2 · Setup scripts wrote UTF-8 BOMs — **FIXED (tooling)**
+
+- **Symptom:** `@qbx_core/shared/jobs.lua:1: unexpected symbol near '<\239>'` and the same for
+  `@ox_inventory/data/items.lua`. `\239` = `0xEF`, first byte of `EF BB BF`.
+- **Root cause:** Windows PowerShell 5.1's `Set-Content -Encoding UTF8` emits a BOM. Lua refuses it.
+- **Blast radius — the lesson of the night.** One BOM, ~20 errors. qbx_core failed to load so its
+  qb-core bridge never registered `GetCoreObject`, which killed **all 13 outbreak server files** plus
+  `illenium-appearance`. ox_inventory failed so `Items`/`RegisterStash` vanished
+  (`qbx_jewelery`, `qbx_taxijob`, `qbx_mechanicjob`); `GetJobs` vanished (`qbx_management`,
+  `Renewed-Banking`). **None of those were real bugs.** Chasing `GetCoreObject` as a bridge problem
+  would have burned the evening — the give-away was that `illenium-appearance`, untouched by us,
+  failed the same way.
+- **Fix:** `Write-TextNoBom` / `Add-TextNoBom` / `Remove-Bom` in `_common.ps1`, routed through
+  01/04/05; `06-fix-bom.ps1` repairs an already-written tree. `Remove-Bom` reads raw **bytes** —
+  `File.ReadAllText` silently swallows a BOM, so a text-level check can never detect one.
+
+### FB-3 · Migrations applied to the wrong database — **FIXED (environment)**
+
+- **Symptom:** `Table 'qboxproject_a70b55.outbreak_loot' doesn't exist` despite `03-apply-migrations`
+  reporting 21 tables created.
+- **Root cause:** the redeploy named its own database `QboxProject_A70B55`. The migrations went into
+  `outbreak`, which nothing reads.
+- **Fix:** `03-apply-migrations.ps1 -DbName qboxproject_a70b55`. **Always read the live
+  `mysql_connection_string` out of `server.cfg` first** rather than trusting the name you asked for.
+  The now-orphaned `outbreak` database can be dropped.
+
+### FB-4 · `set sv_lan 1` locks every player out — **FIXED (pack)**
+
+- **Symptom:** *"This server has bans or whitelisting enabled, which requires every player to have at
+  least one identifier, but you have none."*
+- **Root cause:** `server.cfg.additions` ended with `set sv_lan 1`. LAN mode stops FiveM issuing
+  identifiers, so txAdmin rejects the connection — **and** `add_principal identifier.license:…` can
+  never match, silently revoking `outbreak.debug` / `outbreak.admin` / `outbreak.dm`. The pack
+  contradicted itself: `ops/OPS.md` already said to keep `sv_lan 0`.
+- **Fix:** `set sv_lan 0` in `server.cfg.additions`, with a comment explaining why. Localhost-only
+  comes from not forwarding port 30120, not from `sv_lan`.
+
+### FB-5 · Semicolons in cfg comments parse as commands — **FIXED (pack)**
+
+- **Symptom:** `[cmd] No such command ace.` / `prerequisite.` / `apply.` on every boot.
+- **Root cause:** FiveM splits cfg lines on `;` **before** stripping `#` comments, so text after a
+  semicolon inside a comment is executed. Three lines in `server.cfg.additions` had them.
+- **Fix:** semicolons replaced. Cosmetic only, but it is noise in the one log we read all night.
+
+### Boot result (third attempt, 14:21)
+
+126 resources, all **21 `outbreak_*` started with zero errors**. No BOM, no `GetCoreObject`, no
+missing-export cascade, no missing-table error. `ox_inventory` went 301 → **345 items** (+44 against
+47 in the snippet: ~3 names such as `bread` overwrote stock definitions, which is intended).
+Part 6 verified: none of the nine competing resources started.
+
+Residual, harmless: `Couldn't find resource sessionmanager` / `hardcap` (present on the stock boot
+too), `Argument count mismatch (passed 1, wanted 2)`, and txAdmin's `wmic` warnings on Windows 11.
+
+---
+
 ## Deferred
 
 - **`illenium-appearance` export names — UNVERIFIED.** `startPlayerCustomization` (2 sites) and
