@@ -368,3 +368,66 @@ screen is unreadable in greyscale it is not finished.
 - **Everything in `KNOWN_LIMITATIONS.md` #8, #19, #20** (anim dicts, prop models) is unreachable
   statically. That is exactly what `SMOKE-SCRIPT` §1 (`/ob_animcheck`, `/ob_models`, `/ob_walk`)
   exists to resolve — run it before anything else.
+
+## 2026-09-14 — live tree relocated, and it is stale
+
+**Symptom.** Boot log of 2026-09-13 18:14 showed both bugs we had already fixed:
+`outbreak_faction/server/faction.lua:50: attempt to call a nil value (global 'cid')` (FB-6)
+and `outbreak_needs/server/needs.lua:60: attempt to call a nil value (global 'SetEntityHealth')`
+(FB-8), the latter firing on every needs tick.
+
+**Root cause.** Not a regression. The patches were made in the pack and never copied to the
+live tree. Three independent confirmations that the running tree predates v0.14:
+FB-6 and FB-8 both present; `set sv_master1 ""` absent (the master-list query retry loop is
+still in the log); and `outbreak_status` not among the started resources.
+
+**Path change.** The live tree is no longer `C:\FXServer\txData`. Tony reorganised during the
+purge:
+
+| path | role |
+|---|---|
+| `C:\Outbreak\pack` | source of truth |
+| `C:\Outbreak\txData` | live base — `resources\[outbreak]` etc. |
+| `C:\Outbreak\server` | artifact |
+| `C:\Outbreak\archive` | old trees |
+
+Every setup script now takes `-Base "C:\Outbreak\txData"`. `CLAUDE.md` and `ops/backup.bat`
+updated. `INSTALL-WALKTHROUGH.md` keeps the generic `C:\FXServer` layout — it is the
+from-scratch doc, not a record of this install.
+
+**Status.** Fix ready in pack, not yet deployed. Redeploy pending.
+
+## 2026-09-14 — cfg comment tokenisation (cosmetic)
+
+**Symptom.** `No such command ace.` / `No such command prerequisite.` / `No such command apply.`
+during boot, in the middle of the outbreak ensure block.
+
+**Root cause.** Words out of `server.cfg.additions` comments reaching the command parser.
+I could not pin the exact tokenisation rule from here — the live cfg is a different (older)
+revision than the pack's, so the three reported words do not all map onto lines in the current
+file. Candidates are the inline trailing `#` comments, the non-ASCII box-drawing and em-dash
+characters, and the parentheses. **Unverified which.**
+
+**Patch.** Removed all three candidate classes rather than bisecting a file I cannot read:
+`server.cfg.additions` rewritten with whole-line ASCII comments only and no parentheses.
+Command lines are byte-identical and in the same order; 23 active `ensure` lines before and
+after. All three analyzers clean.
+
+**Status.** Harmless either way — no resource failed to load because of these. If the lines
+survive the redeploy, the cause is elsewhere and worth one more look.
+
+## 2026-09-14 — ops/backup.bat was silently backing up no resources
+
+**Symptom.** None observed; found while correcting the paths.
+
+**Root cause.** `Compress-Archive -Path '...\resources\[outbreak]'` — the same PowerShell
+bracket-wildcard trap that bit the setup scripts. `[outbreak]` is a character class matching
+one character from `outbreak`, so the path matched nothing and the zip contained only
+`server.cfg`. The dump half of the script was fine.
+
+**Patch.** `-Path` → `-LiteralPath`. Also: `DB` corrected to `QboxProject_A70B55`, paths moved
+to `C:\Outbreak\`, `mariadb-dump.exe` now located by scanning `C:\Program Files\MariaDB *`
+instead of the hardcoded 11.4 (Tony runs 12.3.3), and both halves now report a non-zero exit.
+`DBPASS` left as `CHANGE_ME` — the real password does not belong in the repo.
+
+**Status.** Fixed, untested.

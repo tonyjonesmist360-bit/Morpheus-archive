@@ -1,55 +1,83 @@
-## ── OUTBREAK PACK — START ORDER (paste at the END of server.cfg) ──────────────
+## OUTBREAK PACK - START ORDER. Paste at the END of server.cfg.
 ## Foundation must already be ensured above this block by the Qbox recipe:
 ##   oxmysql, ox_lib, qbx_core, ox_inventory, ox_target, pma-voice, illenium-appearance
-## Disable before first boot (comment out in the recipe's cfgs):
+## Disable before first boot by commenting out in the recipe's cfgs:
 ##   qbx_spawn, qbx_properties, qbx_hud, qbx_medical, qbx_ambulancejob, qbx_police,
 ##   npwd + qbx_npwd + npwd_qbx_*, ox_fuel, qbx_density
+##
+## COMMENT STYLE: whole-line only, ASCII only, no parentheses.
+## Inline trailing comments on an ensure/set line get mis-tokenised by the cfg
+## parser and print bogus "No such command <word>." lines during boot.
 
-setr ob_debug 1                 # 1 during the shakedown, 0 for the crew
-set  ob_scenario "motel"        # motel | airport | paleto
+## 1 during the shakedown, 0 for the crew
+setr ob_debug 1
+## motel | airport | paleto
+set  ob_scenario "motel"
 add_ace group.admin outbreak.debug allow
-add_ace group.admin outbreak.admin allow   # /ob_revive <id> — glitch insurance, keep this one for the crew
-add_ace group.admin outbreak.dm allow      # Director menu (F10 / wheel) — you, and whoever else runs events
+## outbreak.admin gates /ob_revive <id> - glitch insurance, keep this for the crew
+add_ace group.admin outbreak.admin allow
+## outbreak.dm gates the Director menu on F10 and the wheel
+add_ace group.admin outbreak.dm allow
 
-## Layer 0 — presentation with no deps
+## Layer 0 - presentation with no deps
 ensure outbreak_minigames
 ensure outbreak_binds
-## Layer 1 — services
-ensure outbreak_core            # tick bus, zombies, world events  (needs ox_lib)
-ensure outbreak_world           # clock/weather (exports read by spawn)
-ensure outbreak_emotes          # action anims (needs core tick)
-ensure outbreak_noise           # needs core tick
-ensure outbreak_radio           # transmit service (needs pma-voice, emotes)
-ensure outbreak_needs           # character state (needs core, ox_inventory)
-ensure outbreak_spawn           # needs needs, radio, world
-ensure outbreak_identity        # needs illenium-appearance, spawn
-ensure outbreak_skills          # needs identity (traits)
-ensure outbreak_items           # useables + loot (needs needs, emotes)
-ensure outbreak_housing         # needs items, minigames, emotes
-ensure outbreak_down            # needs needs, emotes, housing
-ensure outbreak_faction         # reputation service
-ensure outbreak_weapons         # catalog + rules on ox_inventory durability (merge data/weapons_snippet.lua)
-ensure outbreak_worlditems      # mutable world: place/take/storage/notes + entropy (006_worlditems.sql)
-ensure outbreak_dm              # director menu (007_dm.sql) - ace outbreak.dm
-## Layer 2 — presentation that reads everything
+
+## Layer 1 - services. Order is dependency order, do not shuffle.
+## core        tick bus, zombies, world events. needs ox_lib
+## world       clock and weather. exports read by spawn
+## emotes      action anims. needs core tick
+## noise       needs core tick
+## radio       transmit service. needs pma-voice, emotes
+## needs       character state. needs core, ox_inventory
+## spawn       needs needs, radio, world
+## identity    needs illenium-appearance, spawn
+## skills      needs identity for traits
+## items       useables and loot. needs needs, emotes
+## housing     needs items, minigames, emotes
+## down        needs needs, emotes, housing
+## faction     reputation service
+## weapons     catalog and durability rules. merge data/weapons_snippet.lua
+## worlditems  place/take/storage/notes and entropy. needs 006_worlditems.sql
+## dm          director menu. needs 007_dm.sql and the outbreak.dm ace
+ensure outbreak_core
+ensure outbreak_world
+ensure outbreak_emotes
+ensure outbreak_noise
+ensure outbreak_radio
+ensure outbreak_needs
+ensure outbreak_spawn
+ensure outbreak_identity
+ensure outbreak_skills
+ensure outbreak_items
+ensure outbreak_housing
+ensure outbreak_down
+ensure outbreak_faction
+ensure outbreak_weapons
+ensure outbreak_worlditems
+ensure outbreak_dm
+
+## Layer 2 - presentation that reads everything
+## status is the F1 panel. It reads client exports only.
 ensure outbreak_hud
-ensure outbreak_status       # F1 status panel (reads client exports only)
+ensure outbreak_status
 ensure outbreak_wheel
-## Debug — REMOVE for the crew
+
+## Debug - REMOVE for the crew
 ensure outbreak_debug
 
-## ── VEHICLES v2 (server-authoritative - prerequisite for chain 2 and war rigs) ───
-ensure outbreak_vehicles            # ENABLED 2026-09-14. Needs outbreak_core, ox_inventory,
-                                    # outbreak_minigames, outbreak_emotes (all above) and
-                                    # 004_vehicles.sql (applied). Untested in play - if the
-                                    # boot goes red, comment this line and restart.
+## VEHICLES v2 - server-authoritative. Prerequisite for chain 2 and war rigs.
+## Enabled 2026-09-14. Needs outbreak_core, ox_inventory, outbreak_minigames and
+## outbreak_emotes, all ensured above, plus migration 004_vehicles.sql.
+## Untested in play. If the boot goes red, comment this line and restart.
+ensure outbreak_vehicles
 
-## ── PROGRESSION (HELD until DESIGN-progression.md review + slice pass) ─────────
-# ensure outbreak_intel            # after outbreak_core, outbreak_radio, outbreak_items
-# ensure outbreak_opportunities    # after outbreak_intel, outbreak_faction
+## PROGRESSION - HELD until DESIGN-progression.md review and a slice pass
+# ensure outbreak_intel            after outbreak_core, outbreak_radio, outbreak_items
+# ensure outbreak_opportunities    after outbreak_intel, outbreak_faction
 
-## ── EXTENDED (HELD until the slice passes FIRST_BOOT_CHECKLIST.md) ─────────────
-# outbreak_vehicles is ENABLED above in the VEHICLES v2 block - do not add it twice
+## EXTENDED - HELD until the slice passes FIRST_BOOT_CHECKLIST.md
+## outbreak_vehicles is ENABLED above in the VEHICLES v2 block. Do not add it twice.
 # ensure outbreak_craft
 # ensure outbreak_military
 # ensure outbreak_stations
@@ -59,15 +87,19 @@ ensure outbreak_vehicles            # ENABLED 2026-09-14. Needs outbreak_core, o
 # ensure outbreak_map
 
 sv_maxclients 20
-# sv_lan MUST stay 0: sv_lan 1 stops FiveM issuing identifiers, so txAdmin refuses
-# every connection ("requires every player to have at least one identifier") and the
-# add_principal identifier.license:... line in permissions.cfg can never match, which
-# silently revokes outbreak.debug / outbreak.admin / outbreak.dm. Localhost-only comes
-# from not forwarding port 30120, not from sv_lan.
+
+## sv_lan MUST stay 0. sv_lan 1 stops FiveM issuing identifiers, so txAdmin refuses
+## every connection with "requires every player to have at least one identifier", and
+## the add_principal identifier.license:... line in permissions.cfg can never match,
+## which silently revokes outbreak.debug / outbreak.admin / outbreak.dm.
+## Localhost-only comes from not forwarding port 30120, not from sv_lan.
 set sv_lan 0
-# Do not register with the Cfx master server list. This is a private server and 30120 is
-# not forwarded, so registration only produces a "Server list query returned an error"
-# retry loop in the console every few seconds - noise in the log you read during a
-# shakedown. Direct connect is unaffected. Delete this line to be publicly listed.
+
+## Do not register with the Cfx master server list. This is a private server and 30120
+## is not forwarded, so registration only produces a "Server list query returned an
+## error" retry loop in the console every few seconds - noise in the log you read
+## during a shakedown. Direct connect is unaffected.
+## Delete this line to be publicly listed.
 set sv_master1 ""
-sets sv_projectName "^1DEAD STATE^7 — end of the world RP"
+
+sets sv_projectName "^1DEAD STATE^7 - end of the world RP"

@@ -24,7 +24,7 @@ tools_diag*.py                     static analyzers — run ALL THREE after ever
                                     and manifest includes — the classes that let the 2026-09-13 bugs through)
 ops/                               backup/restore
 ```
-Live server files live in `C:\FXServer\txData\<recipe>.base\` (resources/ and server.cfg). The pack folder is the source of truth; copy resources into the live tree, don't edit the live tree only.
+Live server files live in `C:\Outbreak\txData\` (resources/ and server.cfg). The pack source of truth is `C:\Outbreak\pack\`. Every setup script takes `-Base "C:\Outbreak\txData"`. Copy resources into the live tree, don't edit the live tree only.
 
 ## Hard rules
 - **Patch, don't rewrite.** Smallest change that fixes the failure. Preserve the ownership contract, the single tick loop, and server authority. If a fix needs a second polling loop or a client deciding an outcome, stop and say so.
