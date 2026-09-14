@@ -96,6 +96,18 @@
   #noise.loud .r3 { animation-delay: 1s; }
   #noise.danger #ndot { background: var(--rust); }
   #noise.danger .ring { border-color: var(--rust); }
+  /* The eye — beside the noise dot. Closed = hidden, opening = noticed, open and rust = seen.
+     A one-word tag under it because an icon alone is not a reading. Thin, like the strip. */
+  #eye { position: fixed; left: 70px; bottom: 82px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  #eye svg { width: 28px; height: 16px; overflow: visible; }
+  #eye .lid { fill: none; stroke: rgba(216,210,192,.55); stroke-width: 1.6; }
+  #eye .pupil { fill: rgba(216,210,192,.55); transform-origin: 14px 8px; transform: scaleY(0); transition: transform .35s; }
+  #eye .tag { font-size: 8.5px; letter-spacing: 1.4px; font-weight: bold; color: rgba(216,210,192,.4); text-shadow: 0 1px 2px rgba(0,0,0,.8); }
+  #eye.noticed .pupil { transform: scaleY(.6); }
+  #eye.noticed .tag { color: #c98f3d; }
+  #eye.seen .pupil { transform: scaleY(1); fill: var(--rust); }
+  #eye.seen .lid { stroke: var(--rust); }
+  #eye.seen .tag { color: var(--rust); animation: throb 1.2s infinite; }
   @keyframes ripple {
     from { width: 10px; height: 10px; opacity: .8; }
     to   { width: 44px; height: 44px; opacity: 0; }
@@ -112,6 +124,7 @@
   </div>
   <div id="moodles"></div>
   <div id="noise"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><span id="ndot"></span></div>
+  <div id="eye"><svg viewBox="0 0 28 16"><path class="lid" d="M1 8 Q14 -4 27 8 Q14 20 1 8 Z"/><circle class="pupil" cx="14" cy="8" r="3.2"/></svg><span class="tag">HIDDEN</span></div>
 <script>
   const set = (id, v) => {
     const el = document.querySelector(id + ' .fill');
@@ -131,6 +144,14 @@
       const n = document.getElementById('noise');
       n.classList.toggle('loud', data.value > 25);
       n.classList.toggle('danger', data.value > 60);
+      return;
+    }
+    if (data.action === 'sight') {
+      const s = data.data || {}, e = document.getElementById('eye'), sus = s.suspicion || 0;
+      e.classList.toggle('seen', sus >= 100);
+      e.classList.toggle('noticed', sus > 0 && sus < 100);
+      const tag = e.querySelector('.tag');
+      tag.textContent = sus >= 100 ? 'SEEN' : sus > 0 ? 'NOTICED' : (s.visibility || 50) <= 20 ? 'HIDDEN' : (s.visibility || 50) >= 80 ? 'EXPOSED' : 'UNSEEN';
       return;
     }
     if (data.action === 'world') {

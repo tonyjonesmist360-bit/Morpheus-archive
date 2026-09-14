@@ -19,7 +19,11 @@ OutbreakCfg = {
   NightMultiplier = 1.6,        -- more zombies 22:00-05:00
   HeadshotOnly = false,         -- true = only headshots kill (TODO hook)
   InfectionChancePerHit = 0.15, -- Zomboid-style: every hit rolls
-  AggroRadius = 30.0,           -- sight range
+  AggroRadius = 30.0,           -- sight range at visibility 50 (standing, walking, daylight). Scales with outbreak_noise:getVisibility()
+  -- SNEAK. A zombie that can see you does not charge at once: its suspicion climbs each aggro
+  -- tick (faster when you are closer and more visible), it turns to face you, and it charges at
+  -- 100. Inside InstantRadius it charges at once. Out of sight, suspicion decays.
+  Suspicion = { instantRadius = 6.0, gainPerTick = 34, decayPerTick = 20, closeBoost = 2.0 },
   HearGunshotRadius = 90.0,     -- gunfire pulls zombies
   WalkStyles = { 'move_m@injured' },  -- BISECT 2: verydrunk alone did NOT lurch, so it is the bad name
   Hordes = { enabled = true, minInterval = 20, maxInterval = 45, size = 25, announceOnRadio = true },

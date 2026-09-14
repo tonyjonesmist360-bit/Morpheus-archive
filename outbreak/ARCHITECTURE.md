@@ -34,6 +34,8 @@ is patched to obey. Anything not on this map is a bug.
 | **Zombie population** | `outbreak_core` client (per-area owner) | `zombies[]` registry | export `outbreak_core:getZombies()` / `nearestZombie(radius)` — nobody else scans `GetGamePool('CPed')` |
 | **World events** (hordes, future convoys/caches) | `outbreak_core` server `director` | in-memory schedule | export `outbreak_core:scheduleEvent(name, minutes, payload)` + event `outbreak:event:<name>` |
 | **World noise** | `outbreak_noise` client | `noise` number | export `getNoise()` + event `outbreak:noise:spike` (in) + `outbreak:hud:noise` (out) |
+| **Visibility** (how easy you are to see) | `outbreak_noise` client (`visibility.lua`) | `visibility` number | export `getVisibility()`; `outbreak_core` scales sight range by it and pushes `outbreak:hud:sight` `{visibility, suspicion, sightRadius}` |
+| **Suspicion** (per zombie, before the charge) | `outbreak_core` client aggro loop | `suspicion[ped]` | export `getSuspicion()` (highest in range); `lureTo(pos, radius)` walks idle zombies to a point |
 | **Character state** (hunger, thirst, fatigue, infection, wounds by body part, bleeding) | `outbreak_needs` — **server is authoritative store**, client is sensor + effector | MySQL `outbreak_needs` (JSON), mirrored to `LocalPlayer.state.needs` | export `getNeeds()` (client) · server export `getNeeds(src)` · event `outbreak:client:consume` (in, from server only) |
 | **Wounds** | `outbreak_needs` | part of character state | server event `outbreak:server:wound` (client-detected hit → server stores) · treatment via `outbreak:server:treat(part)` |
 | **Downed / death** | `outbreak_down` | `Player(src).state.downState` statebag (server-set) | statebag read by wheel, raiders, PvP search |

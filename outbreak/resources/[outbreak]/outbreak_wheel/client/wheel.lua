@@ -98,6 +98,12 @@ local function build()
   -- ALWAYS
   items[#items + 1] = { label = 'Radio', icon = 'walkie-talkie', onSelect = function() TriggerEvent('outbreak:client:openRadio') end }
   items[#items + 1] = { label = 'Listen', icon = 'ear-listen', onSelect = function() ExecuteCommand('listen') end }
+  do
+    local can = (has('soda') and 'soda') or (has('beer') and 'beer') or nil
+    items[#items + 1] = { label = can and 'Throw a distraction' or 'Throw a distraction (no can)', icon = 'hand-sparkles', onSelect = function()
+      if not can then lib.notify({ title = 'Nothing to throw.', description = 'A soda or a beer can.', type = 'error' }) return end
+      TriggerServerEvent('outbreak:server:throwDistraction', can) end }
+  end
   items[#items + 1] = { label = 'Emotes', icon = 'masks-theater', onSelect = function() ExecuteCommand('semotes') end }
   items[#items + 1] = { label = 'Walk style', icon = 'person-walking', onSelect = function() ExecuteCommand('walkstyle') end }
   items[#items + 1] = { label = 'Crouch', icon = 'person-falling', onSelect = function() ExecuteCommand('crouch') end }

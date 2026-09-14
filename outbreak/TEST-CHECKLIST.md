@@ -85,5 +85,13 @@ from here). Mark each ✓ / ✗ and `/bug` anything that fails so the position a
 - [ ] ~90 s after the first player joins, radio: "...they are moving through <area>..." and a **red radius** on the map; F1 → World → The Tide names it; HUD strip shows **THE TIDE** in rust when you stand in it; zombie density there is ~2×. `/ob_tide` moves it (debug)
 - [ ] A settlement inside the Tide gets defense events far more often (probe weight ×3) — F10 → Director pass while your house is in the red
 
+## 9c · v0.19 — sneak: visibility, suspicion, the eye, distractions
+- [ ] HUD: an **eye** beside the noise dot with a word under it. Standing in daylight: UNSEEN. Crouched (Ctrl stealth or /crouch) and still at night: HIDDEN. Sprinting with a flashlight at night: EXPOSED. F1 → World → Visibility shows the number
+- [ ] `/ob_zombie 1` at ~20 m in daylight, stand still in its view → it **turns to face you**, the eye opens, NOTICED, then SEEN and it charges (~3 s). Break line of sight before SEEN → the eye closes again
+- [ ] Same at night, crouched, fog (`ob_weather FOGGY`, `ob_time 23`) → you can get within ~5 m before it notices; inside 6 m it charges regardless
+- [ ] Sprint straight at one → instant (noise still works as before)
+- [ ] Wheel → **Throw a distraction** with a soda/beer in pockets → can arcs out ★, lands, zombies within 40 m walk to it and stand there; your own noise barely moves. No can → "Nothing to throw."
+- [ ] Stealth skill levels reduce both noise and visibility (skills panel)
+
 ## 10 · Still v0.16 (if not yet walked)
 - [ ] `SMOKE-SCRIPT.md §14` S1–S8: settlement ledger, cooking, consumption, morale behaviours, stranger, rumour, F1 Home column

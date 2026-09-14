@@ -43,6 +43,14 @@ for item, def in pairs(Useables) do
   end)
 end
 
+-- Distraction: the wheel asks, the server takes the can, the client throws it (outbreak_noise).
+local Throwable = { soda = true, beer = true }
+RegisterNetEvent('outbreak:server:throwDistraction', function(item)
+  local src = source
+  if not Throwable[item] then return end
+  if exports.ox_inventory:RemoveItem(src, item, 1) then TriggerClientEvent('outbreak:client:throwDistraction', src, item) end
+end)
+
 QBCore.Functions.CreateUseableItem('purify_tabs', function(src)
   if exports.ox_inventory:GetItemCount(src, 'water_dirty') < 1 then
     TriggerClientEvent('ox_lib:notify', src, { title = 'Nothing to purify.', type = 'error' }) return end

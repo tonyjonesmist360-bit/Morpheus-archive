@@ -1,6 +1,16 @@
-# START HERE — Outbreak v0.18.0
+# START HERE — Outbreak v0.19.0
 
-## What changed since v0.17.0
+## What changed since v0.18.0
+
+| | |
+|---|---|
+| **Sneak** | A second sense number, **visibility** (posture, motion, light, weather, interior, stealth skill), scales zombie sight range. Zombies that see you build **suspicion** — they turn to face you before they charge — so there is a window to break line of sight. Inside 6 m it is instant. HUD **eye**: HIDDEN / UNSEEN / NOTICED / SEEN / EXPOSED. Wheel → **Throw a distraction** (soda/beer can) lures every zombie within 40 m to where it lands. |
+
+Deploy: `02-copy-resources` only (no items, no cfg change). Checklist: `TEST-CHECKLIST.md §9c`.
+
+---
+
+## v0.18.0 — What changed since v0.17.0
 
 | | |
 |---|---|

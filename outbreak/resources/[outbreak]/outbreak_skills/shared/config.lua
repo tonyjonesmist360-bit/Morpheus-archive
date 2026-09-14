@@ -8,7 +8,7 @@ SkillCfg = {
   Effects = {
     mechanics  = function(l) return { repairTime = 1.0 - l * 0.06, partsSave = l * 0.04 } end,  -- 40% faster, 40% chance parts survive at 10
     medicine   = function(l) return { bandageTime = 1.0 - l * 0.05, stabilizeHealth = 20 + l * 3 } end,
-    stealth    = function(l) return { noiseMult = 1.0 - l * 0.04 } end,                          -- 40% quieter at 10
+    stealth    = function(l) return { noiseMult = 1.0 - l * 0.04, sightMult = 1.0 - l * 0.03 } end, -- 40% quieter, 30% harder to see at 10
     fitness    = function(l) return { staminaMult = 1.0 + l * 0.08 } end,
     scavenging = function(l) return { lootBonus = l * 0.03 } end,                                 -- +30% chance at 10
   },

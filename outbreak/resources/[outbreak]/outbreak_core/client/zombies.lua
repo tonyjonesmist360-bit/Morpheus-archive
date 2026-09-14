@@ -58,6 +58,19 @@ exports('countZombies', function(radius)
   return n
 end)
 exports('spawnZombieAt', function(pos) return spawnZombie(pos, PlayerPedId()) end) -- debug/test
+exports('getSuspicion', function() return topSuspicion end)
+-- Something made a noise over THERE: every zombie in radius that is not already fighting walks to it.
+exports('lureTo', function(pos, radius)
+  local n = 0
+  for ped in pairs(zombies) do
+    if DoesEntityExist(ped) and not IsEntityDead(ped) and #(GetEntityCoords(ped) - pos) <= (radius or 40.0) and not IsPedInCombat(ped, PlayerPedId()) then
+      ClearPedTasks(ped)
+      TaskGoStraightToCoord(ped, pos.x + math.random(-2, 2), pos.y + math.random(-2, 2), pos.z, 1.0, 20000, 0.0, 1.0)
+      n = n + 1
+    end
+  end
+  return n
+end)
 
 AddRelationshipGroup('OUTBREAK_ZOMBIES')
 SetRelationshipBetweenGroups(5, ZGROUP, `PLAYER`)
@@ -260,6 +273,12 @@ local function currentNoise()
 end
 
 local wasGhost = false
+local suspicion = {}     -- ped -> 0..100
+local topSuspicion = 0   -- highest in range this tick, for the HUD eye
+local function currentVisibility()
+  local ok, v = pcall(function() return exports.outbreak_noise:getVisibility() end)
+  return ok and v or 50
+end
 CreateThread(function()
   while true do
     Wait(1500)
@@ -282,17 +301,35 @@ CreateThread(function()
     local senseMult = 0.5 + (noise / 100.0) * 2.5
     local frenzy = wm.frenzy and (GetGameTimer() % 90000) < 3000 -- thunder: a 3s agitation window every 90s
     local hearRadius = OutbreakCfg.AggroRadius * senseMult
+    local vis = currentVisibility()
+    local sightRadius = OutbreakCfg.AggroRadius * (vis / 50.0)
+    local S = OutbreakCfg.Suspicion
+    local top = 0
     for ped in pairs(zombies) do
       if DoesEntityExist(ped) and not IsEntityDead(ped) then
         local d = #(GetEntityCoords(ped) - ppos)
-        local sees = d < OutbreakCfg.AggroRadius and HasEntityClearLosToEntity(ped, me, 17)
+        local inCombat = IsPedInCombat(ped, me)
+        local canSee = d < sightRadius and HasEntityClearLosToEntity(ped, me, 17)
         local hears = d < hearRadius and noise > 25
+        if inCombat then suspicion[ped] = 100
+        elseif canSee then
+          local gain = S.gainPerTick * (vis / 50.0) * (d < sightRadius * 0.4 and S.closeBoost or 1.0)
+          suspicion[ped] = math.min(100, (suspicion[ped] or 0) + gain)
+          if suspicion[ped] < 100 and not IsPedInCombat(ped, me) then TaskTurnPedToFaceEntity(ped, me, 1200) end
+        else
+          suspicion[ped] = math.max(0, (suspicion[ped] or 0) - S.decayPerTick)
+        end
+        local sees = canSee and (suspicion[ped] >= 100 or d < S.instantRadius)
         if not isGhost and (sees or hears or (frenzy and d < 80.0)) then
+          suspicion[ped] = 100
           TaskCombatPed(ped, me, 0, 16)
           onZombieAggro(ped)
         end
-      end
+        if d < sightRadius * 1.5 and (suspicion[ped] or 0) > top then top = suspicion[ped] end
+      else suspicion[ped] = nil end
     end
+    topSuspicion = top
+    TriggerEvent('outbreak:hud:sight', { visibility = vis, suspicion = top, sightRadius = sightRadius })
   end
 end)
 

@@ -14,6 +14,7 @@ AddEventHandler('outbreak:hud:update', function(state)
   }})
 end)
 
+AddEventHandler('outbreak:hud:sight', function(s) SendNUIMessage({ action = 'sight', data = s }) end)
 AddEventHandler('outbreak:hud:noise', function(v)
   SendNUIMessage({ action = 'noise', value = v })
 end)

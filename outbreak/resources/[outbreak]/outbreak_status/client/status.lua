@@ -80,6 +80,8 @@ local function gather()
       weather = GlobalState.obWeather or nil,
       blackout= GlobalState.obBlackout and true or false,
       noise   = math.floor(ex(function() return exports.outbreak_noise:getNoise() end, 0) or 0),
+      visible = math.floor(ex(function() return exports.outbreak_noise:getVisibility() end, 50) or 50),
+      seen    = math.floor(ex(function() return exports.outbreak_core:getSuspicion() end, 0) or 0),
       zombies = ex(function() return exports.outbreak_core:countZombies() end, 0) or 0,
       channel = ex(function() return exports.outbreak_radio:getChannel() end, 0) or 0,
       job     = ex(function() return exports.outbreak_faction:getJob() end, nil),

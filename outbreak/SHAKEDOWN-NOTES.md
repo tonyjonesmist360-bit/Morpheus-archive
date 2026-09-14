@@ -558,3 +558,14 @@ session report. Notes that matter for debugging tomorrow:
   and `currentZone()` reports `tide = true` for the HUD. `outbreak_director` now includes
   `@outbreak_core/shared/config.lua` for the HotZones list — the same cross-resource include pattern
   `outbreak_debug` has used since the first boot.
+
+## 2026-09-14 — v0.19.0: sneak
+
+Visibility lives beside noise in `outbreak_noise` (same shape: tick subscriber, one number, one export).
+`outbreak_core`'s aggro loop now scales sight radius by `visibility/50`, accumulates per-zombie
+suspicion while a zombie can see you (`TaskTurnPedToFaceEntity` is the tell), and only charges at 100 or
+inside `Suspicion.instantRadius`. Hearing is unchanged. Tuning knobs: `OutbreakCfg.Suspicion` and
+`VisibilityCfg` at the top of `visibility.lua`. The distraction throw uses `prop_ld_can_01` (already in
+the shelf list) with `SetEntityVelocity` — no throw animation from memory; the whistle action stands in
+for the arm. `lureTo` uses `TaskGoStraightToCoord` with a 20 s timeout so lured zombies do not stand
+at the can forever.

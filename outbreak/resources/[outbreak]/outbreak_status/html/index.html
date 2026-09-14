@@ -174,13 +174,15 @@ function render(d){
   const rows=[['Time',hh],['Weather',w.weather||'—'],
               ['Blackout', w.blackout?'yes':'no'],
               ['Noise',(w.noise==null?'—':w.noise)],
+              ['Visibility',(w.visible==null?'—':w.visible)],
+              ['Being watched',(w.seen>=100?'SEEN':w.seen>0?'noticed':'no')],
               ['Nearby dead',(w.zombies==null?'—':w.zombies)],
               ['Radio',w.channel?('ch '+w.channel):'off'],
               ['Faction',w.job&&w.job!=='unemployed'?w.job:'—'],
               ['Area', w.zone ? String(w.zone).replace(/_/g,' ') : 'open country'],
               ['The Tide', w.tide ? String(w.tide).replace(/_/g,' ') : 'nowhere yet']];
   $('world').innerHTML = rows.map(([k,v])=>{
-    const hot = (k==='Area' && w.heavy) || (k==='Blackout' && w.blackout) || (k==='The Tide' && w.tide && w.zone && String(w.tide)===String(w.zone));
+    const hot = (k==='Area' && w.heavy) || (k==='Blackout' && w.blackout) || (k==='The Tide' && w.tide && w.zone && String(w.tide)===String(w.zone)) || (k==='Being watched' && w.seen>=100);
     return `<div class="row"><b>${esc(k)}</b><span${hot?' style="color:var(--rust)"':''}>${esc(v)}</span></div>`;
   }).join('');
 
