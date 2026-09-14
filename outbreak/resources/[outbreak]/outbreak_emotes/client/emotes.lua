@@ -86,6 +86,45 @@ AddEventHandler('outbreak:tick', function(t)
   if current and current ~= 'handsup' and current ~= 'whistle' and current ~= 'surrender' and current ~= 'carry' and current ~= 'drag' and t.moving then stopEmote() end
 end)
 
+-- ── WALK STYLE + CROUCH ──
+local walkStyle, crouched = nil, false
+local function loadSet(name)
+  RequestAnimSet(name); local t = GetGameTimer()
+  while not HasAnimSetLoaded(name) and GetGameTimer() - t < 2000 do Wait(10) end
+  return HasAnimSetLoaded(name)
+end
+local function applyWalk()
+  local ped = PlayerPedId()
+  if crouched then
+    if loadSet(EmoteCfg.CrouchClipset) then SetPedMovementClipset(ped, EmoteCfg.CrouchClipset, 0.25) else lib.notify({ title = 'Crouch clipset INVALID: ' .. EmoteCfg.CrouchClipset, type = 'error' }) end
+    return
+  end
+  local set = walkStyle and EmoteCfg.WalkStyles[walkStyle] or nil
+  if set then
+    if loadSet(set) then SetPedMovementClipset(ped, set, 0.25) else lib.notify({ title = ('Walk style INVALID: %s (%s)'):format(walkStyle, set), description = 'Name from memory. Pick another.', type = 'error', duration = 6000 }); walkStyle = nil; ResetPedMovementClipset(ped, 0.25) end
+  else ResetPedMovementClipset(ped, 0.25) end
+end
+RegisterCommand('walkstyle', function(_, a)
+  local name = a[1]
+  if not name then
+    local opts = {}
+    for k in pairs(EmoteCfg.WalkStyles) do opts[#opts + 1] = { title = k, description = EmoteCfg.WalkStyles[k] or 'default', onSelect = function() walkStyle = k ~= 'normal' and k or nil; applyWalk(); lib.notify({ title = 'Walk: ' .. k, type = 'inform', duration = 2000 }) end } end
+    table.sort(opts, function(x, y) return x.title < y.title end)
+    lib.registerContext({ id = 'ob_walk', title = 'Walk style', options = opts }); lib.showContext('ob_walk')
+    return
+  end
+  if name == 'normal' or EmoteCfg.WalkStyles[name] then walkStyle = name ~= 'normal' and name or nil; applyWalk(); lib.notify({ title = 'Walk: ' .. name, type = 'inform', duration = 2000 })
+  else lib.notify({ title = 'Unknown walk style.', description = 'Use /walkstyle with no name for the list.', type = 'error' }) end
+end, false)
+RegisterCommand('crouch', function()
+  if LocalPlayer.state.downState then return end
+  crouched = not crouched
+  applyWalk()
+end, false)
+-- clipsets are per-ped; reapply after a model change / respawn
+AddEventHandler('outbreak:client:respawn', function() SetTimeout(3000, applyWalk) end)
+exports('getWalkStyle', function() return walkStyle, crouched end)
+
 exports('play', playEmote)
 exports('stop', stopEmote)
 

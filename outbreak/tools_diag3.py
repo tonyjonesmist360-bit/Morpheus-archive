@@ -50,8 +50,9 @@ def strip(src):
     src = re.sub(r'--\[\[.*?\]\]', '', src, flags=re.S)
     src = re.sub(r'--.*', '', src)
     src = re.sub(r'\[\[.*?\]\]', '""', src, flags=re.S)   # long strings
-    src = re.sub(r"'(\\.|[^'\\])*'", "''", src)
-    src = re.sub(r'"(\\.|[^"\\])*"', '""', src)
+    # ONE pass over both quote styles, left to right. Two passes broke parity the moment a
+    # double-quoted string contained an apostrophe ("Don't come looking") and hid real keys.
+    src = re.sub(r"'(\\.|[^'\\])*'|\"(\\.|[^\"\\])*\"", "''", src)
     src = re.sub(r'`[^`]*`', '0', src)                      # hash literals
     return src
 

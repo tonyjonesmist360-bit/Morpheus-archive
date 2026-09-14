@@ -1,6 +1,30 @@
-# START HERE — Outbreak v0.16.0
+# START HERE — Outbreak v0.17.0
 
-## What changed since v0.15.0 (2026-09-14, autonomous build)
+## What changed since v0.16.0 (2026-09-14 overnight build sheet)
+
+**Walk `TEST-CHECKLIST.md` top to bottom.** Every feature from the sheet is in it, in test order, with the expected result and an
+*unverified* flag where I could not see or hear it from here.
+
+| | |
+|---|---|
+| **P0** | Downed players keep chat, wheel (a downed set), F10, radio, distress (F6 / pad X / `/ob_distress`), `/ooc`. Self-splint works (E, or the wheel). Adrenaline from the wheel. Bleed-out 5 min. `mumble_pill` + `/voicereset`. **`outbreak_chat` new.** |
+| **P1** | The walkie: prop + raised arm on key-up, squelch/static/hiss (synthesized, `tools/gen_audio.py`), radio-FX voice submix, the handheld's own screen (N), `]`/`[` channel step, dead zones (interiors + two tunnels) both ways, battery bars, `((radio))` over talkers, batteries in loot. |
+| **P2 (partial)** | Item icons mapped to ox_inventory's stock images (unverified names). `/walkstyle` picker that says INVALID instead of failing silently. `/crouch`. The rest of P2 is **parked** — see the summary. |
+| **P3** | F10 → **Admin**: player panel, noclip/flight, god, real ghost (hidden for everyone, NPCs ignore), spectate, teleport to waypoint / saved / player, `/coords`, entity gun, zombie controls, vehicle kit, searchable give, announce, voice reset. |
+| **P4** | `/ob_hud` overlay, `/bug` → `outbreak_debug/bugs.log`, `TEST-CHECKLIST.md`. |
+| **P5** | **`outbreak_loadscreen`** (stops the recipe one), MOTD on every load, Discord presence, moodier weather weights, **`outbreak_ambience`** (wind, distant groans). |
+| **P6 / P7** | The Director's probe is a staged **defense event** (warning → 4 min prep → wave → held/overrun with real consequences). **Residents you can see** at any settlement door, scenarios and lines by morale. |
+| **Kit / ops** | Every scenario starts with beans, a knife, clean water. `ops/install-backup-task.ps1 -RunNow` registers and verifies the nightly backup; `ops/verify-backup.ps1`. |
+| **Tooling** | `tools_diag3.py` string-parity bug fixed (a `"Don't"` inside double quotes was hiding config keys). |
+
+**Deploy:** extract over `C:\Outbreak\pack`, then with the server stopped: `02-copy-resources`, `04-paste-ins -Only items -Force`
+(icons + the pill), `07-update-cfg -Apply` (three new ensures + `stop loadscreen`). No new migrations. Expect **28** `outbreak_`
+ensure lines and `Inventory has loaded 349 items`. Rollback per feature: comment its `ensure`; for the loadscreen also delete
+`stop loadscreen`.
+
+---
+
+## v0.16.0 — What changed since v0.15.0 (2026-09-14, autonomous build)
 
 | | |
 |---|---|

@@ -47,7 +47,15 @@ is patched to obey. Anything not on this map is a bug.
 | **Settlements** (residents, morale, ledger, consumption debt) | `outbreak_supply` server | MySQL `outbreak_settlements` | exports `getSettlement(id)`, `settlements()`, `homeOf(src)`, `keyholders(id)`, `addResident`, `takeUnits`, `modify`, `log` · callbacks `outbreak:supply:model`, `outbreak:supply:home` · push `outbreak:supply:update` |
 | **Stockpile levels** | nobody — a read-model over the ox stash `safehouse_<id>` | ox_inventory | `outbreak_supply` reads the stash and removes real items; never mirrors it. See DESIGN-supply.md |
 | **World nudges** (stranger, rumours, probes, unrest) | `outbreak_director` server | MySQL `outbreak_director_log` | export `evaluate()`; rides `outbreak_core:scheduleEvent('director')` |
-| **House read model** | `outbreak_housing` | — | new exports `getHouse(id)` → `{owner, barricade}`, `houses()` → `{id, label, door}` |
+| **House read model** | `outbreak_housing` | — | new exports `getHouse(id)` → `{owner, barricade}`, `houses()` → `{id, label, door}`, `damageBarricade(id, n)` |
+| **Defense events** | `outbreak_director` server | in-memory (`SetTimeout` stages; a restart mid-event cancels it) | export `defend(id)`; event `outbreak:director:defense(house, stage, data)` to all clients |
+| **Resident bodies** | `outbreak_supply` client (cosmetic) | `GlobalState.obSettlements` (door, label, names, residents, morale — no stock) | spawned/despawned from the core tick, throttled 3 s |
+| **Downed inputs** | `outbreak_down` client | — | per-frame disable of body controls only; chat, wheel, radio, F10, distress stay live. `SetPlayerControl(false)` is gone. |
+| **Distress** | `outbreak_down` server | — | `outbreak:server:distress(street, state)` → radio MAYDAY with origin + `outbreak:client:distressPing` to channel listeners, or a 250 m scream |
+| **OOC / announce** | `outbreak_chat` server | — | `/ooc`, `/announce` (ace outbreak.admin) via `chat:addMessage` inline templates |
+| **Voice reset** | `outbreak_radio` | — | `outbreak:client:voiceReset` (item `mumble_pill`, `/voicereset [id]`, `/ob_voicereset`) |
+| **Radio presentation** | `outbreak_radio` client `fx.lua` + NUI | — | prop/arm on `pma-voice:radioActive`, submix + hiss on `pma-voice:setTalkingOnRadio`, dead zones reported on the channel heartbeat and applied server-side both ways |
+| **Admin state** | `outbreak_dm` server | statebags `obGod`, `obGhost` | other clients hide ghosted peds via the statebag handler |
 
 ## Loop budget (the "no duplicate monitors" rule)
 

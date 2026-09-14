@@ -20,6 +20,7 @@ bind('ob_radioup', 'Radio channel up',           'RBRACKET', nil)
 bind('ob_radiodown','Radio channel down',        'LBRACKET', nil)
 bind('fallen',     'Memorial wall',             'F5',     nil)
 bind('ob_distress','Distress call (works while down)','F6',  'RLEFT_INDEX')   -- pad X
+bind('crouch',     'Crouch (toggle)',           '', nil)   -- unbound by default (Ctrl is GTA's stealth); bind it in Settings > Key Bindings > FiveM, or use the wheel
 bind('journal',    'Field journal',             'J',      nil)   -- pad: via the wheel
 bind('dm',         'Director menu (DMs only)',  'F10',    nil)
 bind('craft',      'Craft (when enabled)',      'K',      'LRIGHT_INDEX')

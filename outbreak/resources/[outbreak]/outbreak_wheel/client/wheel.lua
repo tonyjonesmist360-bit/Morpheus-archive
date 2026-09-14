@@ -99,6 +99,8 @@ local function build()
   items[#items + 1] = { label = 'Radio', icon = 'walkie-talkie', onSelect = function() TriggerEvent('outbreak:client:openRadio') end }
   items[#items + 1] = { label = 'Listen', icon = 'ear-listen', onSelect = function() ExecuteCommand('listen') end }
   items[#items + 1] = { label = 'Emotes', icon = 'masks-theater', onSelect = function() ExecuteCommand('semotes') end }
+  items[#items + 1] = { label = 'Walk style', icon = 'person-walking', onSelect = function() ExecuteCommand('walkstyle') end }
+  items[#items + 1] = { label = 'Crouch', icon = 'person-falling', onSelect = function() ExecuteCommand('crouch') end }
   items[#items + 1] = { label = 'Surrender', icon = 'hands', onSelect = function() exports.outbreak_emotes:loopAction('surrender') end }
   items[#items + 1] = { label = 'Vitals', icon = 'heart', onSelect = function()
     local n = needs

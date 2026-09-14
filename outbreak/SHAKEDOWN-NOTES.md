@@ -518,3 +518,28 @@ rendering, `GetInventoryItems` on an unopened stash, the four stranger ped model
 **Deliberately not built.** Resident *bodies* inside the house (behaviour is visible through the
 ledger, notes, notifies and stock — bodies are a follow-up once interiors are settled). Consumption
 while the server is empty (world moves when someone is in it — a design choice, documented).
+
+## 2026-09-14 — overnight build sheet: v0.17.0
+
+Full list and test order in `TEST-CHECKLIST.md`; summary of done / verified / skipped / needs-me in the
+session report. Notes that matter for debugging tomorrow:
+
+- **Why nothing worked while downed.** `outbreak_down` called `SetPlayerControl(PlayerId(), false, 256)` on
+  every down state. That disables *every* input, including chat's T, the wheel's G, F10, the radio, and the
+  E the self-splint thread was polling with `IsControlJustPressed` — which returns false for disabled
+  controls. Replaced with a per-frame `DisableControlAction` over body inputs only. If anything is still
+  dead on the floor, that list (`BODY_CONTROLS` in `client/down.lua`) is where to look.
+- **Voice reset is best-effort.** The natives are real; which one actually clears a stuck mumble session
+  is inferred. `/ob_voicereset` prints before/after `MumbleIsConnected()` with `ob_debug 1` — that line
+  tells you whether the reconnect path ran at all.
+- **Radio sounds are synthesized** by `tools/gen_audio.py`; re-run it to change them. If the squelch is
+  too loud, `RadioCfg.Sfx`. If the voice distortion is too much, `RadioCfg.Submix = false`.
+- **Dead zones** use `GetInteriorFromEntity ~= 0` plus two tunnel coordinates from memory. If the radio
+  dies somewhere it should not, `RadioCfg.IndoorsIsDead = false` isolates it.
+- **Defense event timers are `SetTimeout`**, not persisted. A restart during one cancels it silently.
+- **diag3 had a parity bug**: its string stripper ran `'` before `"`, so an apostrophe inside a
+  double-quoted string flipped every quote after it and hid config keys. One combined pass now.
+- **Not built / parked from P2** (needs assets, a live creator, or in-game iteration): full character
+  editor (illenium still broken — Deferred), layered clothing with condition/dirt, persistent scars,
+  saved outfits, prone/lean/vault, paired emotes, box-carry animation, drag-drop inventory changes
+  (ox_inventory owns it), per-item custom art beyond ox's stock icons.

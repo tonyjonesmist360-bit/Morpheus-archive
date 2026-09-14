@@ -27,6 +27,27 @@ being downed has taken chat away from you.
 | `ob_revive <id>` | admin | Pulls a player out of any downed/critical state. **Console-safe** — and from the console it skips the ace check entirely, so it works even if your principal is wrong. |
 | `dm` | dm | Director menu. World → Ghost (invisible + invincible), Revive, Teleport, Bring. |
 
+## Overnight build 2026-09-14 (v0.17.0)
+
+| Command | Gate | Does |
+|---|---|---|
+| `ob_distress` (F6) | — | Distress call. Radio MAYDAY with street on your channel + map blip for listeners, or a scream heard within 250 m. Works while down. |
+| `ooc <msg>` | — | Out-of-character chat, grey and bracketed. Works while down. |
+| `ob_voicereset` | — | Reset your own voice/mumble connection. |
+| `voicereset [id]` | admin | Reset a player's voice. **Console-safe.** |
+| `announce <msg>` | admin | Styled server-wide chat message + top notify. **Console-safe.** |
+| `radio [n]` | — | Tune to channel n, or open the radio screen. `]` / `[` step channels. |
+| `walkstyle [name]` | — | Pick a walk style (menu without a name). Says INVALID if a clipset does not load. |
+| `crouch` | — | Toggle the crouch clipset. |
+| `bug <note>` | — | Appends position, time, state and your note to `outbreak_debug/bugs.log`. |
+| `ob_hud` | debug or dm | Debug overlay: coords, street, fps, tick age, interior, zone, noise, zombies, radio, speed, time. |
+| `noclip` | dm | Flight/noclip. WASD, Space up, Ctrl down, Shift fast. |
+| `spectate` | dm | Stop spectating (start from the player panel). |
+| `entitygun` | dm | Aim + click deletes objects/vehicles/peds. |
+| `coords` | — | Copies `vec4(x, y, z, h)` to the clipboard. |
+| `ob_defend <house_id>` | debug | Start a settlement defense event now. **Console-safe.** |
+| F10 → Admin | dm | Player panel, noclip, god, ghost, teleports, saved locations, entity gun, zombie controls, vehicle kit, give (search), announce, voice reset. |
+
 ## Settlement & World Director (v0.16.0)
 
 | Command | Gate | Does |

@@ -19,6 +19,16 @@ EmoteCfg = {
     wash     = { label = 'Wash',        scenario = 'WORLD_HUMAN_BUM_WASH',         desc = 'Scrub off the day.' },
     map      = { label = 'Check map',   scenario = 'WORLD_HUMAN_TOURIST_MAP',      desc = 'Paper map. Remember those?' },
   },
+  -- WALK STYLES: /walkstyle <name> or the wheel. Clipset names from memory - UNVERIFIED; the
+  -- picker requests each set with a timeout and says INVALID instead of silently doing nothing
+  -- (the failure mode that hid the zombie lurch for a whole session). 'injured' is the one
+  -- clipset in the pack already confirmed to load.
+  WalkStyles = {
+    normal = nil, injured = 'move_m@injured', tired = 'move_m@tired', hurry = 'move_m@hurry', brave = 'move_m@brave',
+    casual = 'move_m@casual@a', sad = 'move_m@sad@a', hobo = 'move_m@hobo@a', tough = 'move_m@tough_guy@', drunk = 'move_m@drunk@slightlydrunk',
+    shady = 'move_m@shadyped@a', quick = 'move_m@quick', femme = 'move_f@sexy@a', flee = 'move_m@fire',
+  },
+  CrouchClipset = 'move_ped_crouched',
   RestFatiguePerTick = 1.2,   -- every 5s while resting
   ListenRadius = 60.0,
 }
