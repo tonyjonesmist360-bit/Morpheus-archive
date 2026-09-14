@@ -64,7 +64,10 @@ end
 local function describe(ent)
   local model = GetEntityModel(ent); local c = GetEntityCoords(ent)
   local t = GetEntityType(ent); local kind = t == 1 and 'ped' or (t == 2 and 'vehicle' or 'object')
-  local name = Known[model] or (kind == 'vehicle' and GetDisplayNameFromVehicleModel(model)) or '?'
+  -- GetEntityArchetypeName reads the model name off the entity itself, so every prop in
+  -- a store resolves without a hand-maintained table. Known[] stays as the fallback.
+  local name = GetEntityArchetypeName(ent)
+  if not name or name == '' then name = Known[model] or (kind == 'vehicle' and GetDisplayNameFromVehicleModel(model)) or '?' end
   local shelf = false; pcall(function() shelf = WorldItemsCfg.Shelves[model] ~= nil end)
   local takeable = false; pcall(function() takeable = WorldItemsCfg.Takeables[model] ~= nil end)
   local loot = false; pcall(function() loot = LootCfg.Containers[model] ~= nil end)
