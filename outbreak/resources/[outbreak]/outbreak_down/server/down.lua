@@ -69,12 +69,46 @@ RegisterNetEvent('outbreak:server:stationTreat', function(target, stationId)
 end)
 
 -- Adrenaline: solo lifeline, only while incapacitated (registered here, not in items, because it needs the down statebag)
-QBCore.Functions.CreateUseableItem(DownCfg.Adrenaline.item, function(src)
+local function useAdrenaline(src)
   if Player(src).state.downState ~= 'incapacitated' then
     TriggerClientEvent('ox_lib:notify', src, { title = 'Not now. Save it for when you\'re going under.', type = 'inform' }) return end
+  if exports.ox_inventory:GetItemCount(src, DownCfg.Adrenaline.item) < 1 then
+    TriggerClientEvent('ox_lib:notify', src, { title = 'No adrenaline.', type = 'error' }) return end
   if exports.ox_inventory:RemoveItem(src, DownCfg.Adrenaline.item, 1) then
     TriggerClientEvent('outbreak:client:adrenaline', src)
     pcall(function() exports.outbreak_needs:consume(src, { fatigue = -DownCfg.Adrenaline.fatigueCost }) end)
+  end
+end
+QBCore.Functions.CreateUseableItem(DownCfg.Adrenaline.item, useAdrenaline)
+-- the downed wheel cannot open the inventory for you, so it asks the server directly
+RegisterNetEvent('outbreak:server:useAdrenaline', function() useAdrenaline(source) end)
+
+-- DISTRESS: radio if tuned (with location, garbled by range like any transmission), a scream if not.
+local lastDistress = {}
+RegisterNetEvent('outbreak:server:distress', function(street, state)
+  local src = source
+  if os.time() - (lastDistress[src] or 0) < 30 then return end
+  lastDistress[src] = os.time()
+  local p = QBCore.Functions.GetPlayer(src)
+  local name = p and p.PlayerData.charinfo and p.PlayerData.charinfo.firstname or GetPlayerName(src)
+  local pos = GetEntityCoords(GetPlayerPed(src))
+  street = type(street) == 'string' and street:sub(1, 40) or 'somewhere'
+  local ch = 0
+  pcall(function() ch = exports.outbreak_radio:channelOf(src) or 0 end)
+  if ch > 0 then
+    local text = ('MAYDAY. %s. %s near %s. Send someone.'):format(name, state and (state == 'critical' and 'Going under' or 'Down') or 'Pinned', street)
+    pcall(function() exports.outbreak_radio:transmit(ch, 'MAYDAY', text, nil, pos, 1500.0) end)  -- 1500 = the handheld range from the radio resource's config
+    local listeners = {}
+    pcall(function() listeners = exports.outbreak_radio:playersOnChannel(ch) or {} end)
+    for _, s in ipairs(listeners) do if s ~= src then TriggerClientEvent('outbreak:client:distressPing', s, name, pos, 'radio', state) end end
+    TriggerClientEvent('ox_lib:notify', src, { title = ('Mayday sent on channel %d.'):format(ch), type = 'success' })
+  else
+    local n = 0
+    for _, s in ipairs(GetPlayers()) do
+      s = tonumber(s)
+      if s ~= src and #(GetEntityCoords(GetPlayerPed(s)) - pos) <= 250.0 then TriggerClientEvent('outbreak:client:distressPing', s, name, pos, 'scream', state); n = n + 1 end
+    end
+    TriggerClientEvent('ox_lib:notify', src, { title = 'You scream for help.', description = n > 0 and ('%d survivor(s) close enough to hear.'):format(n) or 'Nobody close. The dead heard.', type = n > 0 and 'inform' or 'error' })
   end
 end)
 

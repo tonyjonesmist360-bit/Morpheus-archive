@@ -1,6 +1,6 @@
 # DIAGNOSTIC REPORT (static, pre-boot)
 
-Resources scanned: 34  ·  files: 155
+Resources scanned: 35  ·  files: 159
 
 
 ## ERROR (0)
@@ -9,15 +9,13 @@ Resources scanned: 34  ·  files: 155
 ## WARN (0)
 
 
-## INFO (8)
+## INFO (6)
 
 - **outbreak_debug** — handler 'onClientResourceStart' registered but never triggered (dead or external)
 - **outbreak_debug** — handler 'onResourceStart' registered but never triggered (dead or external)
-- **outbreak_director** — handler 'onResourceStop' registered but never triggered (dead or external)
 - **outbreak_faction** — data/jobs_snippet.lua is a paste-in fragment (not loaded, not syntax-checked as a file)
 - **outbreak_items** — data/ox_items_snippet.lua is a paste-in fragment (not loaded, not syntax-checked as a file)
-- **outbreak_radio** — handler 'pma-voice:radioActive' registered but never triggered (dead or external)
-- **outbreak_radio** — handler 'pma-voice:setTalkingOnRadio' registered but never triggered (dead or external)
+- **outbreak_status** — handler 'onResourceStop' registered but never triggered (dead or external)
 - **outbreak_weapons** — data/weapons_snippet.lua is a paste-in fragment (not loaded, not syntax-checked as a file)
 
 ## What this pass cannot see (runtime only)

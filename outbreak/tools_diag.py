@@ -57,7 +57,7 @@ for r,d in res.items():
         for kind,n in re.findall(r"(TriggerEvent|TriggerClientEvent|TriggerServerEvent)\(\s*'([^']+)'",c): trig[n].add((r,s,kind))
         for n in re.findall(r"\bevent\s*=\s*'([^']+)'",c): trig[n].add((r,s,'TriggerEvent'))
         for n in re.findall(r"(?:RegisterNetEvent|AddEventHandler)\(\s*'([^']+)'\s*\.\.",c): reg[n+'*'].add((r,s))
-EXT_EVENTS={'QBCore:Server:PlayerLoaded','QBCore:Client:OnPlayerLoaded','QBCore:Client:OnJobUpdate','playerDropped','gameEventTriggered','ox_lib:notify','mm_radio:client:use'}
+EXT_EVENTS={'QBCore:Server:PlayerLoaded','QBCore:Client:OnPlayerLoaded','QBCore:Client:OnJobUpdate','playerDropped','gameEventTriggered','ox_lib:notify','mm_radio:client:use','chat:addMessage','chat:addSuggestion','chat:addTemplate','pma-voice:setTalkingOnRadio','pma-voice:radioActive'}
 for n,ts in trig.items():
     if n in EXT_EVENTS or n.startswith('outbreak:event:'): continue
     for (r,s,kind) in ts:

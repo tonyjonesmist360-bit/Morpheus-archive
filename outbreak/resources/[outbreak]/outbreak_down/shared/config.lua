@@ -7,7 +7,7 @@ DownCfg = {
   },
   -- INCAPACITATED: bullets, explosions, falls, vehicle impacts, critical infection.
   Incapacitated = {
-    bleedOutSeconds = 600,   -- 10 min to bleed out
+    bleedOutSeconds = 300,   -- 5 min to bleed out (was 10; 2026-09-14 build sheet)
     stabilizeItem = 'bandage',
     selfStabilize = true,        -- solo-play lifeline
     selfStabilizeItem = 'splint',-- costs more when doing it yourself

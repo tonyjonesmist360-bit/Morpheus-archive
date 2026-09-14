@@ -113,8 +113,34 @@ local function build()
   return items
 end
 
+-- DOWNED WHEEL: the few things a body on the floor can still do.
+local function buildDowned(st)
+  local items = {}
+  if st == 'incapacitated' then
+    items[#items + 1] = { label = has('splint') and 'Splint yourself' or 'Splint yourself (no splint)', icon = 'crutch', onSelect = function()
+      if not has('splint') then lib.notify({ title = 'You need a splint.', type = 'error' }) return end
+      TriggerServerEvent('outbreak:server:trySelfStabilize') end }
+    items[#items + 1] = { label = has('adrenaline_shot') and 'Adrenaline' or 'Adrenaline (none)', icon = 'syringe', onSelect = function()
+      if not has('adrenaline_shot') then lib.notify({ title = 'No adrenaline shot.', type = 'error' }) return end
+      TriggerServerEvent('outbreak:server:useAdrenaline') end }
+  end
+  items[#items + 1] = { label = 'Distress call', icon = 'tower-broadcast', onSelect = function() ExecuteCommand('ob_distress') end }
+  items[#items + 1] = { label = 'Radio', icon = 'walkie-talkie', onSelect = function() TriggerEvent('outbreak:client:openRadio') end }
+  items[#items + 1] = { label = 'Vitals', icon = 'heart', onSelect = function()
+    local n = exports.outbreak_needs:getNeeds() or {}
+    lib.notify({ title = ('%s'):format(st:upper()), description = ('Food %d  Water %d  Rest %d. %s'):format(n.hunger or 0, n.thirst or 0, n.fatigue or 0, n.infected and 'INFECTED.' or ''), type = 'inform', duration = 6000 }) end }
+  items[#items + 1] = { label = 'OOC', icon = 'comment-dots', onSelect = function() lib.notify({ title = 'Press T, then /ooc your message', type = 'inform' }) end }
+  if LocalPlayer.state.isDM then items[#items + 1] = { label = 'DIRECTOR', icon = 'clapperboard', onSelect = function() ExecuteCommand('dm') end } end
+  return items
+end
+
 RegisterCommand('ob_wheel', function()
-  if LocalPlayer.state.downState then return end
+  local st = LocalPlayer.state.downState
+  if st then
+    lib.registerRadial({ id = 'ob_wheel_down', items = buildDowned(st) })
+    lib.showRadial('ob_wheel_down')
+    return
+  end
   lib.registerRadial({ id = 'ob_wheel', items = build() })
   lib.showRadial('ob_wheel')
 end, false)

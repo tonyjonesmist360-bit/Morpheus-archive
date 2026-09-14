@@ -51,3 +51,4 @@
 ['hot_stew']         = { label = 'Hot Stew',           weight = 450,  description = 'Beans, water, heat. The first warm thing in a week. Eat it while it is.' },
 ['cooked_meat']      = { label = 'Cooked Meat',        weight = 300,  description = 'Whatever it was, it is safe now. Mostly.' },
 ['hot_noodles']      = { label = 'Hot Noodles',        weight = 200,  description = 'Boiled properly this time.' },
+['mumble_pill']      = { label = 'Voice Reset',        weight = 0,    description = 'Nobody can hear you? Swallow this. Reconnects your voice without leaving the server.' },

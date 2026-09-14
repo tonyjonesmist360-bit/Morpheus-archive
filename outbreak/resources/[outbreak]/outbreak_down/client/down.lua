@@ -38,7 +38,6 @@ RegisterNetEvent('outbreak:client:enterCritical', function()
   setState('critical', DownCfg.Critical.minutes * 60)
   RequestAnimDict('missfinale_c1@'); while not HasAnimDictLoaded('missfinale_c1@') do Wait(10) end
   TaskPlayAnim(ped, 'missfinale_c1@', 'lying_dead_player0', 8.0, -8.0, -1, 1, 0, false, false, false)
-  SetPlayerControl(PlayerId(), false, 256)
   lib.notify({ title = 'You slip under.', description = 'Someone has to get your body to a medic. You have about half an hour.', type = 'error', duration = 12000 })
 end)
 
@@ -61,7 +60,9 @@ local function goDown(kind)
     while not HasAnimDictLoaded('missfinale_c1@') do Wait(10) end
     TaskPlayAnim(ped, 'missfinale_c1@', 'lying_dead_player0', 8.0, -8.0, -1, 1, 0, false, false, false)
   end
-  SetPlayerControl(PlayerId(), false, 256)
+  -- NOTE: no SetPlayerControl(false) here any more. It switched off EVERY input, which is why
+  -- chat (T), the wheel (G), F10 and even the self-splint E never registered while down. The
+  -- per-frame thread below disables only what a downed body cannot do.
 end
 
 -- Death interception: never actually die; route into a down state
@@ -101,16 +102,54 @@ CreateThread(function()
   end
 end)
 
--- Self-stabilize (solo lifeline) — hold interaction while incapacitated
+-- DOWNED CONTROLS. While down: body inputs off, everything social on. Chat, the wheel, F10,
+-- radio, OOC, inventory keys all stay live. Movement, combat, vehicles and the weapon wheel do not.
+local BODY_CONTROLS = { 21, 22, 23, 24, 25, 30, 31, 32, 33, 34, 35, 36, 37, 44, 47, 58, 75, 140, 141, 142, 143, 257, 263, 264, 266, 267, 268, 269, 270, 271, 272, 273 }
+local promptShown = nil
+local function prompt(text)
+  if promptShown == text then return end
+  promptShown = text
+  if text then lib.showTextUI(text, { position = 'bottom-center' }) else lib.hideTextUI() end
+end
 CreateThread(function()
   while true do
-    Wait(0)
-    if downState == 'incapacitated' and DownCfg.Incapacitated.selfStabilize then
-      if IsControlJustPressed(0, 38) then -- E
-        TriggerServerEvent('outbreak:server:trySelfStabilize')
+    if downState then
+      Wait(0)
+      for _, c in ipairs(BODY_CONTROLS) do DisableControlAction(0, c, true) end
+      if downState == 'incapacitated' and DownCfg.Incapacitated.selfStabilize then
+        prompt('[E] splint yourself   [G] options   [T] chat   [F6] distress')
+        if IsControlJustPressed(0, 38) or IsDisabledControlJustPressed(0, 38) then -- E
+          TriggerServerEvent('outbreak:server:trySelfStabilize')
+        end
+      else
+        prompt('[G] options   [T] chat   [F6] distress')
       end
-    elseif downState then Wait(500) else Wait(1000) end
+    else
+      if promptShown then prompt(nil) end
+      Wait(500)
+    end
   end
+end)
+
+-- DISTRESS. Works from any state, down or not. Radio if you are tuned in; a scream if not.
+local lastDistress = 0
+RegisterCommand('ob_distress', function()
+  if GetGameTimer() - lastDistress < 30000 then lib.notify({ title = 'You already called. Give it a minute.', type = 'inform' }) return end
+  lastDistress = GetGameTimer()
+  local pos = GetEntityCoords(PlayerPedId())
+  local street = GetStreetNameFromHashKey(GetStreetNameAtCoord(pos.x, pos.y, pos.z))
+  TriggerEvent('outbreak:noise:spike', 60)
+  TriggerServerEvent('outbreak:server:distress', street, downState)
+end, false)
+local distressBlips = {}
+RegisterNetEvent('outbreak:client:distressPing', function(name, pos, how, state)
+  local b = AddBlipForCoord(pos.x, pos.y, pos.z)
+  SetBlipSprite(b, 1); SetBlipColour(b, 1); SetBlipScale(b, 0.9); SetBlipFlashes(b, true)
+  BeginTextCommandSetBlipName('STRING'); AddTextComponentString(('DISTRESS: %s'):format(name)); EndTextCommandSetBlipName(b)
+  distressBlips[#distressBlips + 1] = b
+  SetTimeout(5 * 60000, function() if DoesBlipExist(b) then RemoveBlip(b) end end)
+  lib.notify({ title = how == 'radio' and ('MAYDAY — %s'):format(name) or ('A scream. %s.'):format(name),
+    description = (state and (state .. ', ') or '') .. 'marked on your map for five minutes.', type = 'error', duration = 12000, position = 'top' })
 end)
 
 RegisterNetEvent('outbreak:client:adrenaline', function()

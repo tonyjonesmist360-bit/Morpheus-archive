@@ -46,6 +46,20 @@ RegisterNetEvent('outbreak:server:radioHeartbeat', function(on)
   end
 end)
 
+-- VOICE RESET. The "nobody can hear me" fix without a reconnect. The item is consumable; the
+-- admin command is not. Both end in the same client-side reinit (client/voice.lua).
+QBCore.Functions.CreateUseableItem('mumble_pill', function(src)
+  if exports.ox_inventory:RemoveItem(src, 'mumble_pill', 1) then TriggerClientEvent('outbreak:client:voiceReset', src) end
+end)
+RegisterCommand('voicereset', function(src, args)
+  if src ~= 0 and not IsPlayerAceAllowed(src, 'outbreak.admin') then return end
+  local t = tonumber(args[1]) or src
+  if t == 0 then print('voicereset: give a player id from the console') return end
+  TriggerClientEvent('outbreak:client:voiceReset', t)
+  if src ~= 0 and t ~= src then TriggerClientEvent('ox_lib:notify', src, { title = ('Voice reset sent to %s.'):format(GetPlayerName(t) or t), type = 'inform' }) end
+  print(('^3[OB-ADMIN]^7 %s voice-reset %s'):format(src == 0 and 'console' or GetPlayerName(src), t))
+end, true)
+
 QBCore.Functions.CreateUseableItem(RadioCfg.Base.item, function(src)
   local pos = GetEntityCoords(GetPlayerPed(src))
   local ok, near, houseId = pcall(function() return exports.outbreak_housing:isNearClaimedHouse(pos, 15.0) end)

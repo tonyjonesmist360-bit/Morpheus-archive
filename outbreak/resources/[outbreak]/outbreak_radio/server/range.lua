@@ -44,6 +44,8 @@ RegisterNetEvent('outbreak:radio:channel', function(ch)
   channels[src] = ch
 end)
 AddEventHandler('playerDropped', function() channels[source] = nil end)
+exports('channelOf', function(src) return channels[src] or 0 end)
+exports('playersOnChannel', function(ch) local out = {}; for s, c in pairs(channels) do if c == ch then out[#out + 1] = s end end return out end)
 
 local function rangeOf(src)
   local r = RadioCfg.Handheld.range
