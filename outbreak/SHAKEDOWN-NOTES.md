@@ -397,24 +397,53 @@ from-scratch doc, not a record of this install.
 
 **Status.** Fix ready in pack, not yet deployed. Redeploy pending.
 
-## 2026-09-14 — cfg comment tokenisation (cosmetic)
+## 2026-09-14 — cfg comment tokenisation: SEMICOLONS
 
 **Symptom.** `No such command ace.` / `No such command prerequisite.` / `No such command apply.`
 during boot, in the middle of the outbreak ensure block.
 
-**Root cause.** Words out of `server.cfg.additions` comments reaching the command parser.
-I could not pin the exact tokenisation rule from here — the live cfg is a different (older)
-revision than the pack's, so the three reported words do not all map onto lines in the current
-file. Candidates are the inline trailing `#` comments, the non-ASCII box-drawing and em-dash
-characters, and the parentheses. **Unverified which.**
+**Root cause — confirmed.** The 07-update-cfg.ps1 preview printed the live block, which the pack
+no longer matched. The offending line:
 
-**Patch.** Removed all three candidate classes rather than bisecting a file I cannot read:
-`server.cfg.additions` rewritten with whole-line ASCII comments only and no parentheses.
-Command lines are byte-identical and in the same order; 23 active `ensure` lines before and
-after. All three analyzers clean.
+```
+ensure outbreak_dm              # director menu (007_dm.sql); ace outbreak.dm
+```
 
-**Status.** Harmless either way — no resource failed to load because of these. If the lines
-survive the redeploy, the cause is elsewhere and worth one more look.
+FiveM splits cfg lines on `;` **before** stripping `#` comments. So that line is two commands:
+`ensure outbreak_dm # director menu (007_dm.sql)` and `ace outbreak.dm`. The second is the
+error. `prerequisite` and `apply` came from semicolons inside the old VEHICLES comment block
+the same way. Not the brackets, not the em dashes, not the inline `#` — the semicolons.
+
+An earlier pass had "removed semicolons from comments" in the pack, but the live cfg was still
+the pre-fix revision, which is why the pack file did not contain the words the log reported.
+
+**Patch.** The v0.15.0 `server.cfg.additions` has no semicolons anywhere. It also has whole-line
+ASCII comments only — over-broad for this cause, but it costs nothing and closes the door on
+the other candidates. Deployed via 07-update-cfg.ps1 on 2026-09-13 19:05. Boot clean.
+
+**Rule for the file, permanent:** no `;` in server.cfg comments, ever. It is the one character
+the parser reads through a `#`.
+
+**Also corrected.** I had said `apply` was printed where `ensure outbreak_vehicles` should be
+and something was eating the ensure. Wrong: the live cfg never had that ensure line at all
+(confirmed by its absence from the preview's lost-lines list). Nothing was eaten; vehicles
+was simply never enabled live until this deploy.
+
+## 2026-09-14 — 07-update-cfg.ps1 first run: blank-line binding bug
+
+**Symptom.** `Write-TextNoBom : Cannot bind argument to parameter 'Lines' because it is an
+empty string.` at the write step. server.cfg untouched (failure was at parameter binding,
+before the body ran); backup already taken.
+
+**Root cause.** `[Parameter(Mandatory=$true)][string[]]$Lines` validates every element as
+non-empty. `[AllowEmptyCollection()]` permits an empty array, not an empty element. Any real
+server.cfg has blank lines, so the head of the file could never be written back.
+`Add-TextNoBom` had the same defect and is called with `@('')` by 05-append-cfg.ps1.
+
+**Patch.** Dropped Mandatory, added AllowEmptyString + AllowNull with `@()` default, null-guard
+in both bodies. Patched live via a one-line ReadAllText/Replace, and in the repo.
+
+**Status.** Fixed. Second run wrote cleanly; boot 19:05 shows 23 resources.
 
 ## 2026-09-14 — ops/backup.bat was silently backing up no resources
 
