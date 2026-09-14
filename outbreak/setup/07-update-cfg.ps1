@@ -1,0 +1,121 @@
+<#  07-update-cfg.ps1
+    Replace the OUTBREAK PACK block at the end of the live server.cfg with the
+    current server.cfg.additions.
+
+    05-append-cfg.ps1 only APPENDS, and it no-ops when the marker is already
+    present. That is right for a first install and wrong for every upgrade: a
+    server.cfg carrying a v0.13 block keeps it forever, so new ensure lines
+    (outbreak_status, outbreak_vehicles) never reach the live tree.
+
+    This script previews by default and writes only with -Apply. It backs up
+    server.cfg first, and it refuses to run if it finds command lines in the old
+    block that are not in the new additions - that would mean someone hand-edited
+    the live cfg and the edit is about to be discarded. Override with -Force once
+    you have read the list.
+#>
+param([string]$Base, [switch]$Apply, [switch]$Force)
+
+. "$PSScriptRoot\_common.ps1"
+$pack = Get-PackRoot
+$baseResolved = Resolve-Base -Base $Base
+$cfg = Join-Path $baseResolved 'server.cfg'
+$add = Join-Path $pack 'server.cfg.additions'
+
+Write-Host "OUTBREAK - update the start-order block in server.cfg" -ForegroundColor White
+if (-not $Apply) { Warn "PREVIEW - nothing will be changed. Re-run with -Apply to write." }
+
+if (-not (Test-FileExists $cfg)) { throw "server.cfg not found at $cfg" }
+if (-not (Test-FileExists $add)) { throw "server.cfg.additions not found at $add" }
+
+$lines    = @(Get-Content -LiteralPath $cfg)
+$addLines = @(Get-Content -LiteralPath $add)
+
+Step "Locate the existing block"
+$start = -1
+for ($i = 0; $i -lt $lines.Count; $i++) {
+    if ($lines[$i] -match 'OUTBREAK PACK') { $start = $i; break }
+}
+if ($start -lt 0) {
+    Warn "no OUTBREAK PACK marker found - this cfg has never had the block"
+    Note "use 05-append-cfg.ps1 for a first install, not this script"
+    return
+}
+Ok "block starts at line $($start + 1); $($lines.Count - $start) lines from there to end of file"
+
+# A command line is anything that is not blank and not a comment.
+function Get-CommandLines($arr) {
+    return @($arr | Where-Object { $_ -notmatch '^\s*$' -and $_ -notmatch '^\s*#' })
+}
+$oldBlock = @($lines[$start..($lines.Count - 1)])
+$oldCmds  = Get-CommandLines $oldBlock
+$newCmds  = Get-CommandLines $addLines
+
+Step "What changes"
+$normalise = { param($s) ($s -replace '\s+', ' ').Trim() }
+$newSet = @{}
+foreach ($c in $newCmds) { $newSet[(& $normalise $c)] = $true }
+$oldSet = @{}
+foreach ($c in $oldCmds) { $oldSet[(& $normalise $c)] = $true }
+
+$lost   = @($oldCmds | Where-Object { -not $newSet[(& $normalise $_)] })
+$gained = @($newCmds | Where-Object { -not $oldSet[(& $normalise $_)] })
+
+if ($gained.Count -eq 0) { Note "no new command lines" }
+else {
+    Ok "$($gained.Count) command line(s) will be ADDED:"
+    foreach ($g in $gained) { Write-Host "        + $g" -ForegroundColor Green }
+}
+
+if ($lost.Count -eq 0) { Ok "no command lines will be lost" }
+else {
+    Bad "$($lost.Count) command line(s) in the live cfg are NOT in the new additions:"
+    foreach ($l in $lost) { Write-Host "        - $l" -ForegroundColor Red }
+    Warn "if any of those are yours, copy them into server.cfg.additions in the pack first"
+    if (-not $Force) {
+        Write-Host ""
+        Bad "refusing to write. Re-run with -Apply -Force once you have read that list."
+        return
+    }
+    Warn "-Force given - discarding them anyway"
+}
+
+Step "Write"
+if (-not $Apply) {
+    Note "would replace lines $($start + 1)..$($lines.Count) with $($addLines.Count) lines from server.cfg.additions"
+    Note "re-run with -Apply to do it"
+    return
+}
+
+$backup = Backup-File -Path $cfg
+Ok "backed up to $backup"
+
+$keep = @()
+if ($start -gt 0) { $keep = @($lines[0..($start - 1)]) }
+# drop trailing blank lines from the kept head so we do not stack empties on each run
+while ($keep.Count -gt 0 -and $keep[$keep.Count - 1] -match '^\s*$') {
+    $keep = @($keep[0..($keep.Count - 2)])
+}
+
+Write-TextNoBom -Path $cfg -Lines $keep
+Add-TextNoBom  -Path $cfg -Lines @('')
+Add-TextNoBom  -Path $cfg -Lines $addLines
+Ok "server.cfg updated"
+
+Step "Verify"
+$after = @(Get-Content -LiteralPath $cfg)
+$qbx = -1; $ob = -1
+for ($i = 0; $i -lt $after.Count; $i++) {
+    if ($qbx -lt 0 -and $after[$i] -match '^\s*ensure\s+\[qbx\]')      { $qbx = $i }
+    if ($ob  -lt 0 -and $after[$i] -match '^\s*ensure\s+outbreak_core') { $ob  = $i }
+}
+if ($qbx -ge 0 -and $ob -ge 0 -and $qbx -lt $ob) { Ok "ensure [qbx] (line $($qbx+1)) still comes before outbreak_core (line $($ob+1))" }
+elseif ($ob -lt 0) { Bad "outbreak_core is no longer ensured - restore $backup" }
+else { Bad "ORDER WRONG - restore $backup" }
+
+$ensures = @($after | Where-Object { $_ -match '^\s*ensure\s+outbreak_' })
+Ok "$($ensures.Count) outbreak_ ensure lines active"
+$markerCount = @($after | Where-Object { $_ -match 'OUTBREAK PACK' }).Count
+if ($markerCount -ne 1) { Bad "expected 1 OUTBREAK PACK marker, found $markerCount" } else { Ok "single block, no duplication" }
+
+Write-Host ""
+Write-Host "Done. Next: restart the server in txAdmin." -ForegroundColor White

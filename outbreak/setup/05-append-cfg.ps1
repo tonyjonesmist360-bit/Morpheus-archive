@@ -19,7 +19,10 @@ if (-not (Test-FileExists $add)) { throw "server.cfg.additions not found at $add
 Step "Current state"
 $current = Get-Content -LiteralPath $cfg -Raw
 if ($current -match 'OUTBREAK PACK') {
-    Ok "additions already present - nothing to do"
+    Ok "additions already present - nothing appended"
+    Warn "this script only APPENDS. If the pack has been upgraded since that block"
+    Warn "was written, its new ensure lines are NOT live. Run 07-update-cfg.ps1 to"
+    Warn "replace the block, or diff it by hand."
 } else {
     $addLines = @(Get-Content -LiteralPath $add)
     Note "appending $($addLines.Count) lines"
