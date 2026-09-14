@@ -17,6 +17,17 @@ DMCfg = {
   },
   Peds = { survivor = { 'a_m_y_hipster_01', 'a_f_y_tourist_01', 'a_m_m_farmer_01' }, raider = { 'g_m_y_lost_01', 'g_m_y_lost_02', 'g_m_y_salvagoon_01' }, military = { 's_m_y_marine_01', 's_m_y_marine_03' } },
   Vehicles = { 'rebel', 'bodhi2', 'barracks', 'crusader', 'ambulance', 'towtruck', 'pbus', 'dloader', 'sanchez', 'dinghy' },
+  -- Saved teleport locations for the admin menu. Add your own with /coords (copies a vec4 to the clipboard).
+  Locations = {
+    { label = 'Sandy Shores motel (spawn)', pos = vec4(1961.24, 3742.4, 32.34, 300.0) },
+    { label = 'Sandy Medical',              pos = vec4(1839.6, 3672.93, 34.28, 210.0) },
+    { label = 'Sandy bungalow (safehouse)', pos = vec4(1893.45, 3768.72, 32.94, 0.0) },
+    { label = 'Grove St house',             pos = vec4(-14.28, -1441.44, 31.10, 0.0) },
+    { label = 'Pillbox triage',             pos = vec4(298.83, -584.77, 43.26, 70.0) },
+    { label = 'Paleto clinic',              pos = vec4(-247.76, 6331.23, 32.43, 305.0) },
+    { label = 'Zancudo gate',               pos = vec4(-1611.11, 2806.94, 17.05, 0.0) },
+    { label = 'LSIA overpass (spawn)',      pos = vec4(-1037.6, -2737.5, 20.17, 240.0) },
+  },
   Weathers = { 'CLEAR', 'CLOUDS', 'OVERCAST', 'FOGGY', 'RAIN', 'THUNDER', 'CLEARING' },
   -- SCENE PRESETS: author these. Each step is a DM action run in order at (or relative to) the DM's position.
   -- actions: horde{size}, peds{kind,count,hostile,weapon}, vehicle{model,managed}, props{...}, cache{items}, radio{ch,title,text,range}, weather, time, item{name,count}, note{text}, wait{seconds}

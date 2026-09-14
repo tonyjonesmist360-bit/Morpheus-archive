@@ -56,7 +56,42 @@ local function menu()
     { title = ghost and 'Ghost mode: ON (click to leave)' or 'Ghost mode (invisible, invulnerable)', onSelect = function() ghost = not ghost; act('ghost', { on = ghost }) end },
   } })
 
+  -- ── ADMIN ──
+  local god = LocalPlayer.state.obGod == true
+  local locs = {}
+  for _, l in ipairs(DMCfg.Locations or {}) do locs[#locs + 1] = { title = l.label, onSelect = function() act('tp', { pos = vector3(l.pos.x, l.pos.y, l.pos.z) }) end } end
+  lib.registerContext({ id = 'dm_locs', title = 'Saved locations', menu = 'dm_admin', options = locs })
+  lib.registerContext({ id = 'dm_zombies', title = 'Zombie controls', menu = 'dm_admin', options = {
+    { title = 'Spawn one at cursor', onSelect = function() act('zcursor', { count = 1 }) end },
+    { title = 'Spawn a horde at cursor (12)', onSelect = function() act('zcursor', { count = 12 }) end },
+    { title = 'Clear area (60 m)', onSelect = function() act('zclear', { radius = 60.0 }) end },
+    { title = 'Clear area (200 m)', onSelect = function() act('zclear', { radius = 200.0 }) end },
+    { title = 'Freeze / release zombie AI', description = 'the ones loaded around you', onSelect = function() act('zfreeze', {}) end },
+  } })
+  lib.registerContext({ id = 'dm_vehkit', title = 'Vehicle kit', menu = 'dm_admin', description = 'Acts on the vehicle you sit in, or aim at', options = {
+    { title = 'Spawn', onSelect = function() local o = {}; for _, m in ipairs(DMCfg.Vehicles) do o[#o + 1] = { value = m, label = m } end; local i = lib.inputDialog('Vehicle', { { type = 'select', label = 'Model', options = o, required = true } }); if i then act('vehicle', { model = i[1], offset = { 3, 3 } }) end end },
+    { title = 'Repair', onSelect = function() act('vehkit', { op = 'repair' }) end },
+    { title = 'Refuel', onSelect = function() act('vehkit', { op = 'refuel' }) end },
+    { title = 'Delete', onSelect = function() act('vehkit', { op = 'delete' }) end },
+  } })
+  lib.registerContext({ id = 'dm_admin', title = 'Admin', menu = 'dm_main', options = {
+    { title = 'Player panel', icon = 'users', description = 'health, needs, location; heal / feed / revive / freeze / tp / spectate', onSelect = function() TriggerEvent('outbreak:dm:openPanel') end },
+    { title = 'Noclip / flight', icon = 'plane', description = '/noclip - WASD, Space, Ctrl, Shift', onSelect = function() ExecuteCommand('noclip') end },
+    { title = god and 'God mode: ON (click to leave)' or 'God mode (visible, unkillable)', icon = 'shield', onSelect = function() act('god', { on = not god }) end },
+    { title = ghost and 'Ghost mode: ON (click to leave)' or 'Ghost mode (invisible to all, ignored by NPCs and the dead)', icon = 'ghost', onSelect = function() ghost = not ghost; act('ghost', { on = ghost }) end },
+    { title = 'Teleport to waypoint', icon = 'location-dot', onSelect = function() act('tpwaypoint', {}) end },
+    { title = 'Saved locations', icon = 'map', menu = 'dm_locs' },
+    { title = 'Copy my coordinates', icon = 'clipboard', description = '/coords', onSelect = function() ExecuteCommand('coords') end },
+    { title = 'Entity gun', icon = 'crosshairs', description = '/entitygun - aim and click to delete objects, vehicles, peds', onSelect = function() ExecuteCommand('entitygun') end },
+    { title = 'Zombie controls', icon = 'skull', menu = 'dm_zombies' },
+    { title = 'Vehicle kit', icon = 'car', menu = 'dm_vehkit' },
+    { title = 'Give item (search)', icon = 'gift', onSelect = function() players(function(p) act('givesearch', { target = p.id }) end) end },
+    { title = 'Announce', icon = 'bullhorn', onSelect = function() local i = lib.inputDialog('Announce', { { type = 'textarea', label = 'Message', required = true } }); if i then act('announce', { text = i[1] }) end end },
+    { title = 'Voice reset a player', icon = 'microphone', onSelect = function() players(function(p) act('voicereset', { target = p.id }) end) end },
+  } })
+
   lib.registerContext({ id = 'dm_main', title = 'DIRECTOR', options = {
+    { title = 'Admin', icon = 'user-shield', description = 'Players, noclip, god, ghost, teleport, entity gun, zombies, vehicles', menu = 'dm_admin' },
     { title = 'Scenes', icon = 'clapperboard', description = 'Authored presets at your position', menu = 'dm_scenes' },
     { title = 'Spawn', icon = 'skull', menu = 'dm_spawn' },
     { title = 'Story', icon = 'book', description = 'Radio, notes, intel, opportunities, camps, rep', menu = 'dm_story' },
@@ -64,6 +99,37 @@ local function menu()
   } })
   lib.showContext('dm_main')
 end
+
+-- PLAYER PANEL: one row per player, one submenu per player
+AddEventHandler('outbreak:dm:openPanel', function()
+  local list = lib.callback.await('outbreak:dm:panel', false) or {}
+  local rows = {}
+  for _, p in ipairs(list) do
+    local tags = {}
+    if p.down then tags[#tags + 1] = p.down:upper() end
+    if p.infected then tags[#tags + 1] = 'INFECTED' end
+    if p.ghost then tags[#tags + 1] = 'ghost' end
+    if p.god then tags[#tags + 1] = 'god' end
+    local id = 'dm_p_' .. p.id
+    lib.registerContext({ id = id, title = ('%s — %s'):format(p.name, p.char), menu = 'dm_panel', options = {
+      { title = ('HP %d · Food %s · H2O %s · Rest %s'):format(p.health, tostring(p.hunger or '-'), tostring(p.thirst or '-'), tostring(p.fatigue or '-')), description = ('%.0f, %.0f, %.0f · radio ch %d · id %d'):format(p.pos.x, p.pos.y, p.pos.z, p.ch or 0, p.id), readOnly = true },
+      { title = 'Heal (full reset: health, wounds, infection, needs)', icon = 'heart-pulse', onSelect = function() act('heal', { target = p.id }) end },
+      { title = 'Feed (needs to 100)', icon = 'utensils', onSelect = function() act('feed', { target = p.id }) end },
+      { title = 'Revive (out of any downed state)', icon = 'hand-holding-medical', onSelect = function() act('revive', { target = p.id }) end },
+      { title = 'Freeze', icon = 'snowflake', onSelect = function() act('freeze', { target = p.id, on = true }) end },
+      { title = 'Unfreeze', icon = 'sun', onSelect = function() act('freeze', { target = p.id, on = false }) end },
+      { title = 'Teleport to them', icon = 'person-walking-arrow-right', onSelect = function() act('tp', { target = p.id }) end },
+      { title = 'Bring them to me', icon = 'person-arrow-down-to-line', onSelect = function() act('bring', { target = p.id }) end },
+      { title = 'Spectate', icon = 'eye', description = 'teleport near them first if they are far', onSelect = function() act('spectate', { target = p.id }) end },
+      { title = 'Give item (search)', icon = 'gift', onSelect = function() act('givesearch', { target = p.id }) end },
+      { title = 'Voice reset', icon = 'microphone', onSelect = function() act('voicereset', { target = p.id }) end },
+    } })
+    rows[#rows + 1] = { title = ('%s — %s'):format(p.name, p.char), description = ('HP %d · %s%s'):format(p.health, #tags > 0 and table.concat(tags, ' · ') or 'ok', ''), menu = id }
+  end
+  if #rows == 0 then rows[1] = { title = 'Nobody online.' } end
+  lib.registerContext({ id = 'dm_panel', title = ('Players (%d)'):format(#list), menu = 'dm_main', options = rows })
+  lib.showContext('dm_panel')
+end)
 RegisterCommand('dm', menu, false)
 
 -- client-side executors (spawns happen on the director's client so they're near them; server logged the request)

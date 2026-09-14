@@ -55,6 +55,50 @@ Actions.ghost = function(src, a)
   TriggerClientEvent('outbreak:dm:ghost', src, on)
 end
 Actions.wait = function(src, a) Wait((a.seconds or 10) * 1000) end
+-- ── admin console (2026-09-14) ──
+Actions.god = function(src, a) local on = a.on and true or false; Player(src).state:set('obGod', on, true); TriggerClientEvent('outbreak:dm:god', src, on) end
+Actions.spectate = function(src, a) TriggerClientEvent('outbreak:dm:spectate', src, a.target) end
+Actions.heal = function(src, a) local t = a.target or src; pcall(function() exports.outbreak_needs:reset(t) end); TriggerClientEvent('outbreak:dm:heal', t) end
+Actions.feed = function(src, a) local t = a.target or src; pcall(function() exports.outbreak_needs:consume(t, { hunger = 100, thirst = 100, fatigue = 100 }) end); notify(t, 'An admin fed you.', 'success') end
+Actions.freeze = function(src, a) if a.target then TriggerClientEvent('outbreak:dm:freeze', a.target, a.on and true or false) end end
+Actions.entitydel = function(src, a)
+  local e = a.netId and NetworkGetEntityFromNetworkId(a.netId)
+  if e and e ~= 0 and DoesEntityExist(e) then DeleteEntity(e) end
+end
+Actions.vehfuel = function(src, a)
+  pcall(function() local v, plate = exports.outbreak_vehicles:byNet(a.netId); if v then exports.outbreak_vehicles:set(plate or v.plate, { fuel = 100 }, 'dm') end end)
+end
+Actions.zcursor = function(src, a) TriggerClientEvent('outbreak:dm:zombieAtCursor', src, a.count or 1, a.variant) end
+Actions.zclear = function(src, a) TriggerClientEvent('outbreak:dm:zombieClear', src, a.radius or 60.0) end
+Actions.zfreeze = function(src, a) TriggerClientEvent('outbreak:dm:zombieFreeze', src) end
+Actions.tpwaypoint = function(src, a) TriggerClientEvent('outbreak:dm:tpWaypoint', src) end
+Actions.vehkit = function(src, a) TriggerClientEvent('outbreak:dm:vehicle', src, a.op) end
+Actions.givesearch = function(src, a) TriggerClientEvent('outbreak:dm:giveSearch', src, a.target or src) end
+Actions.announce = function(src, a) if a.text and a.text ~= '' then ExecuteCommand(('announce %s'):format(tostring(a.text):gsub('[\r\n]', ' '))) end end
+Actions.voicereset = function(src, a) TriggerClientEvent('outbreak:client:voiceReset', a.target or src) end
+
+-- player panel: everything an admin needs to see per player, in one row
+lib.callback.register('outbreak:dm:panel', function(src)
+  if not dm(src) then return {} end
+  local out = {}
+  for _, s in ipairs(GetPlayers()) do
+    s = tonumber(s)
+    local p = QBCore.Functions.GetPlayer(s)
+    local ped = GetPlayerPed(s)
+    local n = nil; pcall(function() n = exports.outbreak_needs:getNeeds(s) end)
+    local pos = ped ~= 0 and GetEntityCoords(ped) or vector3(0, 0, 0)
+    out[#out + 1] = {
+      id = s, name = GetPlayerName(s), char = p and (p.PlayerData.charinfo.firstname .. ' ' .. p.PlayerData.charinfo.lastname) or '?',
+      health = ped ~= 0 and math.max(0, GetEntityHealth(ped) - 100) or 0,
+      hunger = n and math.floor(n.hunger or 0) or nil, thirst = n and math.floor(n.thirst or 0) or nil, fatigue = n and math.floor(n.fatigue or 0) or nil,
+      infected = n and n.infected or false, down = Player(s).state.downState, ghost = Player(s).state.obGhost == true, god = Player(s).state.obGod == true,
+      pos = pos, ch = 0,
+    }
+    pcall(function() out[#out].ch = exports.outbreak_radio:channelOf(s) or 0 end)
+  end
+  table.sort(out, function(a, b) return a.id < b.id end)
+  return out
+end)
 
 RegisterNetEvent('outbreak:dm:do', function(action, a)
   local src = source
