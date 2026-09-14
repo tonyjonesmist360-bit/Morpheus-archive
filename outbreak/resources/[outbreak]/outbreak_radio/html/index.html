@@ -1,0 +1,104 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Outbreak — Radio</title>
+<style>
+  /* The handheld's own screen. Field-gear palette (UI-SYSTEM.md); the LCD is the one thing
+     allowed a glow, because it is a screen. Never bold outside the digits. */
+  :root{ --bone:#d8d2c0; --olive:#3c4230; --rust:#b4552d; --smoke:rgba(24,26,19,.85);
+         --line:rgba(216,210,192,.22); --dim:rgba(216,210,192,.55); --lcd:#9fb56b; --lcdbg:#1c2416; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font:12px/1.4 'Trebuchet MS','Segoe UI',sans-serif;color:var(--bone);background:transparent;overflow:hidden}
+  #radio{position:fixed;right:22px;bottom:110px;width:232px;display:none;
+         background:var(--smoke);border:1px solid var(--line);padding:10px 12px 9px;
+         box-shadow:0 10px 40px rgba(0,0,0,.6);animation:in .12s ease-out}
+  #radio.on{display:block}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .top{display:flex;justify-content:space-between;align-items:center;font-size:9.5px;letter-spacing:1.4px;
+       text-transform:uppercase;font-weight:bold;color:var(--dim);margin-bottom:7px}
+  .lcd{background:var(--lcdbg);border:1px solid rgba(159,181,107,.35);padding:8px 10px;
+       display:flex;align-items:baseline;justify-content:space-between;
+       box-shadow:inset 0 0 18px rgba(0,0,0,.6), 0 0 10px rgba(159,181,107,.12)}
+  .ch{font:bold 30px/1 'Courier New',monospace;letter-spacing:3px;color:var(--lcd);
+      text-shadow:0 0 6px rgba(159,181,107,.6)}
+  .ch.off{color:rgba(159,181,107,.3);text-shadow:none}
+  .chl{font-size:9px;letter-spacing:1.6px;color:rgba(159,181,107,.6);margin-right:6px}
+  .meters{display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+  .m{display:flex;gap:2px;align-items:flex-end}
+  .m i{display:block;width:5px;background:rgba(159,181,107,.18)}
+  .m i.on{background:var(--lcd)}
+  .m i:nth-child(1){height:5px}.m i:nth-child(2){height:7px}.m i:nth-child(3){height:9px}.m i:nth-child(4){height:11px}.m i:nth-child(5){height:13px}
+  .lab{font-size:8px;letter-spacing:1.2px;color:rgba(159,181,107,.5);margin-right:4px}
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:7px;font-size:10px;
+       letter-spacing:1.2px;text-transform:uppercase;color:var(--dim)}
+  .tx,.rx{padding:2px 7px;border:1px solid var(--line);font-weight:bold;font-size:9px}
+  .tx.on{background:var(--rust);color:var(--bone);border-color:var(--rust)}
+  .rx.on{background:var(--olive);color:var(--bone)}
+  .rx span{font-weight:normal;text-transform:none;letter-spacing:0}
+  .keys{display:flex;gap:6px;margin-top:8px}
+  .keys button{flex:1;background:transparent;border:1px solid var(--line);color:var(--bone);
+               font:inherit;font-size:11px;padding:5px 0;cursor:pointer;letter-spacing:1px}
+  .keys button:hover{background:rgba(216,210,192,.08)}
+  .keys button.off{color:var(--rust);border-color:rgba(180,85,45,.5)}
+  .hint{margin-top:7px;font-size:9.5px;color:rgba(216,210,192,.35);letter-spacing:.8px}
+  kbd{border:1px solid var(--line);padding:0 4px;font-family:inherit;font-size:9px}
+  #entry{position:absolute;opacity:0;pointer-events:none}
+</style>
+<div id="radio">
+  <div class="top"><span>Handheld</span><span id="spares">— spare</span></div>
+  <div class="lcd">
+    <div><span class="chl">CH</span><span class="ch off" id="ch">--</span></div>
+    <div class="meters">
+      <div class="m" title="signal"><span class="lab">SIG</span><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="m" id="bat" title="battery"><span class="lab">BAT</span><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+  </div>
+  <div class="row"><span class="tx" id="tx">TX</span><span class="rx" id="rx">RX <span id="who"></span></span></div>
+  <div class="keys">
+    <button id="dn">▼</button><button id="up">▲</button><button id="tune">TUNE</button><button id="off" class="off">OFF</button>
+  </div>
+  <div class="hint"><kbd>0-9</kbd> type a channel · <kbd>Enter</kbd> tune · <kbd>Esc</kbd> close · <kbd>CapsLock</kbd> talk</div>
+  <input id="entry" inputmode="numeric">
+</div>
+<audio id="a_on"  src="sfx/click_on.wav"  preload="auto"></audio>
+<audio id="a_off" src="sfx/click_off.wav" preload="auto"></audio>
+<audio id="a_hiss" src="sfx/hiss.wav" preload="auto" loop></audio>
+<audio id="a_weak" src="sfx/static_weak.wav" preload="auto" loop></audio>
+<script>
+const $ = id => document.getElementById(id);
+const post = (n, d) => fetch(`https://${GetParentResourceName()}/${n}`, { method:'POST', body: JSON.stringify(d||{}) });
+let ch = 0, typed = '', focused = false;
+function bars(el, v){ const b = el.querySelectorAll('i'); const n = Math.round(Math.max(0,Math.min(1,v))*5); b.forEach((x,i)=>x.classList.toggle('on', i<n)); }
+function render(s){
+  if (s.ch != null) ch = s.ch;
+  const c = $('ch'); c.textContent = ch>0 ? String(ch).padStart(2,'0') : '--'; c.classList.toggle('off', !(ch>0));
+  if (s.signal != null) bars(document.querySelector('.m[title="signal"]'), s.signal);
+  if (s.battery != null) bars($('bat'), s.battery);
+  if (s.spares != null) $('spares').textContent = s.spares + ' spare';
+  if (s.tx != null) $('tx').classList.toggle('on', !!s.tx);
+  if (s.rx != null) { $('rx').classList.toggle('on', !!s.rx); $('who').textContent = s.rx ? (s.who||'') : ''; }
+}
+function play(id, vol){ const a = $(id); try { a.volume = Math.max(0, Math.min(1, vol==null?1:vol)); a.currentTime = 0; a.play(); } catch(e){} }
+function loop(id, on, vol){ const a = $(id); try { if (on) { a.volume = Math.max(0,Math.min(1,vol==null?0.5:vol)); if (a.paused) a.play(); } else { a.pause(); a.currentTime = 0; } } catch(e){} }
+window.addEventListener('message', ({data:m}) => {
+  if (m.action === 'open')  { $('radio').classList.add('on'); focused = true; typed=''; render(m.data||{}); $('entry').focus(); }
+  else if (m.action === 'close') { $('radio').classList.remove('on'); focused = false; }
+  else if (m.action === 'show')  { $('radio').classList.add('on'); render(m.data||{}); }     // passive: no focus (while transmitting/receiving)
+  else if (m.action === 'hide')  { if (!focused) $('radio').classList.remove('on'); }
+  else if (m.action === 'state') render(m.data||{});
+  else if (m.action === 'sfx')   play('a_'+m.name, m.volume);
+  else if (m.action === 'loop')  loop('a_'+m.name, m.on, m.volume);
+});
+$('up').onclick = () => post('tune', { ch: Math.min(99, ch+1) });
+$('dn').onclick = () => post('tune', { ch: Math.max(0, ch-1) });
+$('tune').onclick = () => { if (typed !== '') { post('tune', { ch: parseInt(typed,10)||0 }); typed=''; } };
+$('off').onclick = () => post('tune', { ch: 0 });
+document.addEventListener('keydown', e => {
+  if (!focused) return;
+  if (e.key === 'Escape' || e.key === 'Backspace' && typed === '') { post('close'); return; }
+  if (/^[0-9]$/.test(e.key)) { typed = (typed + e.key).slice(-2); $('ch').textContent = typed.padStart(2,'0'); $('ch').classList.remove('off'); }
+  else if (e.key === 'Backspace') { typed = typed.slice(0,-1); $('ch').textContent = (typed||'--').padStart(2,'0'); }
+  else if (e.key === 'Enter') { if (typed !== '') { post('tune', { ch: parseInt(typed,10)||0 }); typed=''; } else post('close'); }
+  else if (e.key === 'ArrowUp') post('tune', { ch: Math.min(99, ch+1) });
+  else if (e.key === 'ArrowDown') post('tune', { ch: Math.max(0, ch-1) });
+});
+</script>

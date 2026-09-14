@@ -16,6 +16,8 @@ bind('handsup',    'Hands up (reflex)',         'T',      nil)
 bind('whistle',    'Whistle (LOUD, reflex)',    'GRAVE',  nil)
 bind('stopemote',  'Stop emote / cancel',       'X',      'RRIGHT_INDEX')          -- B is "cancel" muscle memory
 bind('ob_radioptt','Radio quick-open',          'N',      'LLEFT_INDEX')
+bind('ob_radioup', 'Radio channel up',           'RBRACKET', nil)
+bind('ob_radiodown','Radio channel down',        'LBRACKET', nil)
 bind('fallen',     'Memorial wall',             'F5',     nil)
 bind('ob_distress','Distress call (works while down)','F6',  'RLEFT_INDEX')   -- pad X
 bind('journal',    'Field journal',             'J',      nil)   -- pad: via the wheel

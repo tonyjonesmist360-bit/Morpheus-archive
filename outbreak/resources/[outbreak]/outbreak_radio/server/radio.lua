@@ -36,7 +36,9 @@ RegisterNetEvent('outbreak:server:radioHeartbeat', function(on)
   local src = source
   if not on then tuned[src] = nil return end
   tuned[src] = (tuned[src] or 0) + 1
-  if tuned[src] >= 9 then
+  local per = RadioCfg.BatteryHeartbeats or 9
+  TriggerClientEvent('outbreak:client:radioBattery', src, math.floor((1 - (tuned[src] % per) / per) * 100))
+  if tuned[src] >= per then
     tuned[src] = 0
     if exports.ox_inventory:RemoveItem(src, 'radio_battery', 1) then
       TriggerClientEvent('ox_lib:notify', src, { title = 'Radio battery swapped. Running low on spares?', type = 'inform' })

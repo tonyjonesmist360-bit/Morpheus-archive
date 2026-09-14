@@ -37,13 +37,15 @@ local function quality(pa, pb, rangeA, rangeB, jobA, jobB)
 end
 
 local channels = {} -- src -> channel (reported by client heartbeat; trust gap, radio item required)
-RegisterNetEvent('outbreak:radio:channel', function(ch)
+local dead = {}     -- src -> true while the client reports an interior / dead zone (presentation-grade trust: it only ever lowers quality)
+RegisterNetEvent('outbreak:radio:channel', function(ch, inDead)
   local src = source
   if type(ch) ~= 'number' then return end
   if ch > 0 and exports.ox_inventory:GetItemCount(src, 'radio_handheld') < 1 then ch = 0 end
   channels[src] = ch
+  dead[src] = inDead and true or nil
 end)
-AddEventHandler('playerDropped', function() channels[source] = nil end)
+AddEventHandler('playerDropped', function() channels[source] = nil; dead[source] = nil end)
 exports('channelOf', function(src) return channels[src] or 0 end)
 exports('playersOnChannel', function(ch) local out = {}; for s, c in pairs(channels) do if c == ch then out[#out + 1] = s end end return out end)
 
@@ -65,7 +67,13 @@ CreateThread(function()
     for _, list in pairs(byCh) do
       for _, a in ipairs(list) do
         local row = {}
-        for _, b in ipairs(list) do if a ~= b then row[tostring(b)] = quality(pos[a], pos[b], rng[a], rng[b], job[a], job[b]) end end
+        for _, b in ipairs(list) do
+          if a ~= b then
+            local q = quality(pos[a], pos[b], rng[a], rng[b], job[a], job[b])
+            if dead[a] or dead[b] then q = q * (RadioCfg.IndoorFactor or 0.3) end
+            row[tostring(b)] = q
+          end
+        end
         Player(a).state:set('radioReach', row, true)
       end
     end
