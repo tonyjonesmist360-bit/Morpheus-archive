@@ -38,6 +38,7 @@ Actions.camp = function(src, a) pcall(function() exports.outbreak_opportunities:
 Actions.rep = function(src, a) pcall(function() exports.outbreak_faction:addRep(a.target or src, a.faction, a.delta or 10, 'dm') end) end
 Actions.repeater = function(src, a) pcall(function() exports.outbreak_radio:setRepeater(a.id, a.active ~= false, 'dm') end) end
 Actions.director = function(src, a) pcall(function() exports.outbreak_director:evaluate() end) end
+Actions.defend = function(src, a) pcall(function() exports.outbreak_director:defend(a.house) end) end
 Actions.settlement = function(src, a)
   pcall(function()
     if (a.residents or 0) > 0 then for _ = 1, a.residents do exports.outbreak_supply:addResident(a.house) end end

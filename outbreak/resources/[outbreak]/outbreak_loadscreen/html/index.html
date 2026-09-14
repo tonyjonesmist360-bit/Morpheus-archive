@@ -1,0 +1,58 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>DEAD STATE</title>
+<style>
+  :root{ --bone:#d8d2c0; --olive:#3c4230; --rust:#b4552d; --deep:#0f110c; --line:rgba(216,210,192,.22); --dim:rgba(216,210,192,.55); --faint:rgba(216,210,192,.32); }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:var(--deep);color:var(--bone);font:15px/1.5 'Trebuchet MS','Segoe UI',sans-serif;overflow:hidden}
+  #bg{position:fixed;inset:0;background:
+      radial-gradient(ellipse at 30% 20%, rgba(60,66,48,.55), transparent 55%),
+      radial-gradient(ellipse at 75% 80%, rgba(142,47,47,.25), transparent 50%),
+      repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 2px, transparent 2px 4px), var(--deep)}
+  #grain{position:fixed;inset:0;opacity:.07;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='120' height='120' filter='url(%23n)'/></svg>");animation:g .4s steps(2) infinite}
+  @keyframes g{to{transform:translate(-4px,3px)}}
+  #wrap{position:relative;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:0 12vw}
+  h1{font-size:64px;letter-spacing:10px;text-transform:uppercase;font-weight:bold;line-height:1;color:var(--bone);text-shadow:0 2px 0 rgba(0,0,0,.6)}
+  h1 span{color:var(--rust)}
+  .sub{margin-top:10px;font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--faint)}
+  .rules{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;max-width:560px}
+  .rules h2{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+  .rules li{list-style:none;padding:6px 0 6px 18px;position:relative;color:var(--dim)}
+  .rules li::before{content:'';position:absolute;left:0;top:13px;width:8px;height:8px;background:var(--olive);border:1px solid var(--line)}
+  .rules li b{color:var(--bone);font-weight:normal}
+  #bar{position:fixed;left:12vw;right:12vw;bottom:9vh;height:6px;background:rgba(24,26,19,.85);border:1px solid var(--line)}
+  #fill{height:100%;width:0;background:var(--bone);transition:width .3s}
+  #status{position:fixed;left:12vw;bottom:calc(9vh + 14px);font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:var(--faint)}
+  #tip{position:fixed;right:12vw;bottom:calc(9vh + 14px);font-size:11px;color:var(--faint);font-style:italic;max-width:40vw;text-align:right}
+</style>
+<div id="bg"></div><div id="grain"></div>
+<div id="wrap">
+  <h1>Dead <span>State</span></h1>
+  <div class="sub">end of the world roleplay · sandy shores and beyond</div>
+  <div class="rules">
+    <h2>Three rules</h2>
+    <ul>
+      <li><b>Stay in character.</b> /ooc exists for a reason. Use it, then get back in.</li>
+      <li><b>No random killing.</b> The dead are the enemy. People are a choice, and choices have consequences.</li>
+      <li><b>Quiet keeps you alive.</b> Channel 4 is main comms. Whisper on the radio, not into the night.</li>
+    </ul>
+  </div>
+</div>
+<div id="status">Loading</div>
+<div id="tip"></div>
+<div id="bar"><div id="fill"></div></div>
+<script>
+  const tips = ['Boil murky water before it counts. Cook at your safehouse door.','A stranger at the door is a mouth to feed and a pair of hands. Your call.','Bread goes bad in a day. Cans do not.','Downed players can still talk. Listen for them.','Chips are loud. So is a whistle. So are you.','Barricade before dark. The Director notices an open door.'];
+  let t = 0; const tipEl = document.getElementById('tip'); tipEl.textContent = tips[0];
+  setInterval(() => { t = (t + 1) % tips.length; tipEl.textContent = tips[t]; }, 6000);
+  const fill = document.getElementById('fill'), status = document.getElementById('status');
+  let count = 0, done = 0;
+  window.addEventListener('message', e => {
+    const d = e.data || {};
+    if (d.eventName === 'loadProgress') { fill.style.width = Math.round((d.loadFraction||0)*100) + '%'; }
+    else if (d.eventName === 'startInitFunctionOrder') { count = d.count||0; done = 0; status.textContent = 'Initialising ' + (d.type||''); }
+    else if (d.eventName === 'initFunctionInvoked') { done++; if (count) fill.style.width = Math.round(done/count*100) + '%'; }
+    else if (d.eventName === 'startDataFileEntries') { status.textContent = 'Loading world'; }
+    else if (d.eventName === 'onLogLine') { status.textContent = (d.message||'').slice(0, 60); }
+  });
+</script>

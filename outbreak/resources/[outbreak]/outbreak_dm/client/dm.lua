@@ -43,6 +43,7 @@ local function menu()
     { title = 'Reputation', onSelect = function() players(function(p) local i = lib.inputDialog('Rep', { { type = 'input', label = 'Faction', default = 'civilian' }, { type = 'number', label = 'Δ', default = 10 } }); if i then act('rep', { target = p.id, faction = i[1], delta = i[2] }) end end) end },
     { title = 'Repeater on/off', onSelect = function() local i = lib.inputDialog('Repeater', { { type = 'input', label = 'Id', default = 'chiliad' }, { type = 'checkbox', label = 'Active', checked = true } }); if i then act('repeater', { id = i[1], active = i[2] }) end end },
     { title = 'World Director: run a pass now', description = 'Reads every settlement and nudges once - stranger, rumour, probe, unrest', onSelect = function() act('director', {}) end },
+    { title = 'Settlement: DEFENSE EVENT now', description = 'warning, 4 min prep, wave at the door, consequences', onSelect = function() local i = lib.inputDialog('Defend', { { type = 'input', label = 'House id', default = 'sandy_bungalow', required = true } }); if i then act('defend', { house = i[1] }) end end },
     { title = 'Settlement: residents / morale', onSelect = function() local i = lib.inputDialog('Settlement', { { type = 'input', label = 'House id', default = 'sandy_bungalow', required = true }, { type = 'number', label = 'residents Δ', default = 1 }, { type = 'number', label = 'morale Δ', default = 0 } }); if i then act('settlement', { house = i[1], residents = i[2], morale = i[3] }) end end },
   } })
 

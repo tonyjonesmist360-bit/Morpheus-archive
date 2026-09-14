@@ -108,6 +108,12 @@ end)
 exports('hasKey', hasKey)
 -- Read model for outbreak_supply / outbreak_director: owner + barricade, never the table itself.
 exports('getHouse', function(id) local h = houses[id]; return h and { owner = h.owner, barricade = h.barricade } or nil end)
+exports('damageBarricade', function(id, n)
+  local h = houses[id]; if not h then return 0 end
+  h.barricade = math.max(0, (h.barricade or 0) - (n or 1)); save(id)
+  TriggerClientEvent('outbreak:client:barricadeLevel', -1, id, h.barricade)
+  return h.barricade
+end)
 exports('houses', function() local out = {}; for _, h in ipairs(HousingCfg.Houses) do out[#out + 1] = { id = h.id, label = h.label, door = h.door } end return out end)
 exports('releaseHouse', function(id) local h = houses[id]; if h then h.owner = nil; save(id) end end)
 exports('isNearClaimedHouse', function(pos, radius)

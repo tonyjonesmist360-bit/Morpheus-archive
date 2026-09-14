@@ -49,4 +49,18 @@ SupplyCfg = {
   Names = { 'Rae', 'Milo', 'Dee', 'Tomas', 'Quinn', 'Ines', 'Bo', 'Lena', 'Hal', 'Priya', 'Sal', 'Nadia', 'Otto', 'June', 'Cal', 'Wren', 'Idris', 'Marta', 'Gus', 'Faye' },
   Notes = { leaving = { "Took what I was owed. Don't come looking. - %s", "There's nothing here worth starving for. - %s", "You said it would get better. - %s", "Gone north. Don't follow. - %s" } },
   LogMax = 30,
+  -- RESIDENT BODIES (client): peds around the door while you are within Residents.spawnAt metres.
+  -- Scenario and what they say follow morale. Models: the same four the DM and Director use - unverified until /ob_models.
+  Residents = {
+    spawnAt = 55.0, despawnAt = 75.0, maxBodies = 4,
+    models = { 'a_m_y_hipster_01', 'a_f_y_tourist_01', 'a_m_m_farmer_01', 'a_m_m_hillbilly_01' },
+    scenarios = { good = { 'WORLD_HUMAN_GUARD_STAND', 'WORLD_HUMAN_HAMMERING', 'WORLD_HUMAN_SMOKING', 'WORLD_HUMAN_CLIPBOARD' },
+                  low  = { 'WORLD_HUMAN_BUM_SLUMPED', 'WORLD_HUMAN_STAND_IMPATIENT', 'WORLD_HUMAN_LEANING', 'WORLD_HUMAN_DRINKING' } },
+    lines = {
+      steady   = { 'Quiet night. I could get used to quiet.', 'We ate warm. You have no idea what that does for people.', 'Watch is covered. Sleep.' },
+      uneasy   = { 'Are we good on water? Someone said we were not good on water.', 'I keep hearing the road.', 'Just tell me there is a plan.' },
+      fraying  = { 'Rae says she is leaving. I do not think she is joking.', 'Two days of cans left. Then what.', 'Nobody is sleeping.' },
+      breaking = { 'Do not talk to me.', 'Whatever you brought, it is not enough.', 'I am not dying in this house.' },
+    },
+  },
 }

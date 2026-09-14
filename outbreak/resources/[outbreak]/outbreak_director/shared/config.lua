@@ -3,6 +3,15 @@ DirectorCfg = {
   EveryMinutes = { 30, 60 },     -- one evaluation pass, scheduled through outbreak_core (only while someone is online)
   Channel = 0,                   -- 0 = anyone with a powered radio on any channel hears it (outbreak_radio semantics)
   ProbeSize = 8, ProbeRange = 200.0, ProbeMorale = { held = 4, failed = -3 },
+  -- DEFENSE EVENT (replaces the one-shot probe): warning -> prep window -> wave at the door -> consequences.
+  Defense = {
+    prepMinutes = 4, waveMinutes = 3,      -- real minutes
+    baseSize = 10, perResident = 2, perBarricade = -2, minSize = 6, maxSize = 30,
+    holdRadius = 60.0,                     -- a keyholder alive and this close to the door when it ends = held
+    roundsPerResident = 3, roundsBase = 4, -- ammo spent from the stockpile if it holds
+    held = { morale = 8, materials = 1 },  -- repairs cost a part
+    overrun = { morale = -15, food = 3, water = 2, medicine = 2, residentLossChance = 0.5, barricade = 1 },
+  },
   StrangerExpireMinutes = 10,
   -- Every model here is unverified until /ob_models says otherwise. These four are already used by outbreak_dm / outbreak_housing.
   StrangerModels = { 'a_m_y_hipster_01', 'a_f_y_tourist_01', 'a_m_m_farmer_01', 'a_m_m_hillbilly_01' },
@@ -28,6 +37,9 @@ DirectorCfg = {
     rumor_food     = { '...heard %s still has shelves. Nobody has been through it since the fires.', 'If you are hungry: %s. Go at first light. Go quiet.', '*static* ...%s... cans... a whole aisle... *static*' },
     rumor_medicine = { '...someone said %s was never looted. Locked, not empty.', '%s. There is a supply room behind triage. Bring a crowbar.' },
     probe          = { '*static* ...movement... near %s... a lot of it... *static*', 'Whoever is at %s: they are coming up the road. Get inside.' },
+    wave           = { 'They are at %s. Now.', '*static* ...%s... the door... *static*' },
+    held           = { '%s held. Whoever was on that door: good.', 'Quiet again at %s.' },
+    overrun        = { '%s went dark. Someone check on them.', '*static* ...%s... gone... *static*' },
     trader         = { 'Word travels. Someone on channel 5 is asking about the place at %s. Might be trade. Might not.' },
     unrest         = { 'Your people at %s are talking. Bring them something. Anything.', 'It is quiet at %s. The bad kind of quiet.' },
     safehouse      = { '%s is empty. The door still holds. Someone should take it before someone else does.', 'If you need walls: %s. Nobody has claimed it.' },

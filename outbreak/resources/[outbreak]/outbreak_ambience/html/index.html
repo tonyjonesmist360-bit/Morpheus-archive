@@ -1,0 +1,13 @@
+<!doctype html><meta charset="utf-8"><title>ambience</title>
+<audio id="wind" src="sfx/wind.wav" loop preload="auto"></audio>
+<audio id="g1" src="sfx/groan_1.wav" preload="auto"></audio>
+<audio id="g2" src="sfx/groan_2.wav" preload="auto"></audio>
+<script>
+const $ = id => document.getElementById(id);
+window.addEventListener('message', ({data:m}) => {
+  try {
+    if (m.action === 'wind') { const a = $('wind'); a.volume = Math.max(0, Math.min(1, m.volume||0)); if (a.paused && a.volume > 0.01) a.play(); }
+    else if (m.action === 'groan') { const a = $(m.which === 2 ? 'g2' : 'g1'); a.volume = Math.max(0, Math.min(1, m.volume||0.3)); a.currentTime = 0; a.play(); }
+  } catch (e) {}
+});
+</script>

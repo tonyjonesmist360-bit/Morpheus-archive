@@ -47,7 +47,40 @@ RegisterNetEvent('outbreak:director:strangerResolved', function(id, took)
   end
 end)
 
+-- ── DEFENSE EVENT presentation: a flashing blip on the door and a countdown line for anyone near or living there ──
+local defBlip, defUntil, defLabel, defStage = nil, 0, nil, nil
+RegisterNetEvent('outbreak:director:defense', function(house, stage, d)
+  local home = nil; pcall(function() home = exports.outbreak_supply:getHome() end)
+  local mine = home and home.id == house
+  local near = d.door and #(GetEntityCoords(PlayerPedId()) - d.door) < 400.0
+  if not mine and not near then return end
+  if stage == 'over' then
+    if defBlip and DoesBlipExist(defBlip) then RemoveBlip(defBlip) end
+    defBlip, defUntil, defStage = nil, 0, nil
+    lib.hideTextUI()
+    return
+  end
+  defStage, defLabel, defUntil = stage, d.label, d.deadline or 0
+  if not defBlip and d.door then
+    defBlip = AddBlipForCoord(d.door.x, d.door.y, d.door.z); SetBlipSprite(defBlip, 1); SetBlipColour(defBlip, 1); SetBlipScale(defBlip, 1.0); SetBlipFlashes(defBlip, true)
+    BeginTextCommandSetBlipName('STRING'); AddTextComponentString('DEFEND: ' .. (d.label or 'home')); EndTextCommandSetBlipName(defBlip)
+  end
+  lib.notify({ title = stage == 'warning' and ('They are coming to %s.'):format(d.label or 'home') or ('They are at %s.'):format(d.label or 'home'),
+    description = stage == 'warning' and 'Barricade. Rounds in the stockpile. Be at the door.' or ('%d of them. Hold the door.'):format(d.size or 0), type = 'error', duration = 12000, position = 'top' })
+end)
+CreateThread(function()
+  while true do
+    if defStage then
+      Wait(1000)
+      local left = math.max(0, defUntil - GetCloudTimeAsInt())
+      lib.showTextUI(('%s  %s  %d:%02d'):format(defStage == 'warning' and 'THEY ARE COMING' or 'HOLD THE DOOR', defLabel or '', left // 60, left % 60), { position = 'top-center' })
+    else Wait(2000) end
+  end
+end)
+
 AddEventHandler('onResourceStop', function(r)
   if r ~= GetCurrentResourceName() then return end
   for _, p in pairs(active) do if DoesEntityExist(p) then DeleteEntity(p) end end
+  if defBlip and DoesBlipExist(defBlip) then RemoveBlip(defBlip) end
+  lib.hideTextUI()
 end)

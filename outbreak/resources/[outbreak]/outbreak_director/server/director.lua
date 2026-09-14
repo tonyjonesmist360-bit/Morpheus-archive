@@ -44,17 +44,74 @@ Actions.stranger = function(m, kh)
 end
 Actions.rumor_food = function(m) local s = nearestSite(D.Rumors.food, m.door); local t = line('rumor_food', s.label); radio(t); slog(m.id, 'Overheard: ' .. t); return t end
 Actions.rumor_medicine = function(m) local s = nearestSite(D.Rumors.medicine, m.door); local t = line('rumor_medicine', s.label); radio(t); slog(m.id, 'Overheard: ' .. t); return t end
-Actions.probe = function(m, kh)
-  local src = nearestPlayer(kh, m.door, D.ProbeRange)
-  radio(line('probe', m.label))
-  if src then pcall(function() exports.outbreak_core:fireEvent('horde', src, { size = D.ProbeSize }) end) end
-  local spent = 0
-  if m.residents > 0 then pcall(function() spent = exports.outbreak_supply:takeUnits(m.id, 'ammo', m.residents * 2, 'scraps') or 0 end) end
-  local held = spent > 0 or (m.barricade or 0) >= 2
-  local text = held and ('They tested the door. %d rounds spent. It held.'):format(math.floor(spent)) or 'They tested the door. Nobody had rounds to spare. It barely held.'
-  pcall(function() exports.outbreak_supply:modify(m.id, { morale = held and D.ProbeMorale.held or D.ProbeMorale.failed }, text) end)
-  return text
+-- ── DEFENSE EVENT: warning -> prep -> wave -> consequences. One per house at a time. ──
+local defense = {}   -- house -> { stage, deadline, size }
+local function model(id) local m; pcall(function() m = exports.outbreak_supply:getSettlement(id) end); return m end
+local function keyholders(id) local k = {}; pcall(function() k = exports.outbreak_supply:keyholders(id) or {} end); return k end
+local function broadcastStage(id, stage, data)
+  data = data or {}; data.house = id
+  TriggerClientEvent('outbreak:director:defense', -1, id, stage, data)
 end
+local function resolveDefense(id)
+  local e = defense[id]; if not e then return end
+  local m = model(id); if not m then defense[id] = nil return end
+  local F = D.Defense
+  local held = false
+  for _, src in ipairs(keyholders(id)) do
+    local ped = GetPlayerPed(src)
+    if ped and ped ~= 0 and GetEntityHealth(ped) > 101 and not Player(src).state.downState and #(GetEntityCoords(ped) - m.door) <= F.holdRadius then held = true break end
+  end
+  local text
+  if held then
+    local spent = 0
+    pcall(function() spent = exports.outbreak_supply:takeUnits(id, 'ammo', F.roundsBase + m.residents * F.roundsPerResident, 'scraps') or 0 end)
+    pcall(function() exports.outbreak_supply:takeUnits(id, 'materials', F.held.materials, 'scraps') end)
+    text = ('The door held. %d rounds spent, a part used on repairs.'):format(math.floor(spent))
+    pcall(function() exports.outbreak_supply:modify(id, { morale = F.held.morale }, text) end)
+    radio(line('held', m.label))
+  else
+    pcall(function()
+      exports.outbreak_supply:takeUnits(id, 'food', F.overrun.food, 'best'); exports.outbreak_supply:takeUnits(id, 'water', F.overrun.water, 'best'); exports.outbreak_supply:takeUnits(id, 'medicine', F.overrun.medicine, 'best')
+    end)
+    local lost = nil
+    if m.residents > 0 and math.random() < F.overrun.residentLossChance then lost = (m.names or {})[1] or 'someone' end
+    pcall(function() exports.outbreak_housing:damageBarricade(id, F.overrun.barricade) end)
+    text = ('Overrun. Nobody on the door. Food, water and medicine gone%s. The barricade is down a level.'):format(lost and (', and ' .. lost .. ' with them') or '')
+    pcall(function() exports.outbreak_supply:modify(id, { morale = F.overrun.morale, residents = lost and -1 or nil }, text) end)
+    radio(line('overrun', m.label))
+  end
+  tell(keyholders(id), held and 'It held.' or 'Overrun.', text, held and 'success' or 'error')
+  broadcastStage(id, 'over', { held = held })
+  logDb(id, held and 'defense_held' or 'defense_overrun', text)
+  defense[id] = nil
+end
+local function waveDefense(id)
+  local e = defense[id]; if not e then return end
+  local m = model(id); if not m then defense[id] = nil return end
+  e.stage = 'wave'
+  local kh = keyholders(id)
+  local src = nearestPlayer(kh, m.door, D.ProbeRange)
+  if src then pcall(function() exports.outbreak_core:fireEvent('horde', src, { size = e.size }) end) end
+  radio(line('wave', m.label))
+  slog(id, ('They are at the door. %d of them.'):format(e.size))
+  tell(kh, 'They are at the door.', ('%d of them. Hold it for %d minutes.'):format(e.size, D.Defense.waveMinutes), 'error')
+  broadcastStage(id, 'wave', { door = m.door, label = m.label, size = e.size, deadline = os.time() + D.Defense.waveMinutes * 60 })
+  SetTimeout(D.Defense.waveMinutes * 60000, function() resolveDefense(id) end)
+end
+local function startDefense(m, kh)
+  if defense[m.id] then return nil end
+  local F = D.Defense
+  local size = math.max(F.minSize, math.min(F.maxSize, F.baseSize + m.residents * F.perResident + (m.barricade or 0) * F.perBarricade))
+  defense[m.id] = { stage = 'warning', deadline = os.time() + F.prepMinutes * 60, size = size }
+  radio(line('probe', m.label))
+  slog(m.id, ('Movement on the road. %d minutes to get ready.'):format(F.prepMinutes))
+  tell(kh, ('They are coming to %s.'):format(m.label), ('%d minutes. Barricade, put rounds in the stockpile, and be at the door.'):format(F.prepMinutes), 'error')
+  broadcastStage(m.id, 'warning', { door = m.door, label = m.label, deadline = defense[m.id].deadline, size = size })
+  SetTimeout(F.prepMinutes * 60000, function() waveDefense(m.id) end)
+  return ('defense: %d in %d min'):format(size, F.prepMinutes)
+end
+Actions.probe = function(m, kh) return startDefense(m, kh) end
+exports('defend', function(id) local m = model(id); if not m then return false end; return startDefense(m, keyholders(id)) ~= nil end)
 Actions.unrest = function(m, kh) local t = line('unrest', m.label); tell(kh, 'Word from home', t, 'inform'); slog(m.id, t); return t end
 Actions.trader = function(m) local t = line('trader', m.label); radio(t); slog(m.id, 'Overheard: ' .. t); return t end
 
@@ -125,6 +182,12 @@ RegisterNetEvent('outbreak:director:sendAway', function(id)
 end)
 
 exports('evaluate', evaluate)
+RegisterCommand('ob_defend', function(src, args)
+  if src ~= 0 and not IsPlayerAceAllowed(src, 'outbreak.debug') then return end
+  local id = args[1]; if not id then return end
+  local ok = exports.outbreak_director:defend(id)
+  if src ~= 0 then TriggerClientEvent('ox_lib:notify', src, { title = ok and ('Defense event started at ' .. id) or 'No such settlement, or one is already running.', type = ok and 'inform' or 'error' }) end
+end, false)
 -- debug: force a pass (ace outbreak.debug, or the console)
 RegisterCommand('ob_director', function(src)
   if src ~= 0 and not IsPlayerAceAllowed(src, 'outbreak.debug') then return end

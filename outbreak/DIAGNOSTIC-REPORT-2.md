@@ -1,11 +1,10 @@
 # SYSTEMS CHECK — pass 2 (static)
 
-Resources: 36 · Lua files: 150 · migrations: 8 · items defined: 67 · commands: 81
+Resources: 37 · Lua files: 156 · migrations: 8 · items defined: 67 · commands: 84
 
 
 ## ERROR (0)
 
-## WARN (1)
-- **outbreak_ambience** — not in server.cfg.additions at all (neither ensured nor held)
+## WARN (0)
 
 ## INFO (0)

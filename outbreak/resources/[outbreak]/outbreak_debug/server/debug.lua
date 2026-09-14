@@ -25,3 +25,16 @@ local cmds = {
 for name, fn in pairs(cmds) do
   RegisterCommand(name, function(src, args) if allowed(src) then fn(src, args) else say(src, 'Debug off or no ace.') end end, false)
 end
+
+-- /bug: any player, rate-limited, appended to bugs.log in this resource. Read it tomorrow.
+local lastBug = {}
+RegisterNetEvent('outbreak:server:bug', function(b)
+  local src = source
+  if type(b) ~= 'table' or type(b.note) ~= 'string' then return end
+  if os.time() - (lastBug[src] or 0) < 10 then return end
+  lastBug[src] = os.time()
+  local line = json.encode({ at = os.date('%Y-%m-%d %H:%M:%S'), by = GetPlayerName(src), id = src, x = b.x, y = b.y, z = b.z, h = b.h, street = b.street, down = b.down, hp = b.hp, note = b.note:sub(1, 240):gsub('[\r\n]', ' ') })
+  local cur = LoadResourceFile(GetCurrentResourceName(), 'bugs.log') or ''
+  SaveResourceFile(GetCurrentResourceName(), 'bugs.log', cur .. line .. '\n', -1)
+  print(('^3[OB-BUG]^7 %s: %s'):format(GetPlayerName(src), b.note))
+end)

@@ -24,6 +24,9 @@ ensure outbreak_minigames
 ensure outbreak_binds
 ## chat: OOC + announce. needs the stock chat resource only
 ensure outbreak_chat
+## loadscreen: ours replaces the recipe one, which is stopped here. Delete the stop line to get the stock screen back.
+stop loadscreen
+ensure outbreak_loadscreen
 
 ## Layer 1 - services. Order is dependency order, do not shuffle.
 ## core        tick bus, zombies, world events. needs ox_lib
@@ -68,6 +71,8 @@ ensure outbreak_director
 ensure outbreak_hud
 ensure outbreak_status
 ensure outbreak_wheel
+## ambience: wind, groans, darker nights, discord presence. needs core tick
+ensure outbreak_ambience
 
 ## Debug - REMOVE for the crew
 ensure outbreak_debug

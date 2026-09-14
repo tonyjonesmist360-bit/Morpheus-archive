@@ -171,12 +171,24 @@ local function model(id, forSrc)
   }
 end
 
+-- GlobalState.obSettlements: the little every client needs to draw residents at any door
+-- (door, label, residents, names, morale). Not the full model - no stock numbers leave the keyholders.
+local function publish()
+  local g = {}
+  for _, hc in ipairs(houses()) do
+    local h = house(hc.id)
+    if h and h.owner then local s = get(hc.id); g[hc.id] = { door = hc.door, label = hc.label, residents = s.residents, names = s.names, morale = math.floor(s.morale) } end
+  end
+  GlobalState.obSettlements = g
+end
 local function push(id)
   for _, src in ipairs(keyholders(id)) do
     local m = model(id, src)
     if m then TriggerClientEvent('outbreak:supply:update', src, m) end
   end
+  publish()
 end
+CreateThread(function() Wait(4000); publish() end)
 
 -- ── the tick: spoilage, consumption, morale, behaviour ──
 local function behaviours(id, s)

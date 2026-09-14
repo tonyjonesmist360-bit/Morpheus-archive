@@ -2,7 +2,10 @@
 
 ## Backups
 - `ops/backup.bat` — DB dump + zip of the three outbreak resource groups + server.cfg. Keeps 14 days. Edit the three paths at the top.
-- Schedule: Task Scheduler → Create Basic Task → Daily 04:00 → run `backup.bat`. Test once by double-clicking it.
+- Schedule: `powershell -ExecutionPolicy Bypass -File .\ops\install-backup-task.ps1 -RunNow` from an **elevated** PowerShell
+  registers the daily 04:00 task, runs it once, and verifies the output. `-Remove` unregisters it.
+- Verify any time: `powershell -ExecutionPolicy Bypass -File .\ops\verify-backup.ps1` (add `-RestoreTest` to restore the dump
+  into a scratch database and drop it again - never touches the live DB).
 - `ops/restore.bat <dump.sql>` puts a dump back. Stop the server first.
 
 ## Scheduled restart (txAdmin)
