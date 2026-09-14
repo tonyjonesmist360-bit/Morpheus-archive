@@ -8,6 +8,10 @@ during the 2026-09-13 first boot. Each check exists because a real bug got throu
   3. Manifest includes vs globals used -> PB-4: outbreak_faction used MySQL without @oxmysql
   4. Config key paths            -> a CfgTable.a.b that no config file defines
   5. Cross-resource exports      -> exports.outbreak_x:y() with no matching exports('y')
+  6. Forward references          -> 2026-09-13 19:05: outbreak_core exported currentZone()
+                                    which called hotZone(), a `local function` defined 70
+                                    lines LATER. Inside the closure the name resolved to a
+                                    global -> nil. Pass 1 saw it "defined" and said nothing.
 
 Run alongside the other two:
     python tools_diag.py && python tools_diag2.py && python tools_diag3.py
@@ -174,6 +178,34 @@ for res in resources():
             if target in defined_exports and fn not in defined_exports[target]:
                 line = src[:m.start()].count('\n') + 1
                 errors.append(f"**{name}** - `exports.{target}:{fn}()` has no matching `exports('{fn}')` ({rel}:{line})")
+
+# ---------------------------------------------------------------- 6
+# A `local function NAME` (or `local NAME = function`) is only in scope AFTER its
+# declaration. Any earlier reference - whether at top level or inside a closure
+# defined earlier - binds to a global that will never exist. The fix is the idiom
+# already used for spawnZombie in outbreak_core: a bare `local NAME` near the top,
+# then `NAME = function(...)` at the definition site.
+for res in resources():
+    name = os.path.basename(res)
+    for f in [x for x in lua_files(res) if os.sep + 'data' + os.sep not in x]:
+        src = strip(open(f, encoding='utf-8', errors='replace').read())
+        rel = os.path.relpath(f, res)
+        defs = {}
+        for m in re.finditer(r'\blocal\s+function\s+([A-Za-z_]\w*)', src):
+            defs.setdefault(m.group(1), m.start())
+        for m in re.finditer(r'\blocal\s+([A-Za-z_]\w*)\s*=\s*function\b', src):
+            defs.setdefault(m.group(1), m.start())
+        # No exemption for a bare `local NAME` above: `local function NAME` below it
+        # declares a SECOND local, and closures captured the first (nil) one. The
+        # forward-declare idiom only works when the definition is `NAME = function`,
+        # which is not a `local` form and so is not in `defs` at all.
+        for fn, at in defs.items():
+            before = src[:at]
+            for m in re.finditer(r'(?<![\w.:])' + re.escape(fn) + r'\s*\(', before):
+                line = before[:m.start()].count('\n') + 1
+                dline = src[:at].count('\n') + 1
+                errors.append(f"**{name}** - `{fn}()` used at `{rel}:{line}` but it is a `local function` declared at line {dline}; earlier uses bind to a nil global. Forward-declare it (`local {fn}` near the top, `{fn} = function` at the definition)")
+                break
 
 print("# SYSTEMS CHECK - pass 3 (classes that slipped past passes 1 and 2)\n")
 print(f"Resources: {len(resources())}\n")

@@ -2,6 +2,7 @@
 -- Replaces GTA ambient population with zombies around the player.
 local zombies = {}
 local spawnZombie -- forward-declared: exports above call it
+local hotZone     -- forward-declared: exports above call it
 local ZGROUP = `OUTBREAK_ZOMBIES`
 local DEBUG = function() return GlobalState.obDebug == true end
 
@@ -120,7 +121,7 @@ local variantOf = {} -- ped -> variant name
 -- MOB AREAS: the zone the player is standing in, or nil. Read by the spawner (density)
 -- and by pickVariant (which variant this place tends to produce).
 local zoneBias = nil
-local function hotZone(pos)
+hotZone = function(pos)
   for _, z in ipairs(OutbreakCfg.HotZones or {}) do
     if #(pos - z.pos) < z.radius then return z end
   end

@@ -460,3 +460,29 @@ instead of the hardcoded 11.4 (Tony runs 12.3.3), and both halves now report a n
 `DBPASS` left as `CHANGE_ME` — the real password does not belong in the repo.
 
 **Status.** Fixed, untested.
+
+## 2026-09-13 19:05 — first login after v0.15.0: `hotZone` nil in outbreak_core
+
+**Symptom.** `@outbreak_core/client/zombies.lua:50: attempt to call a nil value (global
+'hotZone')`, once per HUD tick, called from `outbreak_hud/client/hud.lua:30`.
+
+**Root cause.** `exports('currentZone', ...)` at line 49 calls `hotZone()`. `hotZone` is a
+`local function` declared at line 123. A Lua local is only in scope after its declaration, so
+inside the closure the name resolved to a global — nil. The file already forward-declares
+`spawnZombie` for exactly this reason (line 4); I added `hotZone` in v2 and did not.
+
+**Patch.** `local hotZone` beside the `spawnZombie` forward declaration; definition changed
+from `local function hotZone(pos)` to `hotZone = function(pos)`. Two lines.
+
+**Why the analyzers missed it.** diag3 check 1 asks "is it defined anywhere in the resource"
+— yes. It never asked "is it defined *before* it is used". Added check 6: any call to a
+`local function` / `local NAME = function` that precedes its declaration. Regression-tested
+against both shapes: the original (no forward decl) and the shadow case (bare `local NAME`
+above + `local function NAME` below, which declares a second local the closure never sees).
+
+**Status.** Fixed in pack; live patch by PowerShell replace on both copies, then full restart.
+
+**Also seen, not ours:** `TypeError: Cannot read properties of undefined (reading 'replace')
+(@chat/dist/chat.js:1)` — stock chat resource, most likely a qbx_chat_theme interaction.
+`ultra-voltlab` audio `dlchei4_game.dat` failed loading — recipe resource. Both noted, neither
+chased.
