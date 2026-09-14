@@ -29,6 +29,7 @@ AddEventHandler('outbreak:tick', function()
   lastStrip = now
   local ok, zone = pcall(function() return exports.outbreak_core:currentZone() end)
   local ok2, ch = pcall(function() return exports.outbreak_radio:getChannel() end)
+  local ok3, hf = pcall(function() return exports.outbreak_supply:hudFlags() end)
   SendNUIMessage({ action = 'world', data = {
     hour     = GlobalState.obTime,
     weather  = GlobalState.obWeather,
@@ -36,6 +37,7 @@ AddEventHandler('outbreak:tick', function()
     channel  = ok2 and ch or 0,
     zone     = ok and zone and zone.id or nil,
     heavy    = ok and zone and (zone.mult or 1) > 1.5 or false,
+    home     = ok3 and hf or nil,   -- settlement flags: critical/low categories, starving
   }})
 end)
 

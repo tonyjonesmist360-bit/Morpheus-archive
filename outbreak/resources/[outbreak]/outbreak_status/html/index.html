@@ -40,6 +40,17 @@
 
   .grid{display:grid;grid-template-columns:1.15fr 1fr 1fr .95fr;gap:1px;
         background:var(--line);flex:1;min-height:0}
+  /* With a home, a fifth column. Same bars, same thresholds - the settlement reads like the body. */
+  #panel.five{width:min(1320px,97vw)}
+  .grid.five{grid-template-columns:1.1fr .95fr .85fr .9fr 1.2fr}
+  .hm{display:flex;justify-content:space-between;font-size:10px;letter-spacing:1.2px;
+      text-transform:uppercase;font-weight:bold;color:var(--dim);margin-bottom:8px}
+  .hm span{color:var(--bone);font-variant-numeric:tabular-nums}
+  .need{display:flex;gap:8px;font-size:12px;padding:4px 0;border-bottom:1px solid var(--line);color:var(--dim)}
+  .need i{font-style:normal;width:8px;height:8px;margin-top:5px;flex:none;border:1px solid var(--line);background:var(--smoke)}
+  .need.critical{color:var(--bone)} .need.critical i{background:var(--rust);border-color:var(--rust)}
+  .need.low i{background:var(--food);border-color:var(--food)}
+  .ll{font-size:11.5px;color:var(--faint);padding:3px 0;font-style:italic}
   section{background:var(--panel);padding:15px 17px;overflow:auto;min-height:0}
   h2{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:var(--faint);
      margin-bottom:12px;font-weight:bold}
@@ -101,6 +112,7 @@
     <section><h2>Carrying</h2><div id="carry"></div></section>
     <section><h2>Skills</h2><div id="skills"></div></section>
     <section><h2>World</h2><div class="rows" id="world"></div></section>
+    <section id="homesec" hidden><h2 id="hometitle">Home</h2><div id="home"></div></section>
   </div>
   <footer><span><kbd>F1</kbd> or <kbd>Esc</kbd> close</span><span id="hint"></span></footer>
 </div></div>
@@ -171,9 +183,40 @@ function render(d){
     return `<div class="row"><b>${esc(k)}</b><span${hot?' style="color:var(--rust)"':''}>${esc(v)}</span></div>`;
   }).join('');
 
+  renderHome(d.home);
+
   $('hint').textContent = c.infected ? 'Antibiotics buy time. They do not cure it.'
     : c.bleeding ? 'Bleeding. Bandage before you move.'
     : (c.hunger<30||c.thirst<30) ? 'Running low. Eat or drink soon.' : '';
+}
+
+// A settlement bar shows days (with residents) or units (without). 'low'/'critical' get the
+// same stripes+throb every other low bar gets, so the settlement reads like the body does.
+const HTONE = { food:'var(--food)', water:'var(--water)', medicine:'var(--bone)', fuel:'var(--ok)', ammo:'var(--bone)', materials:'var(--ok)', comfort:'var(--bone)' };
+function hbar(cat, s){
+  const pct = Math.max(0,Math.min(100, s.pct||0));
+  const bad = s.status==='critical' || s.status==='low';
+  const right = s.days!=null ? (s.days<0.05 ? 'empty' : s.days.toFixed(1)+' d') : (Math.floor(s.units)+' '+(s.unit||''));
+  return `<div class="bar"><div class="t"><b>${esc(s.label||cat)}</b><span>${esc(right)}</span></div>
+    <div class="track"><div class="fill${bad?' low':''}" style="width:${pct}%;background:${bad?'var(--rust)':(HTONE[cat]||'var(--bone)')}"></div></div></div>`;
+}
+function renderHome(h){
+  const sec=$('homesec'), panel=$('panel'), grid=document.querySelector('.grid');
+  if(!h){ sec.hidden=true; panel.classList.remove('five'); grid.classList.remove('five'); return; }
+  sec.hidden=false; panel.classList.add('five'); grid.classList.add('five');
+  $('hometitle').textContent = 'Home — ' + (h.label||'');
+  const mw = h.morale>=70?'steady':h.morale>=45?'uneasy':h.morale>=25?'fraying':'breaking';
+  let html = `<div class="hm"><b>Residents</b><span>${h.residents||0} / ${h.targetResidents||0}</span></div>`;
+  html += bar('Morale · '+mw, h.morale||0, 'rest');
+  const order=['food','water','medicine','fuel','ammo','materials','comfort'];
+  html += order.map(c => h.stock&&h.stock[c] ? hbar(c,h.stock[c]) : '').join('');
+  if((h.needs||[]).length){
+    html += '<h2 style="margin-top:10px">Objectives</h2>' + h.needs.slice(0,6).map(n=>`<div class="need ${esc(n.status)}"><i></i><span>${esc(n.text)}</span></div>`).join('');
+  } else html += '<div class="none" style="margin-top:8px">Nothing pressing.</div>';
+  if((h.log||[]).length){
+    html += '<h2 style="margin-top:10px">Ledger</h2>' + h.log.slice(0,3).map(l=>`<div class="ll">${esc(l.text)}</div>`).join('');
+  }
+  $('home').innerHTML = html;
 }
 
 window.addEventListener('message', e=>{

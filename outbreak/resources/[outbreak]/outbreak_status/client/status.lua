@@ -12,7 +12,7 @@ end
 
 -- What counts as food / water / meds / tools. Keep in sync with ox_items_snippet.
 local GROUPS = {
-  food  = { 'canned_beans', 'mre', 'chocolate_bar', 'bread', 'noodle_bowl', 'chips', 'sweets' },
+  food  = { 'canned_beans', 'mre', 'hot_stew', 'cooked_meat', 'hot_noodles', 'chocolate_bar', 'bread', 'noodle_bowl', 'chips', 'sweets' },
   water = { 'water_clean', 'water_dirty', 'purify_tabs', 'soda', 'beer' },
   meds  = { 'bandage', 'ripped_sheet', 'antibiotics', 'splint', 'adrenaline_shot', 'painkillers' },
   tools = { 'hammer_tool', 'crowbar_tool', 'can_opener', 'plank', 'nails', 'radio_handheld', 'radio_battery' },
@@ -54,7 +54,10 @@ local function gather()
   end
 
   local hour = GlobalState.obTime
+  -- Settlement: fresh from the server on open (the HUD uses the pushed cache; this is the moment you look).
+  local home = ex(function() return lib.callback.await('outbreak:supply:home', false) end, nil)
   return {
+    home = home,
     identity = {
       callsign = ident and ident.callsign or nil,
       former   = ident and ident.former or nil,

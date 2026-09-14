@@ -48,3 +48,6 @@
 ['beer']             = { label = 'Beer',               weight = 500,  description = 'Room temperature courage.' },
 ['marine_fuel_can']  = { label = 'Marine Fuel Can',    weight = 2200, description = 'Two-stroke mix. The only thing an outboard will drink.' },
 ['marine_chart']     = { label = 'Marine Charts',      weight = 300,  description = 'Depths, currents, a bearing circled in pencil.' },
+['hot_stew']         = { label = 'Hot Stew',           weight = 450,  description = 'Beans, water, heat. The first warm thing in a week. Eat it while it is.' },
+['cooked_meat']      = { label = 'Cooked Meat',        weight = 300,  description = 'Whatever it was, it is safe now. Mostly.' },
+['hot_noodles']      = { label = 'Hot Noodles',        weight = 200,  description = 'Boiled properly this time.' },

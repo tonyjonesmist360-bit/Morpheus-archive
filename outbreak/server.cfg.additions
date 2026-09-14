@@ -40,6 +40,8 @@ ensure outbreak_binds
 ## weapons     catalog and durability rules. merge data/weapons_snippet.lua
 ## worlditems  place/take/storage/notes and entropy. needs 006_worlditems.sql
 ## dm          director menu. needs 007_dm.sql and the outbreak.dm ace
+## supply      settlements: stockpile read-model over the house stash, residents, morale, cooking. needs housing, items, worlditems, radio, 008_supply.sql
+## director    world director: reads settlements every 30-60 min and nudges the world. needs core, supply, radio
 ensure outbreak_core
 ensure outbreak_world
 ensure outbreak_emotes
@@ -56,6 +58,8 @@ ensure outbreak_faction
 ensure outbreak_weapons
 ensure outbreak_worlditems
 ensure outbreak_dm
+ensure outbreak_supply
+ensure outbreak_director
 
 ## Layer 2 - presentation that reads everything
 ## status is the F1 panel. It reads client exports only.

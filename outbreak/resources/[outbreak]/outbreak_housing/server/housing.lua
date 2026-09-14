@@ -106,6 +106,9 @@ RegisterNetEvent('outbreak:server:forcedEntry', function(id)
 end)
 
 exports('hasKey', hasKey)
+-- Read model for outbreak_supply / outbreak_director: owner + barricade, never the table itself.
+exports('getHouse', function(id) local h = houses[id]; return h and { owner = h.owner, barricade = h.barricade } or nil end)
+exports('houses', function() local out = {}; for _, h in ipairs(HousingCfg.Houses) do out[#out + 1] = { id = h.id, label = h.label, door = h.door } end return out end)
 exports('releaseHouse', function(id) local h = houses[id]; if h then h.owner = nil; save(id) end end)
 exports('isNearClaimedHouse', function(pos, radius)
   for id, h in pairs(houses) do

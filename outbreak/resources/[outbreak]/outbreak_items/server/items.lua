@@ -17,6 +17,10 @@ local Useables = {
   noodle_bowl   = { effects = { hunger = 28, thirst = 6 }, anim = 'eat' },
   soda          = { effects = { thirst = 18, fatigue = 6 }, anim = 'drink' },
   beer          = { effects = { thirst = 10, fatigue = -6 }, anim = 'drink' },
+  -- cooked at a settlement (outbreak_supply recipes): better than the raw input, never sick, fatigue back
+  hot_stew      = { effects = { hunger = 55, thirst = 10, fatigue = 8 }, anim = 'eat' },
+  cooked_meat   = { effects = { hunger = 30, fatigue = 4 }, anim = 'eat' },
+  hot_noodles   = { effects = { hunger = 40, thirst = 10, fatigue = 4 }, anim = 'eat' },
 }
 
 for item, def in pairs(Useables) do

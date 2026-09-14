@@ -68,6 +68,9 @@ local function doorMenu(h)
         inside = h.id; teleport(h.interior, h.interior.w) end }
     end
     opts[#opts + 1] = { title = 'Open storage', icon = 'box', event = 'outbreak:client:openStash', args = h.id }
+    if GetResourceState('outbreak_supply') == 'started' then
+      opts[#opts + 1] = { title = 'Settlement', icon = 'clipboard-list', description = 'Stock, residents, morale, cooking.', onSelect = function() TriggerEvent('outbreak:supply:openLedger', h.id) end }
+    end
     opts[#opts + 1] = { title = ('Barricade (lvl %d)'):format(info.barricade), icon = 'hammer', event = 'outbreak:client:doBarricade', args = h.id }
   end
   if info.isMine then

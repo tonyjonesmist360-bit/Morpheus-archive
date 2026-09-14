@@ -37,6 +37,13 @@ Actions.opp = function(src, a) pcall(function() local O = exports.outbreak_oppor
 Actions.camp = function(src, a) pcall(function() exports.outbreak_opportunities:modifyCamp(a.id, a.deltas or {}, 'dm') end) end
 Actions.rep = function(src, a) pcall(function() exports.outbreak_faction:addRep(a.target or src, a.faction, a.delta or 10, 'dm') end) end
 Actions.repeater = function(src, a) pcall(function() exports.outbreak_radio:setRepeater(a.id, a.active ~= false, 'dm') end) end
+Actions.director = function(src, a) pcall(function() exports.outbreak_director:evaluate() end) end
+Actions.settlement = function(src, a)
+  pcall(function()
+    if (a.residents or 0) > 0 then for _ = 1, a.residents do exports.outbreak_supply:addResident(a.house) end end
+    if (a.residents or 0) < 0 or (a.morale or 0) ~= 0 then exports.outbreak_supply:modify(a.house, { residents = (a.residents or 0) < 0 and a.residents or nil, morale = a.morale or 0 }, 'The Director adjusted the settlement.') end
+  end)
+end
 Actions.revive = function(src, a) TriggerClientEvent('outbreak:client:adminRevive', a.target or src) end
 Actions.tp = function(src, a) if a.target then local p = GetEntityCoords(GetPlayerPed(a.target)); TriggerClientEvent('outbreak:dm:tp', src, p) elseif a.pos then TriggerClientEvent('outbreak:dm:tp', src, a.pos) end end
 Actions.bring = function(src, a) if a.target then TriggerClientEvent('outbreak:dm:tp', a.target, posOf(src)) end end

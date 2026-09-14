@@ -1,6 +1,6 @@
 <#  04-paste-ins.ps1
     INSTALL-WALKTHROUGH Part 7.4. The two paste-ins first boot needs:
-      items - appends the 63 outbreak items into ox_inventory\data\items.lua
+      items - inserts (or refreshes) the outbreak items block in ox_inventory\data\items.lua
       jobs  - replaces the 'police' entry in qbx_core\shared\jobs.lua with military + raider
     weapons_snippet is NOT applied: it ships fully commented out and nothing in the
     slice requires it. Do that one by hand later.
@@ -35,7 +35,35 @@ if ($Only -eq 'both' -or $Only -eq 'items') {
     elseif (-not (Test-FileExists $snippet)) { Bad "not found: $snippet" }
     else {
         $lines = @(Get-Content -LiteralPath $target)
-        if ($lines -match 'OUTBREAK ITEMS') { Ok "already applied (marker found)" }
+        $snip  = @(Get-Content -LiteralPath $snippet)
+        $mStart = -1; $mEnd = -1
+        for ($i = 0; $i -lt $lines.Count; $i++) {
+            if ($mStart -lt 0 -and $lines[$i] -match '>>> OUTBREAK ITEMS') { $mStart = $i }
+            elseif ($mStart -ge 0 -and $lines[$i] -match '<<< OUTBREAK ITEMS') { $mEnd = $i; break }
+        }
+        if ($mStart -ge 0 -and $mEnd -gt $mStart) {
+            # Managed block exists. Re-apply only if the snippet changed, so an upgraded pack
+            # actually lands its new items (the old no-op here left v0.16 items undefined).
+            $current = @($lines[($mStart+1)..($mEnd-1)] | ForEach-Object { $_ -replace '^  ', '' })
+            $same = ($current.Count -eq $snip.Count)
+            if ($same) { for ($k = 0; $k -lt $snip.Count; $k++) { if ($current[$k] -ne $snip[$k]) { $same = $false; break } } }
+            if ($same) { Ok "already applied and current ($($snip.Count) lines)" }
+            else {
+                $body = ($snip | ForEach-Object { '  ' + $_ })
+                $new  = @($lines[0..$mStart]) + $body + @($lines[$mEnd..($lines.Count-1)])
+                $opens  = ([regex]::Matches(($new -join "`n"), '\{')).Count
+                $closes = ([regex]::Matches(($new -join "`n"), '\}')).Count
+                Note "managed block found at lines $($mStart+1)-$($mEnd+1); snippet differs ($($current.Count) -> $($snip.Count) lines); braces after edit: $opens open / $closes close"
+                if ($opens -ne $closes) { Bad "brace count would not balance - refusing to write. Do this one by hand." }
+                elseif ($DryRun) { Note "would rewrite the managed block in $target" }
+                elseif (Confirm-Or-Exit 'items.lua') {
+                    Backup-File -Path $target | Out-Null
+                    Write-TextNoBom -Path $target -Lines $new
+                    Ok "managed block replaced: $($snip.Count) snippet lines"
+                }
+            }
+        }
+        elseif ($mStart -ge 0) { Bad "found the >>> OUTBREAK ITEMS marker but no <<< end marker - items.lua was hand-edited. Fix by hand." }
         else {
             # The insert point is the final closing brace of the returned table.
             $idx = -1
@@ -46,7 +74,6 @@ if ($Only -eq 'both' -or $Only -eq 'items') {
             if ($idx -lt 1) {
                 Bad "could not find the closing '}' of items.lua - do this paste-in by hand (Part 7.4)"
             } else {
-                $snip = @(Get-Content -LiteralPath $snippet)
                 $body = @('', '  -- >>> OUTBREAK ITEMS (managed by setup/04-paste-ins.ps1)') +
                         ($snip | ForEach-Object { '  ' + $_ }) +
                         @('  -- <<< OUTBREAK ITEMS', '')
@@ -61,7 +88,7 @@ if ($Only -eq 'both' -or $Only -eq 'items') {
                 elseif (Confirm-Or-Exit 'items.lua') {
                     Backup-File -Path $target | Out-Null
                     Write-TextNoBom -Path $target -Lines $new
-                    Ok "63 outbreak items inserted"
+                    Ok "$($snip.Count) snippet lines inserted"
                 }
             }
         }

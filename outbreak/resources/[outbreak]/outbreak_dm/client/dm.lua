@@ -42,6 +42,8 @@ local function menu()
     { title = 'Camp stats', onSelect = function() local i = lib.inputDialog('Camp', { { type = 'input', label = 'Camp id', default = 'grapeseed' }, { type = 'number', label = 'defenses Δ', default = 0 }, { type = 'number', label = 'morale Δ', default = 0 }, { type = 'number', label = 'population Δ', default = 0 } }); if i then act('camp', { id = i[1], deltas = { defenses = i[2], morale = i[3], population = i[4] } }) end end },
     { title = 'Reputation', onSelect = function() players(function(p) local i = lib.inputDialog('Rep', { { type = 'input', label = 'Faction', default = 'civilian' }, { type = 'number', label = 'Δ', default = 10 } }); if i then act('rep', { target = p.id, faction = i[1], delta = i[2] }) end end) end },
     { title = 'Repeater on/off', onSelect = function() local i = lib.inputDialog('Repeater', { { type = 'input', label = 'Id', default = 'chiliad' }, { type = 'checkbox', label = 'Active', checked = true } }); if i then act('repeater', { id = i[1], active = i[2] }) end end },
+    { title = 'World Director: run a pass now', description = 'Reads every settlement and nudges once - stranger, rumour, probe, unrest', onSelect = function() act('director', {}) end },
+    { title = 'Settlement: residents / morale', onSelect = function() local i = lib.inputDialog('Settlement', { { type = 'input', label = 'House id', default = 'sandy_bungalow', required = true }, { type = 'number', label = 'residents Δ', default = 1 }, { type = 'number', label = 'morale Δ', default = 0 } }); if i then act('settlement', { house = i[1], residents = i[2], morale = i[3] }) end end },
   } })
 
   lib.registerContext({ id = 'dm_world', title = 'World', menu = 'dm_main', options = {

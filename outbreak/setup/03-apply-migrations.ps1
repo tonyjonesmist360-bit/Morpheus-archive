@@ -1,5 +1,5 @@
 <#  03-apply-migrations.ps1
-    INSTALL-WALKTHROUGH Part 7.3. Applies sql\migrations\001..007 in order.
+    INSTALL-WALKTHROUGH Part 7.3. Applies sql\migrations\001..008 in order.
     Every statement is CREATE TABLE IF NOT EXISTS - safe to re-run.
 #>
 param(
@@ -58,7 +58,7 @@ if (-not $DryRun) {
     Step "Verify"
     $n = (Invoke-Sql "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$DbName' AND table_name LIKE 'outbreak\_%';" |
           Select-Object -Last 1).ToString().Trim()
-    if ($n -eq '21') { Ok "21 outbreak_ tables present" } else { Bad "$n outbreak_ tables, expected 21" }
+    if ($n -eq '23') { Ok "23 outbreak_ tables present" } else { Bad "$n outbreak_ tables, expected 23" }
 }
 
 Write-Host ""
