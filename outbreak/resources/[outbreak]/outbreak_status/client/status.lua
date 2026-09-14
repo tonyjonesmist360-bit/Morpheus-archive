@@ -85,6 +85,8 @@ local function gather()
       job     = ex(function() return exports.outbreak_faction:getJob() end, nil),
       zone    = ex(function() local z = exports.outbreak_core:currentZone(); return z and z.id end, nil),
       heavy   = ex(function() local z = exports.outbreak_core:currentZone(); return z and (z.mult or 1) > 1.5 end, false),
+      tide    = ex(function() local t = GlobalState.obTide; return t and t.zone end, nil),
+      asleep  = ex(function() return exports.outbreak_needs:isAsleep() end, false),
     },
   }
 end

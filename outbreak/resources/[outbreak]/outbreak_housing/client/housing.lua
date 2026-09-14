@@ -71,6 +71,9 @@ local function doorMenu(h)
     if GetResourceState('outbreak_supply') == 'started' then
       opts[#opts + 1] = { title = 'Settlement', icon = 'clipboard-list', description = 'Stock, residents, morale, cooking.', onSelect = function() TriggerEvent('outbreak:supply:openLedger', h.id) end }
     end
+    opts[#opts + 1] = { title = 'Sleep', icon = 'bed', description = 'Four minutes, black screen. Rest to full; costs food and water. Anything close wakes you.', onSelect = function() TriggerEvent('outbreak:client:sleep', h.id) end }
+    opts[#opts + 1] = { title = 'Fill from the tap', icon = 'faucet', description = ('Pressure is gone. A trickle: murky water, %d an hour. Boil it.'):format(HousingCfg.TapPerHour or 4), onSelect = function()
+      if exports.outbreak_emotes:action('siphon', 4000, 'Filling...') then TriggerServerEvent('outbreak:server:tapWater', h.id) end end }
     opts[#opts + 1] = { title = ('Barricade (lvl %d)'):format(info.barricade), icon = 'hammer', event = 'outbreak:client:doBarricade', args = h.id }
   end
   if info.isMine then
@@ -120,12 +123,14 @@ RegisterNetEvent('outbreak:client:doBarricade', function(id)
 end)
 RegisterNetEvent('outbreak:client:openStash', function(id) TriggerServerEvent('outbreak:server:openHouseStash', id) end)
 
--- Wardrobe inside every interior (free — the apocalypse has no clothing stores)
+-- Wardrobe + a bed inside every interior (free — the apocalypse has no clothing stores)
 CreateThread(function()
   for _, h in ipairs(HousingCfg.Houses) do
     if h.interior then
       exports.ox_target:addSphereZone({ coords = vec3(h.interior.x + 2.0, h.interior.y, h.interior.z), radius = 1.2, options = { {
         label = 'Wardrobe', icon = 'fa-solid fa-shirt', onSelect = function() ExecuteCommand('wardrobe') end } } })
+      exports.ox_target:addSphereZone({ coords = vec3(h.interior.x - 2.0, h.interior.y, h.interior.z), radius = 1.2, options = { {
+        label = 'Bed — sleep', icon = 'fa-solid fa-bed', onSelect = function() TriggerEvent('outbreak:client:sleep', h.id) end } } })
     end
   end
 end)

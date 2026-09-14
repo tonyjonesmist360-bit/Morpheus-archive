@@ -177,9 +177,10 @@ function render(d){
               ['Nearby dead',(w.zombies==null?'—':w.zombies)],
               ['Radio',w.channel?('ch '+w.channel):'off'],
               ['Faction',w.job&&w.job!=='unemployed'?w.job:'—'],
-              ['Area', w.zone ? String(w.zone).replace(/_/g,' ') : 'open country']];
+              ['Area', w.zone ? String(w.zone).replace(/_/g,' ') : 'open country'],
+              ['The Tide', w.tide ? String(w.tide).replace(/_/g,' ') : 'nowhere yet']];
   $('world').innerHTML = rows.map(([k,v])=>{
-    const hot = (k==='Area' && w.heavy) || (k==='Blackout' && w.blackout);
+    const hot = (k==='Area' && w.heavy) || (k==='Blackout' && w.blackout) || (k==='The Tide' && w.tide && w.zone && String(w.tide)===String(w.zone));
     return `<div class="row"><b>${esc(k)}</b><span${hot?' style="color:var(--rust)"':''}>${esc(v)}</span></div>`;
   }).join('');
 

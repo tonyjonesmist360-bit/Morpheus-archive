@@ -49,7 +49,8 @@ end)
 -- status panel so 'this place is heavy' is legible before it is lethal.
 exports('currentZone', function()
   local z = hotZone(GetEntityCoords(PlayerPedId()))
-  return z and { id = z.id, mult = z.mult, bias = z.bias } or nil
+  local t = GlobalState.obTide
+  return z and { id = z.id, mult = z.mult, bias = z.bias, tide = (t and t.zone == z.id) or false } or nil
 end)
 exports('countZombies', function(radius)
   local pos = GetEntityCoords(PlayerPedId()); local n = 0
@@ -233,6 +234,7 @@ CreateThread(function()
     local hz = hotZone(ppos)
     zoneBias = hz and hz.bias or nil
     if hz then target = math.max(0, math.ceil(target * hz.mult)) end
+    do local t = GlobalState.obTide; if hz and t and t.zone == hz.id then target = math.ceil(target * (t.mult or 2.0)) end end   -- the Tide is here
     local count = 0
     for ped in pairs(zombies) do
       if not DoesEntityExist(ped) or IsEntityDead(ped) then

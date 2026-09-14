@@ -87,6 +87,39 @@ AddEventHandler('outbreak:tick', function(t)
   SetPedMoveRateOverride(ped, slow)
 end)
 
+-- SLEEP: black screen, the rest scenario, a clock. E, a zombie inside wakeRadius, or the timer wakes you.
+local asleep = false
+RegisterNetEvent('outbreak:client:sleep', function(houseId)
+  if asleep or LocalPlayer.state.downState then return end
+  local Sl = NeedsCfg.Sleep
+  asleep = true
+  TriggerServerEvent('outbreak:server:sleep', houseId, 'start')
+  pcall(function() exports.outbreak_emotes:play('rest') end)
+  DoScreenFadeOut(1500); Wait(1600)
+  lib.showTextUI('Sleeping   [E] wake up', { position = 'bottom-center' })
+  local started, reason = GetGameTimer(), 'rested'
+  while asleep do
+    Wait(250)
+    local left = Sl.seconds - (GetGameTimer() - started) / 1000
+    if left <= 0 then break end
+    if IsControlJustPressed(0, 38) or IsDisabledControlJustPressed(0, 38) then reason = 'woke'; break end
+    if LocalPlayer.state.downState then reason = 'hurt'; break end
+    if Sl.wakeOnZombies then
+      local ok, t = pcall(function() return exports.outbreak_core:getTick() end)
+      if ok and t and t.nearestDist and t.nearestDist < Sl.wakeRadius then reason = 'noise'; break end
+    end
+    if GetEntityHealth(PlayerPedId()) < 120 then reason = 'hurt'; break end
+  end
+  asleep = false
+  lib.hideTextUI()
+  TriggerServerEvent('outbreak:server:sleep', houseId, 'stop')
+  pcall(function() exports.outbreak_emotes:stop() end)
+  DoScreenFadeIn(1500)
+  lib.notify({ title = reason == 'rested' and 'You slept.' or reason == 'noise' and 'Something is outside.' or reason == 'hurt' and 'You wake in pain.' or 'You get up.',
+    description = reason == 'rested' and 'Rested. Hungrier. Thirstier.' or reason == 'noise' and 'Close. Too close.' or nil, type = reason == 'rested' and 'success' or 'warning', duration = 6000 })
+end)
+exports('isAsleep', function() return asleep end)
+
 exports('getNeeds', function() return state end)
 exports('isBleeding', isBleeding)
 exports('getWounds', function() return state.wounds end)

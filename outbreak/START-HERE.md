@@ -1,6 +1,19 @@
-# START HERE — Outbreak v0.17.0
+# START HERE — Outbreak v0.18.0
 
-## What changed since v0.16.0 (2026-09-14 overnight build sheet)
+## What changed since v0.17.0
+
+| | |
+|---|---|
+| **Sleep** | Door → Sleep, or the bed inside an interior. Four minutes black, fatigue to full, costs food and water; E, damage or a zombie within 60 m wakes you. Server pays by elapsed time. |
+| **Water sources** | Door → Fill from the tap: murky water, 4 per house per hour. New `rain_catcher` placeable (tool-chest loot): fills with murky water while it rains, cap 8. Boiling already exists — the loop closes. |
+| **The Tide** | One roaming super-horde on a mob area: radio warning, red radius on the map, ~2× density there, `THE TIDE` on the strip, F1 row. Moves every 20–40 min. Settlements inside it get probed ×3. `/ob_tide` moves it. |
+
+Deploy: `02-copy-resources`, `04-paste-ins -Only items -Force` (rain catcher), `07-update-cfg -Apply` (no cfg change, harmless). Items: **350**.
+Checklist: `TEST-CHECKLIST.md §9b`.
+
+---
+
+## v0.17.0 — What changed since v0.16.0 (2026-09-14 overnight build sheet)
 
 **Walk `TEST-CHECKLIST.md` top to bottom.** Every feature from the sheet is in it, in test order, with the expected result and an
 *unverified* flag where I could not see or hear it from here.

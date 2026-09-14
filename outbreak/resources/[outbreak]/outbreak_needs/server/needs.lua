@@ -101,6 +101,27 @@ local function consume(src, effects)
 end
 exports('consume', consume)
 
+-- SLEEP. Client runs the fade and the wake conditions; the server holds the clock and pays out
+-- by elapsed time, so a client cannot claim a full night from a two-second nap.
+local sleeping = {}
+RegisterNetEvent('outbreak:server:sleep', function(houseId, phase)
+  local src = source
+  local Sl = NeedsCfg.Sleep
+  if phase == 'start' then
+    local ok, k = pcall(function() return exports.outbreak_housing:hasKey(src, houseId) end)
+    if not ok or not k then TriggerClientEvent('ox_lib:notify', src, { title = 'Not your bed.', type = 'error' }) return end
+    sleeping[src] = os.time()
+    Player(src).state:set('sleeping', true, true)
+  elseif phase == 'stop' and sleeping[src] then
+    local frac = math.max(0, math.min(1, (os.time() - sleeping[src]) / Sl.seconds))
+    sleeping[src] = nil
+    Player(src).state:set('sleeping', nil, true)
+    consume(src, { fatigue = Sl.fatigueGain * frac, hunger = -Sl.hungerCost * frac, thirst = -Sl.thirstCost * frac })
+    save(src)
+  end
+end)
+AddEventHandler('playerDropped', function() sleeping[source] = nil end)
+
 -- treat: item validated + removed by outbreak_items; here we change the body
 local function treatWound(src, part, item)
   local st = S[src]; if not st then return false end

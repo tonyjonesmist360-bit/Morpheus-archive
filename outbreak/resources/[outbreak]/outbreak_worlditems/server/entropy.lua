@@ -36,6 +36,17 @@ CreateThread(function()
         if rec.item ~= 'rotten_meat' then WI():placeSystem('rotten_meat', 1, {}, rec.pos, rec.rot, 'time') end
       end
     end
+    -- 3b) rain catchers fill while it rains
+    local R = E.rain
+    if R and R.weathers[GlobalState.obWeather or ''] then
+      for id, rec in pairs(WI():list()) do
+        if rec.item == 'rain_catcher' and rec.storage then
+          local have = 0
+          pcall(function() have = exports.ox_inventory:GetItemCount('wi_' .. id, 'water_dirty') or 0 end)
+          if have < R.cap then pcall(function() exports.ox_inventory:AddItem('wi_' .. id, 'water_dirty', math.min(R.perTick, R.cap - have)) end) end
+        end
+      end
+    end
     -- 4) raiders break into unlocked storage left outside claimed houses (near roads = in the open)
     if now - lastRaid > E.raiders.checkHours * 3600 then
       lastRaid = now

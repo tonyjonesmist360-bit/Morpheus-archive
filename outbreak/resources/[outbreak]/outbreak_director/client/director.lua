@@ -78,9 +78,23 @@ CreateThread(function()
   end
 end)
 
+-- ── THE TIDE on the map: a red radius where the super-horde sits ──
+local tideBlip = nil
+local function drawTide()
+  if tideBlip and DoesBlipExist(tideBlip) then RemoveBlip(tideBlip) end
+  tideBlip = nil
+  local t = GlobalState.obTide
+  if not t or not t.pos or not (DirectorCfg.Tide and DirectorCfg.Tide.blip) then return end
+  tideBlip = AddBlipForRadius(t.pos.x, t.pos.y, t.pos.z, t.radius or 200.0)
+  SetBlipColour(tideBlip, 1); SetBlipAlpha(tideBlip, 70)
+end
+AddStateBagChangeHandler('obTide', 'global', function() Wait(0); drawTide(); local t = GlobalState.obTide; if t then lib.notify({ title = 'The Tide moved.', description = (tostring(t.zone):gsub('_', ' ')) .. '. Red on your map.', type = 'warning', duration = 8000 }) end end)
+CreateThread(function() Wait(4000); drawTide() end)
+
 AddEventHandler('onResourceStop', function(r)
   if r ~= GetCurrentResourceName() then return end
   for _, p in pairs(active) do if DoesEntityExist(p) then DeleteEntity(p) end end
   if defBlip and DoesBlipExist(defBlip) then RemoveBlip(defBlip) end
+  if tideBlip and DoesBlipExist(tideBlip) then RemoveBlip(tideBlip) end
   lib.hideTextUI()
 end)

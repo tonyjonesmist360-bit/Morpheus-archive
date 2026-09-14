@@ -37,6 +37,7 @@ AddEventHandler('outbreak:tick', function()
     channel  = ok2 and ch or 0,
     zone     = ok and zone and zone.id or nil,
     heavy    = ok and zone and (zone.mult or 1) > 1.5 or false,
+    tide     = ok and zone and zone.tide or false,
     home     = ok3 and hf or nil,   -- settlement flags: critical/low categories, starving
   }})
 end)

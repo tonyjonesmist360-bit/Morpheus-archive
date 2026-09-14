@@ -5,6 +5,7 @@ HousingCfg = {
   BarricadeCost = { plank = 2, nails = 1 },
   MaxBarricadeLevel = 3,
   KeyItem = 'safehouse_key',       -- metadata.house = id; give the item = give access. No apps. No money.
+  TapPerHour = 4,                  -- murky water from a claimed house's tap, per house, per real hour (the grid is down; so is the pressure)
   -- Every house has searchable spots (persistent cooldown via outbreak_items loot service) and,
   -- if the occupant roll misses, an environmental story shown on first entry.
   SearchSpots = { { name = 'Kitchen cupboards', table = 'house' }, { name = 'Bathroom cabinet', table = 'medical' }, { name = 'Bedroom drawers', table = 'house' } },

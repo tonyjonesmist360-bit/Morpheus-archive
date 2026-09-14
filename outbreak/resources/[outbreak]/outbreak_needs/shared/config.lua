@@ -25,4 +25,6 @@ NeedsCfg = {
   },
   WoundRateLimitMs = 800,   -- server ignores wound reports faster than this
   Encumbrance = { slowAt = 0.8, crawlAt = 1.0 },
+  -- SLEEP: in a bed you hold a key to. Resting outdoors (the emote) stays the slow, exposed option.
+  Sleep = { seconds = 240, fatigueGain = 100, hungerCost = 8, thirstCost = 10, wakeOnZombies = true, wakeRadius = 60.0 },
 }

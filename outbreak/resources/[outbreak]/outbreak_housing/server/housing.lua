@@ -91,6 +91,17 @@ RegisterNetEvent('outbreak:server:houseSearch', function(id, spotIdx)
   exports.outbreak_items:search(src, ('house_%s_%d'):format(id, spotIdx), spot.table)
 end)
 
+-- The tap: a trickle of murky water for keyholders, rate-limited per house per hour.
+local tap = {}   -- house_id -> { hour = floor(os.time()/3600), n = draws }
+RegisterNetEvent('outbreak:server:tapWater', function(id)
+  local src = source
+  if not houses[id] or not hasKey(src, id) then return end
+  local hour = math.floor(os.time() / 3600)
+  local t = tap[id]; if not t or t.hour ~= hour then t = { hour = hour, n = 0 }; tap[id] = t end
+  if t.n >= (HousingCfg.TapPerHour or 4) then TriggerClientEvent('ox_lib:notify', src, { title = 'Dry. It coughs air.', description = 'Give it an hour.', type = 'error' }) return end
+  if exports.ox_inventory:AddItem(src, 'water_dirty', 1) then t.n = t.n + 1; TriggerClientEvent('ox_lib:notify', src, { title = 'Murky water.', description = 'Boil it before it counts.', type = 'inform' }) end
+end)
+
 -- Permadeath hook: a dead owner's house goes back on the market (their key rots with them)
 AddEventHandler('outbreak:server:characterDied', function(citizenid)
   for id, h in pairs(houses) do

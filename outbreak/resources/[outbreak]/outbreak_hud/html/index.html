@@ -140,6 +140,7 @@
       if (w.weather) bits.push(w.weather);
       if (w.channel) bits.push('CH ' + w.channel);
       if (w.zone) bits.push(`<span class="${w.heavy ? 'hot' : ''}">${String(w.zone).replace(/_/g,' ')}</span>`);
+      if (w.tide) bits.push('<span class="hot">THE TIDE</span>');
       // Home: one token, only when it matters. Critical names the category; low is a single quiet word.
       if (w.home) {
         const h = w.home, crit = (h.critical || []), low = (h.low || []);

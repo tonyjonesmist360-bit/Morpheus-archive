@@ -13,6 +13,9 @@ DirectorCfg = {
     overrun = { morale = -15, food = 3, water = 2, medicine = 2, residentLossChance = 0.5, barricade = 1 },
   },
   StrangerExpireMinutes = 10,
+  -- THE TIDE: one roaming super-horde. It sits on a mob area (OutbreakCfg.HotZones with mult >= minZoneMult),
+  -- multiplies that area's density, then moves on. Announced on the radio; a red radius on the map.
+  Tide = { enabled = true, everyMinutes = { 20, 40 }, mult = 2.2, minZoneMult = 1.0, probeWeightMult = 3, blip = true },
   -- Every model here is unverified until /ob_models says otherwise. These four are already used by outbreak_dm / outbreak_housing.
   StrangerModels = { 'a_m_y_hipster_01', 'a_f_y_tourist_01', 'a_m_m_farmer_01', 'a_m_m_hillbilly_01' },
   -- Per settlement, per action. Minutes. 'quiet' and 'nothing' are the pass doing nothing, on purpose.
@@ -43,6 +46,7 @@ DirectorCfg = {
     trader         = { 'Word travels. Someone on channel 5 is asking about the place at %s. Might be trade. Might not.' },
     unrest         = { 'Your people at %s are talking. Bring them something. Anything.', 'It is quiet at %s. The bad kind of quiet.' },
     safehouse      = { '%s is empty. The door still holds. Someone should take it before someone else does.', 'If you need walls: %s. Nobody has claimed it.' },
+    tide           = { '...they are moving through %s. Hundreds. Stay off the roads...', '*static* ...%s... the whole street... do not... *static*', 'If you are near %s: leave. Now. All of them are there.' },
   },
   StrangerLines = { 'I have been walking for three days. I can work. I can keep watch.', 'Saw your barricade from the road. Please. I will not be trouble.', 'My group is gone. I have hands. I have a knife. Let me in.' },
 }

@@ -8,9 +8,10 @@ WorldItemsCfg = {
     car_battery = 'prop_car_battery_01', engine_parts = 'prop_car_engine_01', hose_kit = 'prop_hose_1', map_scrap = 'prop_cs_paper_01', document = 'prop_cs_documents_01',
     lantern = 'prop_worklight_01a', sandbag = 'prop_sandbag_wall', crate = 'prop_box_wood02a', duffel_bag = 'prop_ld_bag_01', note = 'prop_cs_paper_02', chair = 'prop_chair_01a',
     padlock = 'prop_ld_padlock', dog_tags = 'prop_cs_dogtag',
+    rain_catcher = 'prop_barrel_02a',   -- from memory, UNVERIFIED: if it fails to load the Fallback bag stands in
   },
   -- Placeable STORAGE: becomes an ox stash bound to the placed object. Lockable with a padlock; forcing = pin sweep (pins).
-  Storage = { crate = { slots = 20, weight = 60000, pins = 3 }, duffel_bag = { slots = 12, weight = 30000, pins = 2 } },
+  Storage = { crate = { slots = 20, weight = 60000, pins = 3 }, duffel_bag = { slots = 12, weight = 30000, pins = 2 }, rain_catcher = { slots = 4, weight = 8000, pins = 1 } },
   -- Curated MAP props you can take. Removal is persisted with CreateModelHide for everyone. model -> { item, count, weight-ish delay }
   Takeables = {
     [`prop_chair_01a`] = { item = 'chair', count = 1, seconds = 3 },
@@ -43,5 +44,6 @@ WorldItemsCfg = {
     takeables = { restoreAfterHours = 48 },            -- "someone replaced it": taken map props come back
     raiders = { checkHours = 6, chance = 0.25, roadRadius = 60.0 }, -- unlocked storage outside a claimed house near a road: raiders break in
     perishables = { canned_beans = false, water_dirty = 12, mre = false, rotten_meat = 6, bread = 24, noodle_bowl = false, chocolate_bar = false }, -- hours until a placed food item spoils/vanishes
+    rain = { weathers = { RAIN = true, THUNDER = true }, perTick = 1, cap = 8 },   -- a placed rain_catcher gains murky water per entropy tick while it rains
   },
 }

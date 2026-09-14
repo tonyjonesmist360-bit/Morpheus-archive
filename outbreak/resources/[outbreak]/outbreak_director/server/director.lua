@@ -140,7 +140,9 @@ local function evaluate()
       if m.residents < m.targetResidents and fed and m.morale >= 45 then add('stranger', D.Weights.stranger) end
       if food.status == 'critical' or food.status == 'low' then add('rumor_food', D.Weights.rumor_food) end
       if med.status == 'critical' or med.status == 'low' then add('rumor_medicine', D.Weights.rumor_medicine) end
-      if m.residents > 0 and ((m.barricade or 0) < 1 or m.stock.ammo.status ~= 'good') then add('probe', D.Weights.probe) end
+      local inTide = false
+      do local t = GlobalState.obTide; if t and t.pos and m.door and #(m.door - t.pos) <= (t.radius or 0) then inTide = true end end
+      if m.residents > 0 and ((m.barricade or 0) < 1 or m.stock.ammo.status ~= 'good' or inTide) then add('probe', D.Weights.probe * (inTide and (D.Tide and D.Tide.probeWeightMult or 3) or 1)) end
       if m.residents > 0 and m.morale < 30 then add('unrest', D.Weights.unrest) end
       if m.allGood then add('trader', D.Weights.trader); add('quiet', D.Weights.quiet) end
       add('nothing', D.Weights.nothing)
@@ -155,8 +157,35 @@ local function evaluate()
   end
 end
 
+-- ── THE TIDE ──
+local function zoneLabel(id) return (tostring(id):gsub('_', ' ')) end
+local function moveTide()
+  local T = D.Tide; if not T or not T.enabled then return end
+  local cur = GlobalState.obTide
+  local cands = {}
+  for _, z in ipairs(OutbreakCfg.HotZones or {}) do
+    if (z.mult or 1) >= T.minZoneMult and not (cur and cur.zone == z.id) then cands[#cands + 1] = z end
+  end
+  if #cands == 0 then return end
+  local z = cands[math.random(#cands)]
+  GlobalState.obTide = { zone = z.id, pos = z.pos, radius = z.radius, mult = T.mult, at = os.time() }
+  radio(line('tide', zoneLabel(z.id)))
+  logDb('*', 'tide', z.id)
+end
+exports('tideAt', function() return GlobalState.obTide end)
+RegisterCommand('ob_tide', function(src)
+  if src ~= 0 and not IsPlayerAceAllowed(src, 'outbreak.debug') then return end
+  moveTide()
+  local t = GlobalState.obTide
+  if src ~= 0 then TriggerClientEvent('ox_lib:notify', src, { title = 'The Tide moved.', description = t and zoneLabel(t.zone) or '-', type = 'inform' }) end
+end, false)
+
 CreateThread(function()
   Wait(6000)
+  if D.Tide and D.Tide.enabled then
+    pcall(function() exports.outbreak_core:scheduleEvent('tide', D.Tide.everyMinutes[1], D.Tide.everyMinutes[2], moveTide) end)
+    SetTimeout(90000, function() if not GlobalState.obTide then moveTide() end end)   -- first placement soon after boot, once someone is on
+  end
   local ok = pcall(function() exports.outbreak_core:scheduleEvent('director', D.EveryMinutes[1], D.EveryMinutes[2], evaluate) end)
   if not ok then print('^1[outbreak_director] outbreak_core:scheduleEvent unavailable - the Director will not run^7') end
 end)

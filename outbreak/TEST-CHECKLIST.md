@@ -76,5 +76,14 @@ from here). Mark each ✓ / ✗ and `/bug` anything that fails so the position a
 - [ ] `/walkstyle` → menu; `injured` works (confirmed clipset); try the others — any that say **INVALID** are names from memory, tell me which
 - [ ] `/crouch` (or wheel → Crouch) → crouched clipset ★; again → normal
 
+## 9b · v0.18 — sleep, water sources, the Tide
+- [ ] Door → **Sleep** (keyholder) → screen fades black, "Sleeping [E] wake up", rest pose ★; after 4 min → "You slept." fatigue full, hunger −8, thirst −10. E early → partial credit (server pays by elapsed time)
+- [ ] Sleep with a zombie spawned within 60 m (`/ob_zombie 1` from a friend) → "Something is outside." and you are up
+- [ ] Interior house: **Bed — sleep** target 2 m left of the entry point (opposite the wardrobe) does the same
+- [ ] Door → **Fill from the tap** → 4 s pour anim → 1 murky water; fifth draw in the same hour → "Dry. It coughs air."
+- [ ] `/ob_give rain_catcher 1`, wheel → Set something down → ★ a barrel prop (or the fallback bag if `prop_barrel_02a` is wrong — tell me). `ob_weather RAIN`; each entropy tick (10 min, or set `tickMinutes = 1`) adds 1 murky water to it, cap 8. Open it like a crate
+- [ ] ~90 s after the first player joins, radio: "...they are moving through <area>..." and a **red radius** on the map; F1 → World → The Tide names it; HUD strip shows **THE TIDE** in rust when you stand in it; zombie density there is ~2×. `/ob_tide` moves it (debug)
+- [ ] A settlement inside the Tide gets defense events far more often (probe weight ×3) — F10 → Director pass while your house is in the red
+
 ## 10 · Still v0.16 (if not yet walked)
 - [ ] `SMOKE-SCRIPT.md §14` S1–S8: settlement ledger, cooking, consumption, morale behaviours, stranger, rumour, F1 Home column

@@ -543,3 +543,18 @@ session report. Notes that matter for debugging tomorrow:
   editor (illenium still broken — Deferred), layered clothing with condition/dirt, persistent scars,
   saved outfits, prone/lean/vault, paired emotes, box-carry animation, drag-drop inventory changes
   (ox_inventory owns it), per-item custom art beyond ox's stock icons.
+
+## 2026-09-14 — v0.18.0: sleep, water sources, the Tide
+
+- **Sleep** lives in `outbreak_needs` (server clock, pays by elapsed fraction so a two-second nap is not a
+  night); the door-menu entry and the interior bed target are in `outbreak_housing`. Uses the existing
+  `rest` scenario for the body. Wake conditions are client-side (E, damage, `getTick().nearestDist < 60`).
+- **Tap** is rate-limited per house per real hour in `outbreak_housing` (`TapPerHour`). **Rain catcher** is a
+  storage placeable (`wi_<id>` stash, 4 slots) that the entropy tick tops up with murky water while
+  `GlobalState.obWeather` is RAIN/THUNDER. Model `prop_barrel_02a` is from memory — UNVERIFIED; worlditems
+  falls back to the paper-bag model if it fails, so it degrades to "works, looks wrong".
+- **The Tide** is owned by `outbreak_director` (rides `scheduleEvent('tide')`), published as
+  `GlobalState.obTide`; `outbreak_core`'s spawner multiplies its zone target when the Tide's zone matches
+  and `currentZone()` reports `tide = true` for the HUD. `outbreak_director` now includes
+  `@outbreak_core/shared/config.lua` for the HotZones list — the same cross-resource include pattern
+  `outbreak_debug` has used since the first boot.

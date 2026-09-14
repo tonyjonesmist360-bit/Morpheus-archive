@@ -53,4 +53,5 @@
 ['hot_stew']         = { label = 'Hot Stew',           weight = 450,  description = 'Beans, water, heat. The first warm thing in a week. Eat it while it is.', client = { image = 'burger.png' } },
 ['cooked_meat']      = { label = 'Cooked Meat',        weight = 300,  description = 'Whatever it was, it is safe now. Mostly.', client = { image = 'burger.png' } },
 ['hot_noodles']      = { label = 'Hot Noodles',        weight = 200,  description = 'Boiled properly this time.', client = { image = 'burger.png' } },
+['rain_catcher']     = { label = 'Rain Catcher',       weight = 3000, description = 'A barrel and a tarp. Set it outside; it fills when it rains. Murky - boil it.' },
 ['mumble_pill']      = { label = 'Voice Reset',        weight = 0,    description = 'Nobody can hear you? Swallow this. Reconnects your voice without leaving the server.', client = { image = 'mustard.png' } },
