@@ -53,17 +53,19 @@ function Backup-File {
 function Write-TextNoBom {
     param(
         [Parameter(Mandatory=$true)][string]$Path,
-        [Parameter(Mandatory=$true)][AllowEmptyCollection()][string[]]$Lines
+        [AllowEmptyCollection()][AllowEmptyString()][AllowNull()][string[]]$Lines = @()
     )
+    if ($null -eq $Lines) { $Lines = @() }
     $enc = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllLines($Path, $Lines, $enc)
+    [System.IO.File]::WriteAllLines($Path, [string[]]$Lines, $enc)
 }
 
 function Add-TextNoBom {
     param(
         [Parameter(Mandatory=$true)][string]$Path,
-        [Parameter(Mandatory=$true)][AllowEmptyCollection()][string[]]$Lines
+        [AllowEmptyCollection()][AllowEmptyString()][AllowNull()][string[]]$Lines = @()
     )
+    if ($null -eq $Lines) { $Lines = @() }
     $enc = New-Object System.Text.UTF8Encoding($false)
     [System.IO.File]::AppendAllLines($Path, [string[]]$Lines, $enc)
 }
