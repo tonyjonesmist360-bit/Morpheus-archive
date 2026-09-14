@@ -63,8 +63,25 @@ them, but it never repeats the moodles, which are already unmissable.
 4. Handle the NUI action in the page. `tools_diag.py` flags a `SendNUIMessage` action the HTML never
    handles, which is how the world strip's missing handler got caught before it shipped.
 
-## Accessibility notes, honestly
+## Colour vision
 
-Colour carries meaning in the bars, and red/green is the worst pair for it. Mitigated by every bar
-also carrying a number and a stencil tag, and by low bars throbbing rather than only changing hue.
-Not solved — a colourblind-safe palette is open work, and worth doing before the crew grows.
+The base palette was already close to safe: **blue (`H2O`) against orange (`FOOD`)** is the canonical
+colourblind-safe pair, and bone reads as light to everyone.
+
+The genuine failure was elsewhere. Under deuteranopia — the most common form — **rust and olive
+collapse toward the same yellow-brown**, and that is precisely the *critical* colour against the
+*normal fatigue* colour. A player could not tell a dying bar from a healthy one by hue.
+
+Fixed by making "low" carry three independent signals:
+
+| Signal | Survives colour blindness | Survives a still screenshot |
+|---|---|---|
+| Rust hue | ✗ | ✓ |
+| **45° stripes** | ✓ | ✓ |
+| Throb animation | ✓ | ✗ |
+| Numeric value + stencil tag | ✓ | ✓ |
+
+Any one of them is enough. Applied identically in the HUD and the status panel.
+
+**Rule for anything added later:** colour may reinforce a meaning, never carry it alone. If you
+cannot read the screen in greyscale, it is not finished.

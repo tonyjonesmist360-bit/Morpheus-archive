@@ -5,20 +5,24 @@ local function traitOptions(list)
   return o
 end
 
-RegisterNetEvent('outbreak:client:createSurvivor', function()
-  -- 1) face + body + clothes in illenium's creator
-  -- No config table: illenium builds its own from its config.lua. Passing a flat
-  -- { components = true, props = true } made its NUI read .masks/.hats off undefined
-  -- and crash, leaving the player frozen in the creator with no UI. See SHAKEDOWN-NOTES FB-7.
-  pcall(function() exports['illenium-appearance']:startPlayerCustomization(function() end) end)
+-- Opens illenium's creator. Bounded and non-blocking: its NUI can hang (SHAKEDOWN-NOTES
+-- FB-7) and nothing here is allowed to strand the player. Returns true if it handed
+-- control back cleanly.
+local function openCreator()
+  local ok = pcall(function() exports['illenium-appearance']:startPlayerCustomization(function() end) end)
+  if not ok then return false end
   Wait(500)
-  -- Bounded wait: illenium's creator NUI can hang (see SHAKEDOWN-NOTES FB-7), and an
-  -- unbounded loop here traps the player with no dialog and no way out. After 90s we
-  -- give up on the creator and go straight to the identity dialog.
   local waited = 0
   while IsNuiFocused() and waited < 90000 do Wait(500); waited = waited + 500 end
-  if waited >= 90000 then SetNuiFocus(false, false) end
-  -- 2) who you were
+  if waited >= 90000 then SetNuiFocus(false, false); return false end
+  return true
+end
+
+RegisterNetEvent('outbreak:client:createSurvivor', function()
+  -- ORDER MATTERS. Identity runs FIRST because it is the half that feeds gameplay -
+  -- traits set starting skill levels, the callsign is what other survivors see. The
+  -- creator is cosmetic, it is the half that is currently broken, and putting it first
+  -- meant one broken dependency blocked character creation entirely. See FB-7 / EV-1.
   local input = lib.inputDialog('WHO WERE YOU', {
     { type = 'input', label = 'Callsign / what people call you', required = true, max = 20 },
     { type = 'select', label = 'Former life', required = true, options = (function() local o = {} for _, f in ipairs(IdentityCfg.FormerLives) do o[#o + 1] = { value = f, label = f } end return o end)() },
@@ -26,12 +30,23 @@ RegisterNetEvent('outbreak:client:createSurvivor', function()
     { type = 'multi-select', label = 'Strengths (pick 2)', required = true, options = traitOptions(IdentityCfg.Traits.positive) },
     { type = 'select', label = 'Flaw (pick 1)', required = true, options = traitOptions(IdentityCfg.Traits.negative) },
   })
-  if not input then TriggerEvent('outbreak:client:createSurvivor') return end
+  if not input then
+    -- Dismissed. Re-ask, but never in a tight loop.
+    Wait(2000)
+    TriggerEvent('outbreak:client:createSurvivor')
+    return
+  end
   local pos = input[4] or {}
   if #pos > 2 then pos = { pos[1], pos[2] } end
   local traits = { pos[1], pos[2], input[5] }
   TriggerServerEvent('outbreak:server:saveIdentity', { callsign = input[1], former = input[2], description = input[3], traits = traits })
   lib.notify({ title = 'That\'s who you were.', description = 'Now stay alive.', type = 'inform', duration = 7000 })
+
+  -- Then the mirror. Failure here costs you a face, not a character.
+  Wait(800)
+  if not openCreator() then
+    lib.notify({ title = 'The mirror is cracked.', description = 'Appearance editor did not open. Use /wardrobe to try again later.', type = 'warning', duration = 9000 })
+  end
 end)
 
 -- /look : read the person in front of you (NoPixel-style description)

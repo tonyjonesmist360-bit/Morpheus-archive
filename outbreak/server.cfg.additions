@@ -39,14 +39,17 @@ ensure outbreak_wheel
 ensure outbreak_debug
 
 ## ── VEHICLES v2 (server-authoritative - prerequisite for chain 2 and war rigs) ───
-# ensure outbreak_vehicles          # after outbreak_core, ox_inventory, outbreak_minigames, outbreak_emotes - apply 004_vehicles.sql
+ensure outbreak_vehicles            # ENABLED 2026-09-14. Needs outbreak_core, ox_inventory,
+                                    # outbreak_minigames, outbreak_emotes (all above) and
+                                    # 004_vehicles.sql (applied). Untested in play - if the
+                                    # boot goes red, comment this line and restart.
 
 ## ── PROGRESSION (HELD until DESIGN-progression.md review + slice pass) ─────────
 # ensure outbreak_intel            # after outbreak_core, outbreak_radio, outbreak_items
 # ensure outbreak_opportunities    # after outbreak_intel, outbreak_faction
 
 ## ── EXTENDED (HELD until the slice passes FIRST_BOOT_CHECKLIST.md) ─────────────
-# ensure outbreak_vehicles
+# outbreak_vehicles is ENABLED above in the VEHICLES v2 block - do not add it twice
 # ensure outbreak_craft
 # ensure outbreak_military
 # ensure outbreak_stations

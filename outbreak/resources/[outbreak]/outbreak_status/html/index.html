@@ -52,7 +52,10 @@
   .bar .t span{font-variant-numeric:tabular-nums;color:var(--bone)}
   .track{height:7px;background:var(--smoke);border:1px solid var(--line)}
   .fill{height:100%;transition:width .3s}
-  .fill.low{animation:throb 1.2s infinite}
+  /* Same treatment as the HUD: stripes carry "low" without relying on hue. */
+  .fill.low{animation:throb 1.2s infinite;
+    background-image:repeating-linear-gradient(45deg,
+      rgba(0,0,0,.32) 0 3px, transparent 3px 6px)}
   @keyframes throb{50%{opacity:.45}}
 
   .rows{display:flex;flex-direction:column;gap:7px}

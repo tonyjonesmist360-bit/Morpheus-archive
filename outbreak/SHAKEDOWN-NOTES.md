@@ -285,6 +285,54 @@ depending on framework config. Identify it from the running resource first — t
 
 ---
 
+## Build 2026-09-14 — identity order, vehicles v2, colour vision
+
+### B3-1 · Identity runs before the creator
+
+`outbreak:client:createSurvivor` opened illenium's creator first and the WHO WERE YOU dialog
+second. The creator is the half that is broken (FB-7) and the half that is purely cosmetic; the
+dialog is the half that feeds gameplay, because traits set starting skill levels and the callsign
+is what other survivors see with `/look`. One broken dependency was therefore blocking character
+creation outright.
+
+Reversed. Dialog first, then the creator as an optional trailing step in `openCreator()`, still
+bounded at 90s. If it fails the player gets *"The mirror is cracked — use /wardrobe to try again
+later"* and keeps playing. Also fixed a tight retry: dismissing the dialog re-fired the event with
+no delay, now `Wait(2000)` first.
+
+**EV-1 is still open.** The appearance is still discarded by the empty callback. This makes a
+broken creator survivable; it does not make it work.
+
+### B3-2 · Vehicles v2 enabled
+
+`ensure outbreak_vehicles` is live. `CLAUDE.md` holds the extended groups until smoke 0–11 pass and
+they have not — this is a deliberate override, taken on request.
+
+Pre-flight before enabling, all clean: every export it calls exists (`ox_target:addGlobalVehicle`,
+five ox_inventory exports, `outbreak_skills:grantXP/getLevel/effects`, `outbreak_emotes:action`,
+`outbreak_minigames:play`), all seven manifest dependencies start earlier in the cfg, and
+`004_vehicles.sql` is applied. Also removed a duplicate `ensure outbreak_vehicles` left commented
+in the EXTENDED block, which would have double-ensured it the moment that block was uncommented.
+
+**Untested in play.** If the boot goes red, comment line 42 of `server.cfg.additions` and restart —
+nothing else in the slice depends on it.
+
+### B3-3 · Colour vision — the real failure was not red/green
+
+The palette was already close to safe: blue `H2O` against orange `FOOD` is the canonical
+colourblind-safe pair. The genuine failure was **rust against olive** — under deuteranopia both
+collapse toward the same yellow-brown, and that is exactly *critical* against *normal fatigue*. A
+player could not distinguish a dying bar from a healthy one by hue.
+
+"Low" now carries four independent signals: rust hue, 45° stripes, throb, and the numeric value
+next to its stencil tag. Stripes survive colour blindness and screenshots; throb survives colour
+blindness but not a still; the number survives everything. Applied identically in HUD and panel.
+
+Rule recorded in `UI-SYSTEM.md`: colour may reinforce a meaning, never carry it alone — if the
+screen is unreadable in greyscale it is not finished.
+
+---
+
 ## Deferred
 
 - **illenium-appearance creator hangs and traps the player.** `SMOKE-SCRIPT` §2 / checklist C1.

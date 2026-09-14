@@ -34,7 +34,14 @@
   #f-hunger .fill { background: #c98f3d; }
   #f-thirst .fill { background: #5f8fa3; }
   #f-fatigue .fill { background: #7d8a5c; }
-  .fill.low { background: var(--rust) !important; animation: throb 1.2s infinite; }
+  /* A low bar must not rely on hue alone. Deuteranopia collapses rust and olive toward
+     the same yellow-brown, which is exactly the FATIGUE-vs-critical pair. Stripes carry
+     the meaning independently of colour; throb carries it independently of both. */
+  .fill.low {
+    background: var(--rust) !important; animation: throb 1.2s infinite;
+    background-image: repeating-linear-gradient(45deg,
+      rgba(0,0,0,.32) 0 3px, transparent 3px 6px) !important;
+  }
   @keyframes throb { 50% { opacity: .45; } }
 
   /* World strip — one thin line under the bars. Deliberately the quietest thing on
