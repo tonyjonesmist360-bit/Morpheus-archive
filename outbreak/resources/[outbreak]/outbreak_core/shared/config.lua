@@ -24,6 +24,18 @@ OutbreakCfg = {
   -- tick (faster when you are closer and more visible), it turns to face you, and it charges at
   -- 100. Inside InstantRadius it charges at once. Out of sight, suspicion decays.
   Suspicion = { instantRadius = 6.0, gainPerTick = 34, decayPerTick = 20, closeBoost = 2.0 },
+  -- QUIET KILL (client/quietkill.lua). Anims are GTA's own takedown clips, names from memory - UNVERIFIED;
+  -- tried in order, the first dict that loads is used, and the kill happens either way (plain stab if none).
+  QuietKill = {
+    Range = 1.7, BehindDot = -0.35, Standoff = 0.75, Seconds = 1.4,
+    Weapons = { 'WEAPON_KNIFE', 'WEAPON_DAGGER', 'WEAPON_HATCHET', 'WEAPON_MACHETE', 'WEAPON_SWITCHBLADE', 'WEAPON_BOTTLE', 'WEAPON_CROWBAR', 'WEAPON_HAMMER', 'WEAPON_WRENCH', 'WEAPON_BAT', 'WEAPON_UNARMED' },
+    Never = { bloater = true },
+    Struggle = { runner = true, brute = true }, StruggleHealthLeft = 0.5, StruggleNoise = 20,
+    Anims = {
+      { dict = 'melee@knife@streamed_core', plyr = 'plyr_takedown_back', victim = 'victim_takedown_back' },
+      { dict = 'melee@unarmed@streamed_variations', plyr = 'plyr_takedown_front_slap', victim = 'victim_takedown_front_slap' },
+    },
+  },
   HearGunshotRadius = 90.0,     -- gunfire pulls zombies
   WalkStyles = { 'move_m@injured' },  -- BISECT 2: verydrunk alone did NOT lurch, so it is the bad name
   Hordes = { enabled = true, minInterval = 20, maxInterval = 45, size = 25, announceOnRadio = true },

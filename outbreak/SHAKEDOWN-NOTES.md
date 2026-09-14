@@ -569,3 +569,18 @@ inside `Suspicion.instantRadius`. Hearing is unchanged. Tuning knobs: `OutbreakC
 the shelf list) with `SetEntityVelocity` — no throw animation from memory; the whistle action stands in
 for the arm. `lureTo` uses `TaskGoStraightToCoord` with a 20 s timeout so lured zombies do not stand
 at the can forever.
+
+## 2026-09-14 — v0.20.0: quiet kill
+
+`outbreak_core/client/quietkill.lua`. Candidate picked from the core tick (stealth or crouched, blade
+or blunt in hand, inside 1.7 m, behind by forward-vector dot < -0.35, suspicion < 100, not in combat);
+the per-frame thread only runs while a candidate exists. On E: snap behind, freeze it, takedown clip
+pair from `OutbreakCfg.QuietKill.Anims` (GTA's own clip names, from memory - UNVERIFIED; first dict that
+loads wins, plain stab via the treat action if none), kill with `markQuietKill` so headshot-only's
+resurrect skips it. Bloaters refuse; runners/brutes struggle. No noise spike: `TaskPlayAnim` is not
+melee combat, so the tick never sees `melee`.
+
+**Analyzer lesson.** Writing the exports that read `variantOf`/`suspicion` above their `local`
+declarations would have been the `hotZone` bug again in a different shape. diag3 check 6 only knew
+`local function`; 6b now flags a top-level `local NAME = ...` used earlier in the file. Regression-tested
+by un-hoisting `variantOf`.

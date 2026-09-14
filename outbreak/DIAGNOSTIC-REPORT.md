@@ -1,6 +1,6 @@
 # DIAGNOSTIC REPORT (static, pre-boot)
 
-Resources scanned: 37  ·  files: 178
+Resources scanned: 37  ·  files: 179
 
 
 ## ERROR (0)

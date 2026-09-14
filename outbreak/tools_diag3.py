@@ -9,6 +9,7 @@ during the 2026-09-13 first boot. Each check exists because a real bug got throu
   4. Config key paths            -> a CfgTable.a.b that no config file defines
   5. Cross-resource exports      -> exports.outbreak_x:y() with no matching exports('y')
   6. Forward references          -> 2026-09-13 19:05: outbreak_core exported currentZone()
+                                    (6b: same for top-level `local NAME = ...` tables, 2026-09-14)
                                     which called hotZone(), a `local function` defined 70
                                     lines LATER. Inside the closure the name resolved to a
                                     global -> nil. Pass 1 saw it "defined" and said nothing.
@@ -207,6 +208,19 @@ for res in resources():
                 dline = src[:at].count('\n') + 1
                 errors.append(f"**{name}** - `{fn}()` used at `{rel}:{line}` but it is a `local function` declared at line {dline}; earlier uses bind to a nil global. Forward-declare it (`local {fn}` near the top, `{fn} = function` at the definition)")
                 break
+        # 6b. the same for top-level `local NAME = ...` tables/values: a closure defined above the
+        #     declaration captures a global NAME (nil), not the local. Caught 2026-09-14: the export
+        #     block in outbreak_core read variantOf/suspicion declared 60 lines further down.
+        for m in re.finditer(r'^local\s+([A-Za-z_]\w{3,})\s*=(?!\s*function\b)', src, re.M):
+            nm, at = m.group(1), m.start()
+            before = src[:at]
+            u = re.search(r'(?<![\w.:])' + re.escape(nm) + r'(?![\w])(?!\s*=[^=])', before)
+            if u:
+                # ignore if an earlier `local NAME` (any form) already exists above the use - a different scope's own local
+                if re.search(r'\blocal\s+(?:function\s+)?' + re.escape(nm) + r'\b', before[:u.start()]): continue
+                line = before[:u.start()].count('\n') + 1
+                dline = src[:at].count('\n') + 1
+                errors.append(f"**{name}** - `{nm}` used at `{rel}:{line}` before its top-level `local {nm} = ...` at line {dline}; a closure above the declaration reads a nil global. Move the declaration up")
 
 print("# SYSTEMS CHECK - pass 3 (classes that slipped past passes 1 and 2)\n")
 print(f"Resources: {len(resources())}\n")

@@ -3,6 +3,9 @@
 local zombies = {}
 local spawnZombie -- forward-declared: exports above call it
 local hotZone     -- forward-declared: exports above call it
+local variantOf = {} -- ped -> variant name (declared up here: the exports below read it)
+local suspicion = {}     -- ped -> 0..100
+local topSuspicion = 0   -- highest in range this tick, for the HUD eye
 local ZGROUP = `OUTBREAK_ZOMBIES`
 local DEBUG = function() return GlobalState.obDebug == true end
 
@@ -59,6 +62,10 @@ exports('countZombies', function(radius)
 end)
 exports('spawnZombieAt', function(pos) return spawnZombie(pos, PlayerPedId()) end) -- debug/test
 exports('getSuspicion', function() return topSuspicion end)
+exports('suspicionOf', function(ped) return suspicion[ped] or 0 end)
+exports('variantOf', function(ped) return variantOf[ped] end)
+local quietKilled = {}
+exports('markQuietKill', function(ped) quietKilled[ped] = true end)
 -- Something made a noise over THERE: every zombie in radius that is not already fighting walks to it.
 exports('lureTo', function(pos, radius)
   local n = 0
@@ -130,7 +137,7 @@ local function findSpawnPos(ppos)
   return vector3(x, y, z)
 end
 
-local variantOf = {} -- ped -> variant name
+-- variantOf declared near the top (forward)
 
 -- MOB AREAS: the zone the player is standing in, or nil. Read by the spawner (density)
 -- and by pickVariant (which variant this place tends to produce).
@@ -273,8 +280,7 @@ local function currentNoise()
 end
 
 local wasGhost = false
-local suspicion = {}     -- ped -> 0..100
-local topSuspicion = 0   -- highest in range this tick, for the HUD eye
+-- suspicion / topSuspicion declared near the top (forward)
 local function currentVisibility()
   local ok, v = pcall(function() return exports.outbreak_noise:getVisibility() end)
   return ok and v or 50
@@ -336,6 +342,7 @@ end)
 -- Headshot-only: a body-shot "kill" twitches... and gets back up
 local function tryResurrect(ped)
   if not OutbreakCfg.HeadshotOnly then return end
+  if quietKilled[ped] then quietKilled[ped] = nil return end   -- a knife in the neck stays down
   local _, bone = GetPedLastDamageBone(ped)
   if bone == 31086 then return end -- SKEL_Head: it stays down
   SetTimeout(math.random(1500, 4000), function()

@@ -1,6 +1,16 @@
-# START HERE — Outbreak v0.19.0
+# START HERE — Outbreak v0.20.0
 
-## What changed since v0.18.0
+## What changed since v0.19.0
+
+| | |
+|---|---|
+| **Quiet kill** | Stealth/crouched + a blade or blunt + behind an unseen zombie inside 1.7 m → `[E] quiet kill`: snap to its back, takedown, no noise, stays down under headshot-only. Bloaters never; runners and brutes struggle (half damage, noise 20, they turn on you). Stealth XP. GTA's own engine takedown is untouched and may also fire — test both. |
+
+Deploy: `02-copy-resources` only. Checklist: `TEST-CHECKLIST.md §9d`.
+
+---
+
+## v0.19.0 — What changed since v0.18.0
 
 | | |
 |---|---|

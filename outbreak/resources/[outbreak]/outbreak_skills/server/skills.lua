@@ -40,7 +40,7 @@ local function grant(src, action)
   local c = cache[src]; if not c then return end
   local amt = SkillCfg.XP[action]; if not amt then return end
   local skill = ({ repair = 'mechanics', battery = 'mechanics', hotwire = 'mechanics', bandage = 'medicine', splint = 'medicine', stabilize = 'medicine',
-                   sneak_tick = 'stealth', sprint_tick = 'fitness', search = 'scavenging', cache = 'scavenging' })[action]
+                   sneak_tick = 'stealth', sprint_tick = 'fitness', search = 'scavenging', cache = 'scavenging', quiet_kill = 'stealth' })[action]
   local mult = 1.0
   for t, m in pairs(SkillCfg.TraitXPMult) do if hasTrait(c, t) then mult = mult * m end end
   local before = math.floor(c.xp[skill] / SkillCfg.XPPerLevel)

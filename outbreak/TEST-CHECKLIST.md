@@ -93,5 +93,13 @@ from here). Mark each ✓ / ✗ and `/bug` anything that fails so the position a
 - [ ] Wheel → **Throw a distraction** with a soda/beer in pockets → can arcs out ★, lands, zombies within 40 m walk to it and stand there; your own noise barely moves. No can → "Nothing to throw."
 - [ ] Stealth skill levels reduce both noise and visibility (skills panel)
 
+## 9d · v0.20 — quiet kill
+- [ ] **Engine takedown first:** Ctrl stealth, knife out, walk up behind an UNSEEN/NOTICED zombie, melee. Does GTA's own takedown animation play? (Free if yes; tell me either way)
+- [ ] **Scripted:** same approach → `[E] quiet kill` prompt appears on the right only when: stealth/crouched + blade/blunt in hand + within 1.7 m + behind it + not SEEN. Step in front → prompt goes
+- [ ] E → you snap to its back, ★ takedown animation (or a plain stab if both dicts are INVALID — F8 says which), it drops, **noise dot does not ripple**, "Quiet."
+- [ ] With `HeadshotOnly = true` it stays down (quiet kills are exempt from the get-back-up)
+- [ ] Runner at night → "It twists out of your grip", half health, noise, it fights you. Bloater → "Not that one."
+- [ ] Skills → stealth XP +10 per quiet kill
+
 ## 10 · Still v0.16 (if not yet walked)
 - [ ] `SMOKE-SCRIPT.md §14` S1–S8: settlement ledger, cooking, consumption, morale behaviours, stranger, rumour, F1 Home column

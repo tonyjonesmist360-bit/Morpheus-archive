@@ -3,7 +3,7 @@ SkillCfg = {
   MaxLevel = 10,
   XPPerLevel = 100,     -- level = floor(sqrt(xp / 100))-ish; kept linear for readability
   XP = { repair = 25, battery = 15, hotwire = 12, bandage = 15, splint = 25, stabilize = 40,
-         sneak_tick = 2, sprint_tick = 1, search = 6, cache = 30 },
+         sneak_tick = 2, sprint_tick = 1, search = 6, cache = 30, quiet_kill = 10 },
   -- what levels buy you (read via exports by other resources)
   Effects = {
     mechanics  = function(l) return { repairTime = 1.0 - l * 0.06, partsSave = l * 0.04 } end,  -- 40% faster, 40% chance parts survive at 10
