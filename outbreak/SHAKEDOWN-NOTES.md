@@ -486,3 +486,35 @@ above + `local function NAME` below, which declares a second local the closure n
 (@chat/dist/chat.js:1)` — stock chat resource, most likely a qbx_chat_theme interaction.
 `ultra-voltlab` audio `dlchei4_game.dat` failed loading — recipe resource. Both noted, neither
 chased.
+
+## 2026-09-14 — autonomous build: v0.16.0 (settlements, cooking, morale, World Director)
+
+Tony's brief while away: stability first, then the food/supply foundation, then roadmap 1–3 (World
+Director, Settlement Needs, morale as behaviour), everything with its UI. Full design in
+`DESIGN-supply.md`; test plan in `SMOKE-SCRIPT §14` / checklist S1–S8.
+
+**ALWAYS FIRST — bug status.** Latest login log (19:05) was clean after the `hotZone` fix. Still
+open and *not* fixable from here: illenium creator NUI errors (needs the recipe's illenium config
+in front of us — next step unchanged from the Deferred entry), `prop_cs_body_bag` and the two bread
+shelf props (need `/ob_models`), the stock `chat.js` TypeError (not ours). Nothing else red.
+
+**Could not boot.** No FXServer in this container. Substitute: `tools_luac.py` (a real Lua 5.4
+parse of all 145 files) added to the chain, and all four passes are clean. First boot of v0.16.0
+is Tony's; rollback is two `#`s in the cfg.
+
+**Built.** `outbreak_supply` (config 60 lines, server 330, client 120), `outbreak_director`
+(config 45, server 170, client 60), migration 008, three items + useables, Home column in F1,
+HUD strip token, Director menu tools, housing `getHouse`/`houses` exports + Settlement door entry.
+
+**Deploy traps fixed on the way.** `04-paste-ins.ps1` no-oped when the marker existed, exactly like
+05 — an upgraded snippet never landed. It now diffs the managed block and refreshes it.
+`03-apply-migrations.ps1` hardcoded 21 tables (now 23); `_common.ps1` migration list and
+`SliceResourceCount` (24) updated.
+
+**Unverified until it runs** (all listed in DESIGN-supply.md): ox_lib context `progress`/`colorScheme`
+rendering, `GetInventoryItems` on an unopened stash, the four stranger ped models, rumour coordinates
+(only used to pick the nearest label).
+
+**Deliberately not built.** Resident *bodies* inside the house (behaviour is visible through the
+ledger, notes, notifies and stock — bodies are a follow-up once interiors are settled). Consumption
+while the server is empty (world moves when someone is in it — a design choice, documented).

@@ -96,6 +96,16 @@ Record PASS / FAIL / NOTES per line. Copy console errors verbatim.
 - [ ] D7 Critical timer expires → epitaph → memorial `/fallen` → corpse bag lootable → character cannot reload
 - [ ] D8 `/ob_revive <id>` from an admin pulls a glitched player out of any state
 
+## Settlement & World Director (outbreak_supply / outbreak_director) — v0.16.0
+- [ ] S1 Door → Settlement on a claimed house: 7 bars, residents 0/4, `/ob_home` opens it too
+- [ ] S2 Items in storage move the bars; murky water shows as "unboiled" and does not count
+- [ ] S3 Cook → Boil / Stew / Noodles / Meat: inputs + one plank gone from storage, outputs appear, ledger line, pouring anim
+- [ ] S4 DM → Settlement +2 residents; with `TickMinutes = 2` a meal disappears per few ticks; HUD `HOME LOW` → `HOME FOOD`
+- [ ] S5 DM morale −45: within 3 ticks a dispute / drinking / leaving line; on leaving a readable note prop at the door and residents −1
+- [ ] S6 DM → World Director pass with food stocked: stranger walks to the door; Take them in → resident +1; Send away → wanders off
+- [ ] S7 Food empty → Director pass → OVERHEARD rumour on the radio naming a real store; `outbreak_director_log` row
+- [ ] S8 F1 Home column agrees with the ledger; survives a restart
+
 ## Wheel & binds
 - [ ] G1 G opens the wheel; contents change with state (wounds, downed neighbor)
 - [ ] G2 Controller: D-pad Down = wheel, Up = inventory, Left = radio, B = cancel

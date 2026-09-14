@@ -49,6 +49,14 @@ the panel must agree.
 | **World strip** — thinnest line on screen | time / blackout / weather / radio channel / mob area | — |
 | **Status panel** (`outbreak_status`) — on demand | condition + wounds, carrying by category, skills, world | `F1` |
 | **Wheel** (`outbreak_wheel`) — on demand | contextual actions | `G` |
+| **Settlement ledger** (`outbreak_supply`) — on demand | stock bars with days/units, residents + morale, cook, objectives, log | Door → Settlement, or `/ob_home` |
+| **Home column** in the status panel | the same seven bars, morale, objectives, last ledger lines — only when you hold a key | `F1` |
+| **World strip** token | `HOME FOOD` (rust) when critical · `HOME LOW` when low · `HOME STARVING` | — |
+
+The ledger is an ox_lib context menu, not a new NUI page: menus are the pack's interaction
+language (wheel, emotes, DM), and progress rows give bars without a second visual system to keep
+in step with the HUD. The Home column reuses the panel's `bar()` treatment — stripes and throb on
+low — so a starving house reads exactly like a starving body.
 
 Nothing duplicates for its own sake: the panel repeats the vitals because you open it *to* check
 them, but it never repeats the moodles, which are already unmissable.

@@ -1,6 +1,28 @@
-# START HERE — Outbreak v0.13.3
+# START HERE — Outbreak v0.16.0
 
-Everything needed for the first-ever boot is in this folder. Nothing has run on FXServer yet.
+## What changed since v0.15.0 (2026-09-14, autonomous build)
+
+| | |
+|---|---|
+| **+ `outbreak_supply`** | Settlements. The house stash is the stockpile; residents eat from it; spoilage; four recipes at the door; morale that becomes behaviour (disputes, drinking, leaving with a note). Ledger on the door menu + `/ob_home`. **Migration 008.** |
+| **+ `outbreak_director`** | World Director every 30–60 min: stranger at the door (recruit), food/medicine rumours on the radio, probes at weak houses, word from home, safehouse tips. DM → Story → "run a pass now". |
+| **✎ status panel / HUD** | F1 gains a Home column; the world strip gets one `HOME …` token. |
+| **✎ `outbreak_items`** | 3 cooked items + useables — **re-run `04-paste-ins.ps1`**, it now refreshes the managed block. |
+| **✎ `outbreak_housing`** | read-only `getHouse` / `houses` exports; Settlement entry on the door menu. |
+| **✎ `outbreak_dm`** | Director pass + settlement residents/morale tools. |
+| **✎ setup** | `07-update-cfg.ps1` (replaces a stale cfg block), `04` refreshes items, 24 slice resources, 23 tables. `tools_luac.py` — a real Lua parser pass; run it with the other three. |
+| **✎ `outbreak_core`** | `hotZone` forward-declared (was nil in `currentZone`). |
+
+Read `DESIGN-supply.md`, then run **SMOKE-SCRIPT §14**. Deploy: extract over `C:\Outbreak\pack`, then
+`02-copy-resources`, `03-apply-migrations`, `04-paste-ins`, `07-update-cfg -Apply` — all with
+`-Base "C:\Outbreak\txData"` — then restart. Rollback for the two new resources is two `#`s in
+`server.cfg` (`ensure outbreak_supply`, `ensure outbreak_director`); nothing else depends on them.
+
+---
+
+## Original first-boot notes (v0.13.3)
+
+Everything needed for the first-ever boot is in this folder.
 
 ## What changed since v0.13.2
 

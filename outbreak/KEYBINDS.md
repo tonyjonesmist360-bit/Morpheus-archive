@@ -25,4 +25,4 @@ Reclaimed controller buttons: D-pad Up (phone is dead), D-pad Left/Right (radio 
 | Cancel a stuck minigame | /cancelminigame | — | escape hatch |
 | Self-splint when incapacitated | E | A | |
 
-Chat commands: `/e <emote>` `/semotes` `/fallen` `/craft` `/setfaction <id> military|raider <grade>` (admin)
+Chat commands: `/e <emote>` `/semotes` `/fallen` `/craft` `/ob_home` (settlement ledger) `/setfaction <id> military|raider <grade>` (admin)

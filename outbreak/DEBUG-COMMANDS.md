@@ -27,6 +27,14 @@ being downed has taken chat away from you.
 | `ob_revive <id>` | admin | Pulls a player out of any downed/critical state. **Console-safe** — and from the console it skips the ace check entirely, so it works even if your principal is wrong. |
 | `dm` | dm | Director menu. World → Ghost (invisible + invincible), Revive, Teleport, Bring. |
 
+## Settlement & World Director (v0.16.0)
+
+| Command | Gate | Does |
+|---|---|---|
+| `ob_home` | — | Opens your settlement ledger from anywhere (the same menu as Door → Settlement). |
+| `ob_director` | debug | Forces one World Director pass now. **Console-safe.** Also: F10 → Story → "World Director: run a pass now". |
+| F10 → Story → Settlement | dm | residents ± / morale ± on a house id. |
+
 ## Items and character state
 
 | Command | Gate | Does |

@@ -86,4 +86,15 @@ Legend: 🖥 server console · F8 client console · ▶ do · 👁 expect
 ## 13 · Controller (5 min)
 ▶ Pad: D-pad Up inventory, Down wheel, Left radio, B cancel; journal D-pad nav; wheel select.
 
+## 14 · Settlement + World Director (20 min) — v0.16.0, never run
+▶ Claim a house (or `/ob_key`), Door → **Settlement** → 👁 residents 0, seven bars, "Nobody yet". `/ob_home` opens the same from anywhere.
+▶ Open the stockpile, drop in 3 beans, 2 clean water, 2 murky water, 2 planks → reopen Settlement → 👁 bars moved, "2 unboiled water".
+▶ Cook → Boil water → 👁 pouring anim 8 s; storage: murky gone, +2 clean; Ledger has the line. Cook → Bean stew → 👁 +2 hot stew, a plank gone. Eat one → 👁 hunger +55.
+▶ F10 → Story → Settlement: residents +2. F1 → 👁 Home column: residents 2/4, food in days. For a fast test set `SupplyCfg.TickMinutes = 2` and restart: 👁 a meal disappears from storage every few ticks; HUD strip shows `HOME LOW` then `HOME FOOD` in rust.
+▶ F10 → Settlement: morale −45. Wait 2–3 ticks → 👁 ledger: dispute / drinking / **a resident left**, a note prop at the door (Read it), resident count −1, "Word from home" notify.
+▶ Stock food again, F10 → Story → **World Director: run a pass now** → 👁 "Someone at the door" — a survivor walks up; Take them in → 👁 "<name> moves in", ledger line. Run again → Send them away → 👁 they wander off.
+▶ Empty the food, run a pass → 👁 radio (CH --) OVERHEARD naming the nearest 24/7. `/ob_director` from F8 does the same (debug ace).
+▶ 🖥 `outbreak_settlements` has your house; `outbreak_director_log` has rows.
+▶ Restart → 👁 residents, morale and ledger survive.
+
 STOP. Paste every red line and every FAIL. That's the patch list.

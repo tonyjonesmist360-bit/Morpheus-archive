@@ -44,6 +44,10 @@ is patched to obey. Anything not on this map is a bug.
 | **Item definitions** | `outbreak_items/data/ox_items.lua` — the ONLY item list | ox_inventory | useables registered in `outbreak_items/server` only |
 | **Inputs** | `outbreak_binds` — the ONLY `RegisterKeyMapping` calls | — | commands dispatched to owners |
 | **Animations** | `outbreak_emotes` | — | export `action(name, durationMs)` — every progress-bar action calls this; animations on player peds replicate natively |
+| **Settlements** (residents, morale, ledger, consumption debt) | `outbreak_supply` server | MySQL `outbreak_settlements` | exports `getSettlement(id)`, `settlements()`, `homeOf(src)`, `keyholders(id)`, `addResident`, `takeUnits`, `modify`, `log` · callbacks `outbreak:supply:model`, `outbreak:supply:home` · push `outbreak:supply:update` |
+| **Stockpile levels** | nobody — a read-model over the ox stash `safehouse_<id>` | ox_inventory | `outbreak_supply` reads the stash and removes real items; never mirrors it. See DESIGN-supply.md |
+| **World nudges** (stranger, rumours, probes, unrest) | `outbreak_director` server | MySQL `outbreak_director_log` | export `evaluate()`; rides `outbreak_core:scheduleEvent('director')` |
+| **House read model** | `outbreak_housing` | — | new exports `getHouse(id)` → `{owner, barricade}`, `houses()` → `{id, label, door}` |
 
 ## Loop budget (the "no duplicate monitors" rule)
 
@@ -57,6 +61,8 @@ Exactly these client loops exist in the slice:
 6. `outbreak_down` **death intercept** (100 ms) — must be fast
 7. `outbreak_world` **clock/weather** (2 s)
 8. `outbreak_housing` **barricade render** (event-driven, no loop)
+
+Server-side schedules (all through `outbreak_core:scheduleEvent`, so they only fire with players online): `horde`, `supplyTick` (10 min), `director` (30–60 min). `outbreak_worlditems` entropy keeps its own 10-min thread (pre-dates the scheduler).
 
 Removed by this pass: noise's own sampling loop (→ tick subscriber), needs' encumbrance loop (→ tick), skills' sneak loop (→ tick), emotes' movement-cancel loop (→ tick), identity/vehicles/camps `GetGamePool` scans (→ core export).
 
@@ -85,7 +91,10 @@ Server → Client:
 `outbreak:client:loadNeeds`, `outbreak:client:consume`, `outbreak:client:infected`, `outbreak:client:antibiotics`, `outbreak:client:horde`,
 `outbreak:client:radioMsg`, `outbreak:client:revived`, `outbreak:client:respawn`, `outbreak:client:corpseSpawned`, `outbreak:client:thisIsHowYouDied`,
 `outbreak:client:freshSpawn`, `outbreak:client:createSurvivor`, `outbreak:client:skills`, `outbreak:client:barricadeLevel`, `outbreak:client:me`, `outbreak:client:carried`,
-`outbreak:client:survivalDamage` (server computes starvation/bleed/infection damage, client applies it — `SetEntityHealth` is client-only)
+`outbreak:client:survivalDamage` (server computes starvation/bleed/infection damage, client applies it — `SetEntityHealth` is client-only),
+`outbreak:supply:update` (settlement model to keyholders), `outbreak:director:stranger` / `outbreak:director:strangerResolved`
+
+Client → Server (v0.16): `outbreak:supply:hello`, `outbreak:supply:cook(houseId, recipeId)`, `outbreak:supply:dismiss(houseId, name)`, `outbreak:director:takeIn(encounterId)`, `outbreak:director:sendAway(encounterId)`
 
 Client-local bus:
 `outbreak:tick`, `outbreak:noise:spike`, `outbreak:hud:update`, `outbreak:hud:noise`, `outbreak:client:bleedCheck`, `outbreak:anim:play`
@@ -105,3 +114,5 @@ Client-local bus:
 | XP / traits | server | |
 | Faction changes / reputation | server | ace-gated command |
 | Fuel / battery / part / lock / key / claim | **server** (vehicles v2) | server burns fuel from `GetEntityVelocity`; every mutation validated; claimed vehicles persisted + respawned server-side |
+| Cooking / residents / morale | server | key + `DoorRange` + stash contents checked server-side; the client only picks a recipe |
+| Stranger take-in | server | server-issued encounter id with expiry; key + 20 m of the door checked; the ped is cosmetic |
