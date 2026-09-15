@@ -121,6 +121,31 @@
   .figure.infected .r { stroke: #7d8a5c; }
   #body { position: fixed; left: 238px; bottom: 16px; width: 30px; height: 65px; }
   #body .figure { width: 100%; height: 100%; overflow: visible; }
+  /* Crew panel — top left, thin. Name, a 60px health line, a one-word state. Only while in a crew. */
+  #crew { position: fixed; left: 18px; top: 18px; display: none; flex-direction: column; gap: 4px; min-width: 150px; }
+  #crew.on { display: flex; }
+  #crew .cn { font-size: 9.5px; letter-spacing: 1.6px; text-transform: uppercase; font-weight: bold; color: rgba(216,210,192,.45); text-shadow: 0 1px 2px rgba(0,0,0,.8); margin-bottom: 2px; }
+  #crew .m { display: grid; grid-template-columns: 90px 60px auto; gap: 8px; align-items: center; font-size: 11px; color: var(--bone); text-shadow: 0 1px 2px rgba(0,0,0,.8); }
+  #crew .m .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #crew .m .nm.me { color: rgba(216,210,192,.6); }
+  #crew .m .tr { height: 5px; background: var(--smoke); border: 1px solid rgba(216,210,192,.25); }
+  #crew .m .tr i { display: block; height: 100%; background: var(--bone); }
+  #crew .m .tr i.low { background: var(--rust); animation: throb 1.2s infinite; }
+  #crew .m .st { font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase; color: rgba(216,210,192,.5); }
+  #crew .m .st.bad { color: var(--rust); }
+  /* Compass — top centre. Cardinals slide with the camera heading; pins, waypoint and home sit on it. */
+  #compass { position: fixed; left: 50%; top: 14px; width: 380px; height: 30px; margin-left: -190px; overflow: hidden;
+             -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); }
+  #compass .track { position: absolute; top: 0; left: 0; height: 100%; }
+  #compass .tk { position: absolute; top: 3px; width: 1px; height: 5px; background: rgba(216,210,192,.28); }
+  #compass .tk.big { height: 8px; background: rgba(216,210,192,.5); }
+  #compass .cd { position: absolute; top: 10px; transform: translateX(-50%); font-size: 10px; letter-spacing: 1px; font-weight: bold; color: rgba(216,210,192,.55); text-shadow: 0 1px 2px rgba(0,0,0,.8); }
+  #compass .cd.n { color: var(--rust); }
+  #compass .mk { position: absolute; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; }
+  #compass .mk i { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid #c98f3d; }
+  #compass .mk b { font-size: 8px; letter-spacing: 1px; text-transform: uppercase; color: rgba(216,210,192,.6); text-shadow: 0 1px 2px rgba(0,0,0,.8); white-space: nowrap; margin-top: 12px; font-weight: bold; }
+  #compass .mk.wp i { border-top-color: #5f8fa3; } #compass .mk.home i { border-top-color: var(--bone); }
+  #compass .ctr { position: absolute; left: 50%; top: 0; width: 1px; height: 30px; margin-left: -.5px; background: rgba(216,210,192,.35); }
   @keyframes ripple {
     from { width: 10px; height: 10px; opacity: .8; }
     to   { width: 44px; height: 44px; opacity: 0; }
@@ -148,6 +173,8 @@
         <path data-part="right_leg" d="M20 94 l7 7 M27 94 l-7 7"/><path data-part="left_leg" d="M33 94 l7 7 M40 94 l-7 7"/>
       </g>
     </svg></div>
+  <div id="crew"></div>
+  <div id="compass"><div class="track" id="ctrack"></div><div class="ctr"></div></div>
   <div id="moodles"></div>
   <div id="noise"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><span id="ndot"></span></div>
   <div id="eye"><svg viewBox="0 0 28 16"><path class="lid" d="M1 8 Q14 -4 27 8 Q14 20 1 8 Z"/><circle class="pupil" cx="14" cy="8" r="3.2"/></svg><span class="tag">HIDDEN</span></div>
@@ -178,7 +205,33 @@
     { key: 'wounded',  test: d => Object.values(d.wounds||{}).some(w => !w.treated), icon: '🩹', text: d => { const n = Object.values(d.wounds||{}).filter(w=>!w.treated).length; return n + (n===1?' open wound':' open wounds'); }, danger: d => Object.values(d.wounds||{}).some(w => !w.treated && (w.kind==='gunshot'||w.kind==='fracture')) },
     { key: 'infected', test: d => !!d.infection,  icon: '🦠', text: d => d.infection, danger: d => d.infection === 'Fever' || d.infection === 'Critical' },
   ];
+  // ── compass ──
+  const PX = 380 / 120;            // pixels per degree: the strip shows 120 degrees
+  const CARD = { 0:'N', 45:'NE', 90:'E', 135:'SE', 180:'S', 225:'SW', 270:'W', 315:'NW' };
+  const ctrack = document.getElementById('ctrack');
+  const wrap = a => ((a % 360) + 360) % 360;
+  let marks = [];
+  const drawCompass = (h) => {
+    const hh = wrap(h); let html = '';
+    const rel = a => { let d = wrap(a) - hh; if (d > 180) d -= 360; if (d < -180) d += 360; return d; };
+    for (let a = 0; a < 360; a += 5) { const d = rel(a); if (Math.abs(d) <= 62) html += `<span class="tk ${a % 45 === 0 ? 'big' : ''}" style="left:${190 + d * PX}px"></span>`; }
+    for (const a in CARD) { const d = rel(+a); if (Math.abs(d) <= 62) html += `<span class="cd ${+a === 0 ? 'n' : ''}" style="left:${190 + d * PX}px">${CARD[a]}</span>`; }
+    for (const m of marks) { const d = rel(m.b); if (Math.abs(d) <= 62) html += `<span class="mk ${m.k || ''}" style="left:${190 + d * PX}px"><i></i><b>${m.l || ''}</b></span>`; }
+    ctrack.innerHTML = html;
+  };
+  // ── crew ──
+  const drawCrew = (c) => {
+    const el = document.getElementById('crew');
+    if (!c || !c.members || !c.members.length) { el.className = ''; el.innerHTML = ''; return; }
+    el.className = 'on';
+    el.innerHTML = `<div class="cn">${c.name}</div>` + c.members.map(m => {
+      const st = m.down ? 'DOWN' : m.bleed ? 'BLEEDING' : m.infected ? 'INFECTED' : (m.me ? 'you' : (m.dist != null ? m.dist + ' m' : ''));
+      return `<div class="m"><span class="nm ${m.me ? 'me' : ''}">${m.leader ? '★ ' : ''}${m.name}</span><span class="tr"><i class="${m.hp < 25 ? 'low' : ''}" style="width:${Math.max(0, Math.min(100, m.hp || 0))}%"></i></span><span class="st ${(m.down || m.bleed || m.infected) ? 'bad' : ''}">${st}</span></div>`;
+    }).join('');
+  };
   window.addEventListener('message', ({ data }) => {
+    if (data.action === 'compass') { if (data.marks) marks = data.marks; drawCompass(data.heading || 0); return; }
+    if (data.action === 'crew') { drawCrew(data.data); return; }
     if (data.action === 'noise') {
       const n = document.getElementById('noise');
       n.classList.toggle('loud', data.value > 25);

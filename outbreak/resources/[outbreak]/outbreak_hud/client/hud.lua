@@ -44,12 +44,39 @@ AddEventHandler('outbreak:tick', function()
   }})
 end)
 
--- Hide default GTA hud pieces we replace
+-- Crew panel: outbreak_group pushes rows; we only relay.
+AddEventHandler('outbreak:hud:crew', function(c) SendNUIMessage({ action = 'crew', data = c }) end)
+
+-- Compass markers, rebuilt once a second from the tick: crew pins, my waypoint, home.
+local marks, lastMarks = {}, 0
+AddEventHandler('outbreak:tick', function(t)
+  if GetGameTimer() - lastMarks < 1000 then return end
+  lastMarks = GetGameTimer()
+  local out = {}
+  local function bearingTo(x, y) return (math.deg(math.atan(x - t.pos.x, y - t.pos.y)) + 360) % 360 end
+  local ok, pins = pcall(function() return exports.outbreak_group:getPins() end)
+  if ok and pins then for _, p in ipairs(pins) do out[#out + 1] = { b = bearingTo(p.x, p.y), l = p.label, k = 'pin' } end end
+  local wp = GetFirstBlipInfoId(8)
+  if DoesBlipExist(wp) then local c = GetBlipInfoIdCoord(wp); out[#out + 1] = { b = bearingTo(c.x, c.y), l = 'waypoint', k = 'wp' } end
+  local ok2, home = pcall(function() return exports.outbreak_supply:getHome() end)
+  if ok2 and home and home.door then out[#out + 1] = { b = bearingTo(home.door.x, home.door.y), l = 'home', k = 'home' } end
+  marks = out
+end)
+
+-- Hide default GTA hud pieces we replace. This is the pack's one permitted per-frame HUD loop;
+-- the compass heading rides on it at 10 Hz instead of adding another.
 CreateThread(function()
+  local lastC = 0
   while true do
     HideHudComponentThisFrame(1) -- wanted stars
     HideHudComponentThisFrame(3) -- cash
     HideHudComponentThisFrame(4) -- mp cash
+    local now = GetGameTimer()
+    if now - lastC >= 100 then
+      lastC = now
+      local rot = GetGameplayCamRot(2)
+      SendNUIMessage({ action = 'compass', heading = (360.0 - rot.z) % 360.0, marks = marks })
+    end
     Wait(0)
   end
 end)

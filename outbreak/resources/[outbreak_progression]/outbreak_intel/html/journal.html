@@ -43,11 +43,15 @@ const TABS = [
   { id:'confirmed', label:'Confirmed locations', filter: r => r.state === 'confirmed' },
   { id:'active',    label:'Active opportunities',filter: null },
   { id:'done',      label:'Completed discoveries', filter: r => ['completed','failed','obsolete'].includes(r.state) },
+  { id:'objectives',label:'Objectives',            filter: null },
+  { id:'factions',  label:'Factions',              filter: null },
 ];
-let S = { intel:{}, opps:{}, catalog:{}, tab:2, row:0, sol:-1, focus:'list' };
+let S = { intel:{}, opps:{}, catalog:{}, factions:[], objectives:[], tab:2, row:0, sol:-1, focus:'list' };
 
 function entries() {
   const t = TABS[S.tab];
+  if (t.id === 'objectives') return (S.objectives || []).map(o => ({ obj:o }));
+  if (t.id === 'factions') return (S.factions || []).map(f => ({ fac:f }));
   if (t.id === 'active') return Object.values(S.opps || {}).filter(o => o.state === 'active' || o.state === 'available').map(o => ({ opp:o }));
   return Object.entries(S.intel).filter(([id,r]) => t.filter(r)).map(([id,r]) => ({ id, r, def:S.catalog[id] || {title:id} }));
 }
@@ -56,11 +60,21 @@ function render() {
   const es = entries(); if (S.row >= es.length) S.row = Math.max(0, es.length-1);
   document.getElementById('count').textContent = es.length + ' entries';
   document.getElementById('list').innerHTML = es.length ? es.map((e,i)=>{
+    if (e.obj) return `<div class="row ${i===S.row?'sel':''} ${e.obj.done?'obsolete':''}"><span>${e.obj.text}</span><span class="rel">${e.obj.done?'done':(e.obj.status||e.obj.kind||'')}</span></div>`;
+    if (e.fac) return `<div class="row ${i===S.row?'sel':''}"><span>${e.fac.mine?'★ ':''}${e.fac.name}</span><span class="rel">${e.fac.word}</span></div>`;
     if (e.opp) return `<div class="row ${i===S.row?'sel':''}"><span>${e.opp.title}</span><span class="rel">${e.opp.stub?'<span class="stub">unbuilt</span>':e.opp.state}</span></div>`;
     return `<div class="row ${i===S.row?'sel':''} ${e.r.state==='obsolete'?'obsolete':''}"><span>${e.def.title}</span><span class="rel">${e.r.reliability||''}</span></div>`;
   }).join('') : `<div class="empty">Nothing here yet. ${TABS[S.tab].id==='rumors'?'Listen to the radio. Read what you find.':''}</div>`;
   const e = es[S.row]; const d = document.getElementById('detail');
   if (!e) { d.innerHTML = ''; return; }
+  if (e.obj) { d.innerHTML = `<h2>${e.obj.text}</h2><div class="meta">${e.obj.kind==='guide'?'first ten minutes':'settlement need'} · ${e.obj.done?'done':(e.obj.status||'open')}</div>`; return; }
+  if (e.fac) {
+    const f = e.fac, pct = Math.round((f.value + 100) / 2);
+    d.innerHTML = `<h2>${f.name}</h2><div class="meta">standing: ${f.word} · ${f.value > 0 ? '+' : ''}${f.value}${f.mine ? ' · yours' : ''}</div>
+      <div style="height:7px;background:rgba(24,26,19,.72);border:1px solid rgba(216,210,192,.22);margin:6px 0 14px"><div style="height:100%;width:${pct}%;background:${f.value<0?'#b4552d':'#d8d2c0'}"></div></div>
+      <div class="clue">${f.blurb||''}</div>`;
+    return;
+  }
   if (e.opp) {
     const o = e.opp;
     d.innerHTML = `<h2>${o.title}</h2><div class="meta">${o.state}${o.deadline?` · ${fmt(o.remaining)} remaining`:''}${o.stub?' · <span class="stub">not built yet</span>':''}</div>
@@ -99,7 +113,7 @@ window.addEventListener('keydown', e => {
   if (m) { e.preventDefault(); nav(m); }
 });
 window.addEventListener('message', ({data}) => {
-  if (data.action==='open') { S.intel=data.intel||{}; S.opps=data.opps||{}; S.catalog=data.catalog||{}; document.getElementById('book').className='on'; render(); }
+  if (data.action==='open') { S.intel=data.intel||{}; S.opps=data.opps||{}; S.catalog=data.catalog||{}; S.factions=data.factions||[]; S.objectives=data.objectives||[]; document.getElementById('book').className='on'; render(); }
   else if (data.action==='data') { S.intel=data.intel||{}; S.opps=data.opps||{}; S.catalog=data.catalog||{}; render(); }
   else if (data.action==='close') document.getElementById('book').className='';
   else if (data.action==='nav') nav(data.key);

@@ -42,17 +42,18 @@ local function publish(plate)
   local v = V[plate]; if not v or not v.netId then return end
   local ent = NetworkGetEntityFromNetworkId(v.netId)
   if not ent or ent == 0 or not DoesEntityExist(ent) then return end
-  Entity(ent).state:set('veh', { plate = plate, fuel = math.floor(v.fuel), battery = v.battery, hotwired = v.hotwired, locked = v.locked, part = v.part, claimed = v.claimed, noise = v.noise, boat = v.boat }, true)
+  Entity(ent).state:set('veh', { plate = plate, fuel = math.floor(v.fuel), battery = v.battery, hotwired = v.hotwired, locked = v.locked, part = v.part, claimed = v.claimed, keyed = v.keyed, noise = v.noise, boat = v.boat, restore = v.restore }, true)
 end
 
 local function save(plate)
   local v = V[plate]
-  if VehCfg.Persistence.claimedOnly and not v.claimed then return end
+  if VehCfg.Persistence.claimedOnly and not (v.claimed or v.keyed) then return end
   local ent = v.netId and NetworkGetEntityFromNetworkId(v.netId)
   local pos = ent and ent ~= 0 and DoesEntityExist(ent) and GetEntityCoords(ent) or v.pos or vector3(0, 0, 0)
   local heading = ent and ent ~= 0 and DoesEntityExist(ent) and GetEntityHeading(ent) or v.heading or 0.0
   v.pos, v.heading = pos, heading
-  v.data = v.data or {}; v.data.boat = v.boat or false
+  v.data = v.data or {}; v.data.boat = v.boat or false; v.data.keyed = v.keyed or false
+  if ent and ent ~= 0 and DoesEntityExist(ent) then v.data.body = GetVehicleBodyHealth(ent); v.data.engine = GetVehicleEngineHealth(ent) end
   MySQL.prepare([[INSERT INTO outbreak_vehicles (plate, model, fuel, battery, hotwired, locked, part, claimed, owner, x, y, z, heading, data)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE fuel=VALUES(fuel), battery=VALUES(battery), hotwired=VALUES(hotwired), locked=VALUES(locked), part=VALUES(part),
     claimed=VALUES(claimed), owner=VALUES(owner), x=VALUES(x), y=VALUES(y), z=VALUES(z), heading=VALUES(heading), data=VALUES(data)]],
@@ -117,9 +118,11 @@ end)
 -- ── restore claimed vehicles on start (server-side creation, no client needed) ──
 CreateThread(function()
   Wait(1000)
-  for _, r in ipairs(MySQL.query.await('SELECT * FROM outbreak_vehicles WHERE claimed = 1') or {}) do
-    V[r.plate] = { model = r.model, fuel = r.fuel, battery = r.battery, hotwired = r.hotwired == 1, locked = r.locked == 1, part = r.part, claimed = true, owner = r.owner,
-                   pos = vector3(r.x, r.y, r.z), heading = r.heading, noise = 1.0, burn = 1.0, data = json.decode(r.data or '{}'), boat = (json.decode(r.data or '{}')).boat or false }
+  for _, r in ipairs(MySQL.query.await([[SELECT * FROM outbreak_vehicles WHERE claimed = 1 OR data LIKE '%"keyed":true%']]) or {}) do
+    local d0 = json.decode(r.data or '{}')
+    V[r.plate] = { model = r.model, fuel = r.fuel, battery = r.battery, hotwired = r.hotwired == 1, locked = r.locked == 1, part = r.part, claimed = r.claimed == 1, keyed = d0.keyed or false, owner = r.owner,
+                   pos = vector3(r.x, r.y, r.z), heading = r.heading, noise = 1.0, burn = 1.0, data = d0, boat = d0.boat or false,
+                   restore = (d0.body or d0.engine) and { body = d0.body, engine = d0.engine } or nil }
     if VehCfg.Persistence.respawnOnStart then
       local d = json.decode(r.data or '{}')
       local ent = CreateVehicleServerSetter(r.model, d.boat and 'boat' or 'automobile', r.x, r.y, r.z, r.heading)
@@ -132,6 +135,11 @@ CreateThread(function()
   end
 end)
 
+-- the first client to see a restored car applies its saved damage, then tells us so nobody else does
+RegisterNetEvent('outbreak:veh:restored', function(netId)
+  local plate = ByNet[netId]; local v = plate and V[plate]
+  if v and v.restore then v.restore = nil; publish(plate) end
+end)
 -- SCENE CLEAR: delete unoccupied, unclaimed vehicles inside a radius (DM spawns and strays).
 -- Claimed vehicles (a key exists) are never touched.
 exports('clearNear', function(pos, radius)

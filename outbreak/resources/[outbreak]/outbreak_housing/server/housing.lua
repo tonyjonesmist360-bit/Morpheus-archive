@@ -73,11 +73,15 @@ RegisterNetEvent('outbreak:server:barricade', function(id)
   if not hasKey(src, id) then return end
   if exports.ox_inventory:GetItemCount(src, 'hammer_tool') < 1 then
     TriggerClientEvent('ox_lib:notify', src, { title = 'You need a hammer.', type = 'error' }); return end
-  for item, n in pairs(HousingCfg.BarricadeCost) do
-    if exports.ox_inventory:GetItemCount(src, item) < n then
-      TriggerClientEvent('ox_lib:notify', src, { title = 'Missing materials.', type = 'error' }); return end
+  if exports.ox_inventory:GetItemCount(src, 'barricade_kit') >= 1 then   -- a bench-made kit is one level, ready to hang
+    exports.ox_inventory:RemoveItem(src, 'barricade_kit', 1)
+  else
+    for item, n in pairs(HousingCfg.BarricadeCost) do
+      if exports.ox_inventory:GetItemCount(src, item) < n then
+        TriggerClientEvent('ox_lib:notify', src, { title = 'Missing materials.', description = 'Two planks and nails, or a barricade kit from a workbench.', type = 'error' }); return end
+    end
+    for item, n in pairs(HousingCfg.BarricadeCost) do exports.ox_inventory:RemoveItem(src, item, n) end
   end
-  for item, n in pairs(HousingCfg.BarricadeCost) do exports.ox_inventory:RemoveItem(src, item, n) end
   h.barricade = h.barricade + 1; save(id)
   TriggerClientEvent('outbreak:client:barricadeLevel', -1, id, h.barricade)
   TriggerClientEvent('ox_lib:notify', src, { title = ('Barricade level %d.'):format(h.barricade), type = 'success' })

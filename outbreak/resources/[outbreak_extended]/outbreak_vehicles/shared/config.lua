@@ -41,6 +41,8 @@ VehCfg = {
   },
   Storm = { burnMult = 2.0, weathers = { THUNDER = true } },   -- boats in a storm drink fuel; the island chain refuses to depart
   SiphonYield = { 5, 20 }, PourMax = 100,
-  Persistence = { claimedOnly = true, respawnOnStart = true }, -- claimed = a key exists for it
+  Persistence = { claimedOnly = true, respawnOnStart = true }, -- claimed OR keyed (v0.22: any car a key was cut/handed out for) persists: position, fuel, state, body/engine damage
+  -- STASHES (v0.22): trunk and glovebox are ox stashes keyed by plate, so they persist with the car.
+  Stashes = { trunk = { slots = 25, weight = 120000, label = 'Trunk' }, glovebox = { slots = 5, weight = 8000, label = 'Glovebox' }, boat = { slots = 15, weight = 60000, label = 'Hold' } },
   DragOut = { enabled = true, idleSeconds = 6, dragChance = 0.5 },
 }

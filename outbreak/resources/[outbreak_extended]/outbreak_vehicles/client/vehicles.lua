@@ -13,6 +13,13 @@ AddEventHandler('outbreak:tick', function(t)
       local id = netOf(veh)
       TriggerServerEvent('outbreak:veh:register', id)
       TriggerServerEvent('outbreak:veh:class', id, GetVehicleClass(veh))
+      -- a car restored from the DB carries its saved damage until one client applies it
+      local v = st(veh)
+      if v and v.restore then
+        if v.restore.body then SetVehicleBodyHealth(veh, v.restore.body + 0.0) end
+        if v.restore.engine then SetVehicleEngineHealth(veh, v.restore.engine + 0.0) end
+        TriggerServerEvent('outbreak:veh:restored', id)
+      end
     end
   end
 end)
@@ -66,8 +73,22 @@ CreateThread(function()
       onSelect = function(d) if exports.outbreak_emotes:action('siphon', 10000, 'Siphoning...') then TriggerServerEvent('outbreak:veh:siphon', netOf(d.entity)) end end },
     { label = 'Cut a key (claim)', icon = 'fa-solid fa-key', item = 'key_blank', canInteract = function(e) local v = st(e); return v and v.hotwired and not v.claimed end,
       onSelect = function(d) if exports.outbreak_emotes:action('repair', 6000, 'Cutting a key...') then TriggerServerEvent('outbreak:veh:claim', netOf(d.entity)) end end },
+    -- trunk: stand at the back. Locked cars need the key (server checks); the label says so.
+    { label = 'Open the trunk', icon = 'fa-solid fa-box-open',
+      canInteract = function(e) local v = st(e); if not v then return false end
+        local back = GetOffsetFromEntityInWorldCoords(e, 0.0, -2.2, 0.0)
+        return #(GetEntityCoords(PlayerPedId()) - back) < 2.6 end,
+      onSelect = function(d)
+        if exports.outbreak_emotes:action('search', 1200, 'Opening the trunk...') then TriggerServerEvent('outbreak:veh:trunk', netOf(d.entity)) end end },
   })
 end)
+
+-- glovebox: from the driver or passenger seat. /glovebox, and the wheel when you sit in a car.
+RegisterCommand('glovebox', function()
+  local veh = GetVehiclePedIsIn(PlayerPedId(), false)
+  if veh == 0 then lib.notify({ title = 'Sit in the car first.', type = 'error' }) return end
+  TriggerServerEvent('outbreak:veh:glovebox', netOf(veh))
+end, false)
 
 -- pour target: the can was used; pick the vehicle you're next to / in
 RegisterNetEvent('outbreak:veh:askPourTarget', function(slot, pct, canName)

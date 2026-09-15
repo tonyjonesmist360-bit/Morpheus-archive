@@ -9,6 +9,7 @@ WorldItemsCfg = {
     lantern = 'prop_worklight_01a', sandbag = 'prop_sandbag_wall', crate = 'prop_box_wood02a', duffel_bag = 'prop_ld_bag_01', note = 'prop_cs_paper_02', chair = 'prop_chair_01a',
     padlock = 'prop_ld_padlock', dog_tags = 'prop_cs_dogtag',
     rain_catcher = 'prop_barrel_02a',   -- from memory, UNVERIFIED: if it fails to load the Fallback bag stands in
+    workbench = 'prop_tool_bench02',    -- from memory, UNVERIFIED; outbreak_craft targets this model as a bench
   },
   -- Placeable STORAGE: becomes an ox stash bound to the placed object. Lockable with a padlock; forcing = pin sweep (pins).
   Storage = { crate = { slots = 20, weight = 60000, pins = 3 }, duffel_bag = { slots = 12, weight = 30000, pins = 2 }, rain_catcher = { slots = 4, weight = 8000, pins = 1 } },

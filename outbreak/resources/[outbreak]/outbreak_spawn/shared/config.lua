@@ -10,6 +10,21 @@ SpawnCfg = {
       'Downed? You can still talk, T for chat, F6 for a distress call. /ooc for out of character.',
     },
   },
+  -- FIRST TEN MINUTES (v0.22). Runs once per character after the scenario spawn; /tutorial replays it.
+  -- Each step: a line at the top of the screen, a check from the core tick, a sound when it lands.
+  Guide = {
+    enabled = true, stepSound = { 'CHECKPOINT_PERFECT', 'HUD_MINI_GAME_SOUNDSET' }, doneSound = { 'MEDAL_UP', 'HUD_MINI_GAME_SOUNDSET' },
+    Steps = {
+      { id = 'move',   text = 'You are awake. WASD moves, Shift runs. Ctrl crouches - crouching is how you stay unseen.', check = 'moved', arg = 6.0, timeout = 0 },
+      { id = 'pockets',text = 'TAB: your pockets. Beans, a knife, water, a ripped sheet, a map scrap.',                   check = 'wait',  arg = 10, timeout = 10 },
+      { id = 'drink',  text = 'Drink. Drag the clean water to use it, or put it on the hotbar (1-5) and press the key.',   check = 'thirst', arg = 5, timeout = 60 },
+      { id = 'wheel',  text = 'G: the survival wheel. Treat wounds, listen, throw a can, crouch, crew, map key.',          check = 'wait',  arg = 10, timeout = 10 },
+      { id = 'status', text = 'F1: your body. Hover the silhouette to see what hurts and what fixes it.',                  check = 'wait',  arg = 10, timeout = 10 },
+      { id = 'radio',  text = 'N: the radio. Channel 4 is where people talk. CapsLock to speak.',                          check = 'wait',  arg = 8,  timeout = 8 },
+      { id = 'safety', text = 'Find walls. The nearest safehouse door is on your compass and marked on the map.',          check = 'house', arg = 25.0, timeout = 0 },
+      { id = 'done',   text = 'You made it. E on the door claims it. Sleep in it. Keep it quiet out there.',               check = 'wait',  arg = 10, timeout = 10 },
+    },
+  },
   Active = 'motel',   -- which scenario fresh survivors get (set convar ob_scenario to override)
   Scenarios = {
     motel = {

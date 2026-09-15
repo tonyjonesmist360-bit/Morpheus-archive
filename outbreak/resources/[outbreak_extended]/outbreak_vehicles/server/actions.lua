@@ -20,6 +20,7 @@ local function giveKeys(src, netId, plate)
   if not plate then local _, p = S():byNet(netId); plate = p end
   if not plate then return false end
   if not hasKey(src, plate) then exports.ox_inventory:AddItem(src, VehCfg.KeyItem, 1, { plate = plate, description = 'Key · ' .. plate }) end
+  local v = S():get(plate); if v and not v.keyed then S():set(plate, { keyed = true }, 'keyed: persists now') end
   if GetResourceState('qbx_vehiclekeys') == 'started' then
     local ent = NetworkGetEntityFromNetworkId(netId)
     if ent and ent ~= 0 then pcall(function() exports.qbx_vehiclekeys:GiveKeys(src, ent) end) end
@@ -130,6 +131,21 @@ RegisterNetEvent('outbreak:veh:claim', function(netId)
   S():set(plate, { claimed = true, owner = cid(src) }, 'claimed')
   notify(src, 'It\'s yours now. It\'ll be where you left it.', 'success')
 end)
+
+-- TRUNK / GLOVEBOX (v0.22): ox stashes keyed by plate. Locked car = key required. Registered lazily.
+local stashes = {}
+local function openStash(src, netId, which)
+  local ent = near(src, netId, which == 'glovebox' and 3.0 or 4.0); if not ent then return end
+  local v, plate = S():byNet(netId); if not v then TriggerClientEvent('ox_lib:notify', src, { title = 'Give it a second.', type = 'inform' }) return end
+  if v.locked and not hasKey(src, plate) then notify(src, 'Locked.', 'error') return end
+  local kind = (which == 'trunk' and v.boat) and 'boat' or which
+  local def = VehCfg.Stashes[kind]; if not def then return end
+  local id = ('%s_%s'):format(which, plate)
+  if not stashes[id] then exports.ox_inventory:RegisterStash(id, def.label .. ' · ' .. plate, def.slots, def.weight, nil); stashes[id] = true end
+  exports.ox_inventory:forceOpenInventory(src, 'stash', id)
+end
+RegisterNetEvent('outbreak:veh:trunk', function(netId) openStash(source, netId, 'trunk') end)
+RegisterNetEvent('outbreak:veh:glovebox', function(netId) openStash(source, netId, 'glovebox') end)
 
 -- engine gate: the CLIENT asks whether the engine may run; the server answers from state (cheap, cached by statebag anyway)
 lib.callback.register('outbreak:veh:mayRun', function(src, netId)

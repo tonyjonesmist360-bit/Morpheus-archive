@@ -83,6 +83,8 @@ ensure outbreak_mapkey
 ensure outbreak_hud
 ensure outbreak_status
 ensure outbreak_wheel
+## group: crews, member blips and vitals, shared pins. needs core tick, hud
+ensure outbreak_group
 ## ambience: wind, groans, darker nights, discord presence. needs core tick
 ensure outbreak_ambience
 

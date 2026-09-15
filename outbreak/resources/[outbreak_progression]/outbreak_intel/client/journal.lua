@@ -7,11 +7,27 @@ AddEventHandler('outbreak:intel:journalData', function(intel, opps)
   if open then SendNUIMessage({ action = 'data', intel = intel, opps = opps, catalog = IntelCatalog }) end
 end)
 
+-- v0.22: the journal is also the quest log. Factions (standing) and Objectives (home needs,
+-- the first-ten-minutes guide, active chains) are gathered here from soft exports, never owned.
+local function extras()
+  local ex = { factions = {}, objectives = {} }
+  pcall(function() ex.factions = exports.outbreak_faction:getStandings() or {} end)
+  pcall(function()
+    local steps = exports.outbreak_spawn:onboarding()
+    for _, s in ipairs(steps or {}) do ex.objectives[#ex.objectives + 1] = { text = s.text, done = s.done, kind = 'guide' } end
+  end)
+  pcall(function()
+    local h = lib.callback.await('outbreak:supply:home', false)
+    if h then for _, n in ipairs(h.needs or {}) do ex.objectives[#ex.objectives + 1] = { text = (h.label or 'Home') .. ': ' .. n.text, status = n.status, kind = 'home' } end end
+  end)
+  return ex
+end
 local function openJournal()
   if open or LocalPlayer.state.downState then return end
   open = true
   TriggerServerEvent('outbreak:intel:openJournal')   -- fresh payload arrives via journalData
-  SendNUIMessage({ action = 'open', intel = latest.intel, opps = latest.opps, catalog = IntelCatalog })
+  local ex = extras()
+  SendNUIMessage({ action = 'open', intel = latest.intel, opps = latest.opps, catalog = IntelCatalog, factions = ex.factions, objectives = ex.objectives })
   SetNuiFocus(true, false)
   pcall(function() exports.outbreak_emotes:loopAction('read') end)
   -- controller relay: NUI can't read the pad, so we poll and forward

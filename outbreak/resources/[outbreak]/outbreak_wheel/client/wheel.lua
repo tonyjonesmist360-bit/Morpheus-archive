@@ -114,6 +114,15 @@ local function build()
     lib.notify({ title = ('Food %d  Water %d  Rest %d'):format(n.hunger, n.thirst, n.fatigue), description = ('%d open wound(s). %s'):format(w, n.infected and 'INFECTED.' or 'No fever.'), type = 'inform', duration = 6000 }) end }
   items[#items + 1] = { label = 'Set something down', icon = 'hand', onSelect = function() ExecuteCommand('placeitem') end }
   items[#items + 1] = { label = 'Map key', icon = 'map', onSelect = function() ExecuteCommand('mapkey') end }
+  if t and t.veh and t.veh ~= 0 then items[#items + 1] = { label = 'Glovebox', icon = 'box', onSelect = function() ExecuteCommand('glovebox') end } end
+  do -- crew submenu, built by outbreak_group so the wheel never owns crew state
+    local ok, sub = pcall(function() return exports.outbreak_group:radialItems() end)
+    if ok and sub and #sub > 0 then
+      lib.registerRadial({ id = 'ob_crew', items = sub })
+      local c = nil; pcall(function() c = exports.outbreak_group:getCrew() end)
+      items[#items + 1] = { label = c and ('Crew: ' .. c.name) or 'Crew', icon = 'people-group', menu = 'ob_crew' }
+    end
+  end
   items[#items + 1] = { label = 'Skills', icon = 'graduation-cap', onSelect = function() ExecuteCommand('skills') end }
   if GetResourceState('outbreak_intel') == 'started' then items[#items + 1] = { label = 'Journal', icon = 'book', onSelect = function() ExecuteCommand('journal') end } end
   if GetResourceState('outbreak_craft') == 'started' then items[#items + 1] = { label = 'Craft', icon = 'hammer', onSelect = function() ExecuteCommand('craft') end } end
