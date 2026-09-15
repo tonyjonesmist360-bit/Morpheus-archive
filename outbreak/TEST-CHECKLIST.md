@@ -101,6 +101,9 @@ from here). Mark each ✓ / ✗ and `/bug` anything that fails so the position a
 - [ ] Runner at night → "It twists out of your grip", half health, noise, it fights you. Bloater → "Not that one."
 - [ ] Skills → stealth XP +10 per quiet kill
 
+## 9f · v0.22 — see TEST-GUIDE.md (generated) and press F9
+The overnight-sheet-2 run lives in `TEST-GUIDE.md`, generated from the F9 table. Sections below stay for reference.
+
 ## 9e · v0.21 — vehicles: era, keys, admin list
 - [ ] Boot log: no red `[OB-VEH] qbx_vehiclekeys is running` line. If there is one, `stop qbx_vehiclekeys` in the console and retry the next line; if that fixes entry, comment its ensure out of server.cfg (your call, tell me)
 - [ ] Walk up to 5 parked ambient cars: ~4 open. Sit in one → no "No keys — press [E]" prompt on more than half of them (keys in the ignition); the rest need the splice. `ob_debug 1` prints `[OB-VEH]` lines on register

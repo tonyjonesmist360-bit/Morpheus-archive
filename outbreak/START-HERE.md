@@ -1,6 +1,35 @@
-# START HERE — Outbreak v0.21.0
+# START HERE — Outbreak v0.22.0 — OVERNIGHT SHEET #2
 
-## What changed since v0.20.0
+**Deploy:** extract, `robocopy` into `C:\Outbreak\pack`, then `02-copy-resources` → `04-paste-ins -Only items` (three new
+items) → `07-update-cfg -Apply` (five new ensure lines) → start the server. No new migration. **Then:** `TEST-GUIDE.md`
+beside you, **F9** in game.
+
+## What changed since v0.21.0
+
+| | |
+|---|---|
+| **Core mechanics protected** | `CORE-MECHANICS.md`: the protected list, the review rule, the hook inventory and every root cause found (vehicle entry, punch, pad inventory button, the sprint cut that never worked). F9 section 1 covers all of it. |
+| **Body scan** | A silhouette beside the HUD bars and a large one in F1. Regions: healthy / **bruised** (amber) / **bleeding** (rust, throb) / **broken** (blood + cross) / treated (dim). Hover in F1 = what is wrong + what treats it; click = treat with what you carry. Wired: leg break **limps** until splinted, arm wound **shakes the sights**, torso wound **cuts your sprint**. Fists now bruise; **painkillers** treat bruises; bandage/splint/painkillers are usable straight from the inventory and go to the worst matching wound. Wrong item on the wrong wound is refused, not consumed. |
+| **Infection from wounds** | A zombie scratch/bite is *dirty*; left untreated 20 min it turns ("has gone bad"). Antibiotics inside the first hour **cure**; later they only slow. Antibiotics stay rare medical loot. |
+| **Story wired in** | `outbreak_intel` + `outbreak_opportunities` are ensured (five chains, journal on **J**). Journal gained **Objectives** (guide steps + your settlement's needs) and **Factions** (standing bars) tabs. |
+| **Factions** | Enlist / walk out at the Zancudo armory; Join / leave the Boneyard at the raider cache. Rep gates it, leaving costs 25, 30-min cooldown. Three standings (Remnant, Boneyard, Enclave) with words: hostile → wary → neutral → trusted → kin. |
+| **Dead money** | `old_cash` exists, drops from tills / vending / houses / trash, trades between players by drag, buys nothing. Using it: "$N, more or less." |
+| **Stores are looting** | Shelves say **STEAL** with noise per take and a 12 % dropped-can spike. Tills: **Force the register** (pry anim, loud). Vending: **Break into the machine**. **Needs you:** if any ox "Open shop" point survives, blank `ox_inventory/data/shops.lua` (E5). |
+| **Map key** | New `outbreak_mapkey`: vanilla shop / bank / clothing / ammunation / LSC blips removed every 10 s (sprite ids unverified); `/mapkey` (wheel → Map key) lists every blip the pack draws. |
+| **Sandy 24/7** | Console `ob_scene_clear 1960.5 3740.6 32.3 45` removes the roadblock props (they were persisted `__prop` world items from the *Raider roadblock* scene run at the motel spawn) and the unclaimed car; writes `cleared-*.json`; `ob_scene_restore <file>` undoes. F10 → Spawn → **Clear scene here (40 m)** for DMs. Nothing in the pack re-creates them on restart. |
+| **Crews** (3, 4) | New `outbreak_group`: G → Crew → start / invite nearest / pins / leave. Top-left crew panel (name, health line, DOWN/BLEEDING/INFECTED/distance). Blue member blips, yellow labelled pins, crew-only. `/crew`, `/pin <label>`. |
+| **Compass** (5) | Top-centre strip: cardinals follow the camera (N in rust), ticks for crew pins, your waypoint and home. Rides on the HUD's existing per-frame loop at 10 Hz — no new loop. |
+| **Vehicles** (6, 7) | Any car a key was cut or handed out for **persists**: position, fuel, state, body + engine damage. **Trunk** (stand at the back) and **glovebox** (seated, wheel or `/glovebox`) are ox stashes keyed by plate, so cargo persists too. Locked = key required. |
+| **Workbench** (8) | `outbreak_craft` ensured. K = field recipes. Tool benches / a placed `workbench` item: Molotov, **barricade kit** (one level, the door accepts it instead of planks + nails), key blank, padlock. Craft sound. |
+| **First ten minutes** (9) | Eight guided steps on a fresh character (move, pockets, drink, wheel, F1, radio, reach the nearest safehouse — waypoint set — claim). Sound per step. `/tutorial` replays, `/tutorial off` stops. |
+| **F9 TEST MENU** | 71 steps in 8 sections, each with Do / Expect; **M** = mouse mode with PASS / FAIL / NOTE buttons; results to `shakedown-results.md`. `TEST-GUIDE.md` is generated from the same table. |
+
+**Unverified names this build** (F9 will tell): map sprite ids, `prop_tool_bench02` and the other bench models, `move_m@injured`
+as the limp, `SetPlayerSprint` persistence, `CHECKPOINT_PERFECT` / `MEDAL_UP` / `PICK_UP` sound names, blip sprite 1 for crew and pins.
+
+---
+
+## v0.21.0 — What changed since v0.20.0
 
 | | |
 |---|---|

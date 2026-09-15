@@ -126,3 +126,10 @@ Client-local bus:
 | Fuel / battery / part / lock / key / claim | **server** (vehicles v2) | server burns fuel from `GetEntityVelocity`; every mutation validated; claimed vehicles persisted + respawned server-side |
 | Cooking / residents / morale | server | key + `DoorRange` + stash contents checked server-side; the client only picks a recipe |
 | Stranger take-in | server | server-issued encounter id with expiry; key + 20 m of the door checked; the ped is cosmetic |
+
+## Loops, v0.22 addendum
+Permitted client loops after overnight sheet #2: the core tick (500 ms), the HUD hide-components loop (per-frame;
+**the compass heading rides on it at 10 Hz**), the crouch stand-up thread (per-frame only while crouched),
+menu relays (journal, shakedown, status: per-frame only while open), bounded one-shots (sleep, the first-ten-minutes
+guide). `outbreak_group`, `outbreak_mapkey`, the body-scan effects and the vehicle damage restore are all tick
+subscribers. Removed: the radio's per-frame control-27 loop.

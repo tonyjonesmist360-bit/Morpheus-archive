@@ -16,7 +16,9 @@ booting, run the smoke script with Tony, and patch what breaks — not to add fe
 ```
 resources/[outbreak]/              the slice + services (ensured)
 resources/[outbreak_extended]/     held (commented out) — vehicles v2, craft, military, stations, raiders, camps, broadcast, map
-resources/[outbreak_progression]/  held — outbreak_intel, outbreak_opportunities (5 chains)
+resources/[outbreak_progression]/  ENSURED since v0.22 — outbreak_intel, outbreak_opportunities (5 chains)
+CORE-MECHANICS.md                  the protected-mechanics list + review rule: read before touching controls/clipsets/tasks
+TEST-GUIDE.md                      GENERATED from outbreak_debug/client/shakedown.lua by tools/gen_test_guide.py - never hand-edit
 sql/migrations/001..008            apply in order, idempotent
 tools_diag*.py + tools_luac.py     static analyzers — run ALL FOUR after every patch:
                                    `python tools_diag.py && python tools_diag2.py && python tools_diag3.py && python tools_luac.py`
@@ -35,8 +37,9 @@ Live server files live in `C:\Outbreak\txData\` (resources/ and server.cfg). The
 - **Log discipline.** Tail `txData\logs\fxserver.log` (or the txAdmin live console) for `outbreak_` lines. Read `resources/[outbreak]/outbreak_debug/shakedown.log` (JSON lines) for Tony's pass/fail marks and notes — that is the shared record. Append your own findings to `SHAKEDOWN-NOTES.md` in the pack root: step, symptom, root cause, patch, status.
 - **Ordering.** Boot → instrumentation (`/ob_animcheck`, `/ob_models`, `/ob_walk`) → fix name classes in one pass each → then the rest of the script. Don't chase a wound bug while three anim dictionaries are still wrong.
 - **Framework API.** qbx_core runs a qb-core bridge; we call `exports['qb-core']:GetCoreObject()`. If the bridge is off, the fix is enabling it in qbx config, not rewriting resources. `exports.qbx_core:Logout`, `illenium-appearance` exports, `mm_radio` exports, `pma-voice` `getRadioChannel`/`setTalkingOnRadio` are the likeliest wrong names — check their actual source in `resources/` before guessing.
-- **Don't** enable `[outbreak_extended]` or `[outbreak_progression]` until sections 0–11 of the smoke script pass. Then enable in the order the cfg comments give, one group per restart.
+- **Extended groups** other than vehicles and craft stay held (military, stations, raiders, camps, broadcast, map). `[outbreak_progression]` is ensured since v0.22. Enable anything further in the order the cfg comments give, one group per restart.
 - **Don't** touch ox_inventory / qbx_core / ox_lib internals; only our resources and the documented paste-ins (`ox_items_snippet.lua`, `weapons_snippet.lua`, `jobs_snippet.lua`).
+- **Core mechanics are protected.** Any change that hooks input, controls, clipsets, ped tasks or ped events goes through `CORE-MECHANICS.md` (conditional, restores on every exit, one owner per native, no per-frame loops, F9 K-step updated).
 - **Debug is debug.** `setr ob_debug 1` and `ensure outbreak_debug` tonight; both come out before the crew joins.
 
 ## How to talk to Tony

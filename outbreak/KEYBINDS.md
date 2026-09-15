@@ -5,6 +5,8 @@ Reclaimed controller buttons: D-pad Up (phone is dead), D-pad Left/Right (radio 
 
 | Action | Keyboard | Controller | Notes |
 |---|---|---|---|
+| Test menu | F9 | — | debug only; **M** toggles mouse mode for the Pass / Fail buttons |
+| Journal / quest log | J | — | Rumors, Confirmed, Active, Completed, Objectives, Factions |
 | Interact | E (set in ox_target) | LB hold | ox_target default is Left Alt — rebind to E in settings, the whole crew will thank you |
 | Inventory | TAB | D-pad Up | ox_inventory |
 | Hotbar 1-5 | 1-5 | — | ox_inventory |

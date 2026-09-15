@@ -92,6 +92,13 @@ being downed has taken chat away from you.
 | `ob_walk` | debug | Toggle: prints the model name of whatever you aim at. Use it along 24/7 shelves. |
 | `ob_scan <radius>` | debug | Lists nearby prop models. Use it inside a house for search spots. |
 | `ob_look` | debug | Print what you are aiming at. |
+| `ob_scene_clear <x> <y> <z> [r]` | dm / console | Removes DM scene props and unclaimed empty vehicles in the radius; backup JSON in outbreak_worlditems. Sandy 24/7: `ob_scene_clear 1960.5 3740.6 32.3 45`. |
+| `ob_scene_restore <file>` | dm / console | Puts a `cleared-*.json` back. |
+| `tutorial [off]` | — | Replay / stop the first-ten-minutes guide. |
+| `crew` / `pin <label>` | — | Crew menu; drop a shared pin where you stand. |
+| `glovebox` | — | Open the glovebox of the car you sit in. |
+| `mapkey` | — | The map legend. |
+| `shakedown` (F9) | debug | The TEST MENU. M = mouse mode. |
 | `ob_vehera [early\|live]` | dm / console | Vehicle era: early = day one, cars mostly run with keys in them; live = locked, dead, dry. No arg prints the current era. Cars seen from now on roll the new table; restart re-rolls all unclaimed. |
 | `ob_debugmenu` | debug | Context menu of the above. |
 

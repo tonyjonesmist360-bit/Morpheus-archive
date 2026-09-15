@@ -1,3 +1,6 @@
+# DIAG AFTER — 2026-09-15T04:52Z — e51f951+wip
+
+## tools_diag.py
 # DIAGNOSTIC REPORT (static, pre-boot)
 
 Resources scanned: 39  ·  files: 186
@@ -25,3 +28,37 @@ Resources scanned: 39  ·  files: 186
 - ox_inventory client weight exports; ox_lib `registerRadial` payload shape; NUI focus + keyboard behaviour
 - OneSync entity ownership behaviour (zombie migration, wave election), `TaskWarpPedIntoVehicle` on anim-locked peds
 - JavaScript inside NUI html (not parsed here)
+
+
+## tools_diag2.py
+# SYSTEMS CHECK — pass 2 (static)
+
+Resources: 39 · Lua files: 165 · migrations: 8 · items defined: 71 · commands: 95
+
+
+## ERROR (0)
+
+## WARN (0)
+
+## INFO (0)
+
+## tools_diag3.py
+# SYSTEMS CHECK - pass 3 (classes that slipped past passes 1 and 2)
+
+Resources: 39
+
+
+## ERROR (0)
+
+
+## WARN (0)
+
+
+## INFO (0)
+
+
+## tools_luac.py
+# LUA PARSE (luac5.4) - 166 files
+
+## ERROR (0)
+

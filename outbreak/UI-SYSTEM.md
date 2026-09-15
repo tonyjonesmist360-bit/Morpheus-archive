@@ -93,3 +93,13 @@ Any one of them is enough. Applied identically in the HUD and the status panel.
 
 **Rule for anything added later:** colour may reinforce a meaning, never carry it alone. If you
 cannot read the screen in greyscale, it is not finished.
+
+## v0.22 additions (all thin, same palette)
+| Surface | Shows | Key |
+|---|---|---|
+| **Body silhouette** (HUD, beside the bars; F1, large) | six regions: healthy / bruised (FOOD amber) / bleeding (rust, throb) / broken (blood + cross) / treated (dim bone); infected = olive outline | hover / click in F1 |
+| **Crew panel** (top-left) | crew name, members: name, 60 px health line, one-word state or distance | only while in a crew |
+| **Compass** (top-centre) | cardinals (N in rust), ticks: crew pins (amber), waypoint (H2O blue), home (bone) | always |
+| **Journal** tabs Objectives / Factions | guide + settlement needs; standing bars | J |
+| **Test menu** (F9, right) | Do / Expect per step, PASS / FAIL buttons in mouse mode | debug only |
+Rule kept: nothing new is bold. The moodle column is still the only loud element.

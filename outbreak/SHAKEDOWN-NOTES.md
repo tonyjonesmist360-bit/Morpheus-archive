@@ -609,3 +609,31 @@ our block is Tony's.
 car if unseen and forces a running state. Vehicle kit gained Give me the key, Lock / unlock, World era.
 `DMCfg.Vehicles` is now `{ model, label }` pairs (100+ base-game models, from memory - unverified) behind a
 searchable select; bare strings still work.
+
+## 2026-09-15 — v0.22.0: overnight sheet #2 (offline build)
+
+**Rule 0.** `reports/DIAG-BEFORE.md` / `reports/DIAG-AFTER.md`: all four analyzers 0 ERROR / 0 WARN before and after.
+**Rule 1.** `CORE-MECHANICS.md` written; every control/clipset/task hook inventoried. Two real bugs found by the
+sweep: the radio's per-frame control-27 loop ate the pad inventory button (R1-1), and the "no sprint" effect was
+a no-op (`RestorePlayerStamina(…, 0.0)` restores nothing; a tick-driven `DisableControlAction` flickers) (R1-2).
+`SetPedMoveRateOverride` from a tick is per-frame too, so the fracture slow was invisible - the limp clipset is
+the real effect now.
+
+**Body scan.** No new state: the wound table already had parts and kinds. Added `severity` (a fracture replaces a
+bruise, never the reverse - the old `bleed >=` compare blocked fracture-over-bruise both ways), `bruise` for fists,
+`dirty` for zombie wounds, and a `bodyScan()` read-model. One SVG, painted by the same JS in the HUD and F1.
+
+**Sandy 24/7 root cause.** Not a spawner: the *Raider roadblock* scene (two `prop_barrier_work05`, a wreck, a
+`rebel`) run at the motel spawn, 20 m from the 24/7. Scene props go through `placeSystem('__prop')`, which
+persists to `outbreak_world_items`, so they came back every restart; the car was a client-fallback spawn kept
+alive by OneSync. `ob_scene_clear` is the undo; it backs up first.
+
+**Progression enabled.** Chains only soft-call the slice (pcall'd exports); analyzers cross-referenced every
+export they use against the ensured set. Journal gained two tabs fed from soft exports.
+
+**Trust gaps added (same class as minigame results):** the workbench flag is client-reported; crew member
+vitals come from a client-set statebag (`obCrew`) - read-only presentation, nothing decides on it.
+
+**Needs Tony:** `ensure qbx_vehiclekeys` out of the recipe cfg; `ox_inventory/data/shops.lua` blanked if any shop
+survives (E5); model/sprite/sound names flagged unverified in START-HERE; `ob_scene_clear` is a DB delete (backed
+up) and is left for him to run.
