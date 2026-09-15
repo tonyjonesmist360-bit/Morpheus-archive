@@ -75,17 +75,23 @@ RegisterNetEvent('outbreak:server:wound', function(part, kind)
   if not valid then return end
   if def.legOnly and not part:find('leg') then kind = 'laceration'; def = NeedsCfg.WoundTypes[kind] end
   local existing = st.wounds[part]
-  if existing and not existing.treated and (NeedsCfg.WoundTypes[existing.kind].bleed >= def.bleed) then return end -- worse wound already there
-  st.wounds[part] = { kind = kind, treated = false, at = os.time() }
-  st.bleeding = true
-  TriggerClientEvent('ox_lib:notify', src, { title = def.label .. ' — ' .. part:gsub('_', ' '), description = def.bleed > 0 and 'You\'re bleeding.' or 'It won\'t take weight.', type = 'error' })
+  local function sev(k) return (NeedsCfg.WoundTypes[k] or {}).severity or 0 end
+  if existing and not existing.treated and sev(existing.kind) >= (def.severity or 0) then return end -- worse (or equal) wound already there
+  st.wounds[part] = { kind = kind, treated = false, at = os.time(), dirty = def.dirty or nil }
+  st.bleeding = bleeding(st) > 0
+  TriggerClientEvent('ox_lib:notify', src, { title = def.label .. ' — ' .. part:gsub('_', ' '), description = def.bleed > 0 and 'You\'re bleeding.' or (kind == 'bruise' and 'That will bruise.') or 'It won\'t take weight.', type = 'error' })
   push(src)
 end)
 
+local function infect(src, why)
+  local st = S[src]; if not st or st.infected then return end
+  st.infected = true; st.infectedAt = os.time()
+  TriggerClientEvent('ox_lib:notify', src, { title = 'The wound burns.', description = why or 'You don\'t feel right.', type = 'error' })
+  push(src)
+end
 RegisterNetEvent('outbreak:server:infect', function()
   local src = source; local st = S[src]; if not st or st.infected then return end
-  st.infected = true; st.infectedAt = os.time()
-  TriggerClientEvent('ox_lib:notify', src, { title = 'The wound burns.', description = 'You don\'t feel right.', type = 'error' })
+  infect(src)
   push(src)
 end)
 
@@ -95,7 +101,15 @@ local function consume(src, effects)
   for k, v in pairs(effects) do
     if type(st[k]) == 'number' then st[k] = math.max(0, math.min(100, st[k] + v)) end
   end
-  if effects.antibiotics and st.infectedAt then st.infectedAt = st.infectedAt + NeedsCfg.Infection.antibioticsSlowHours * 3600 end
+  if effects.antibiotics and st.infectedAt then
+    if os.time() - st.infectedAt < NeedsCfg.Infection.cureWithinHours * 3600 then
+      st.infected = false; st.infectedAt = nil
+      TriggerClientEvent('ox_lib:notify', src, { title = 'Caught it early.', description = 'The fever never comes.', type = 'success', duration = 6000 })
+    else
+      st.infectedAt = st.infectedAt + NeedsCfg.Infection.antibioticsSlowHours * 3600
+      TriggerClientEvent('ox_lib:notify', src, { title = 'Too late to cure. It slows.', description = ('Bought about %d hours.'):format(NeedsCfg.Infection.antibioticsSlowHours), type = 'inform', duration = 6000 })
+    end
+  end
   push(src)
   return true
 end
@@ -130,7 +144,7 @@ local function treatWound(src, part, item)
   local ok = false
   for _, t in ipairs(def.treat) do if t == item then ok = true end end
   if not ok then return false end
-  w.treated = true; w.treatedWith = item
+  w.treated = true; w.treatedWith = item; w.dirty = nil
   st.bleeding = bleeding(st) > 0
   push(src)
   return true
@@ -145,6 +159,10 @@ CreateThread(function()
       local changed = false
       for part, w in pairs(st.wounds) do
         if w.treated and os.time() - (w.at or 0) > 3 * 3600 then st.wounds[part] = nil; changed = true end
+        -- a dirty wound left open long enough turns: the infection comes from the wound, not the bite
+        if w.dirty and not w.treated and not st.infected and os.time() - (w.at or 0) > (NeedsCfg.Infection.dirtyMinutes or 20) * 60 then
+          w.dirty = nil; infect(src, ('The %s on your %s has gone bad.'):format((NeedsCfg.WoundTypes[w.kind] or {}).label or 'wound', part:gsub('_', ' '))); changed = false
+        end
       end
       if changed then push(src) end
     end

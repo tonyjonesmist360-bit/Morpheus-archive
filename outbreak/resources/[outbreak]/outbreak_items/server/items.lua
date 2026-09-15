@@ -8,7 +8,6 @@ local Useables = {
   water_clean  = { effects = { thirst = 45 }, anim = 'drink' },
   water_dirty  = { effects = { thirst = 25 }, sick = true, anim = 'drink' },
   mre          = { effects = { hunger = 60, thirst = 10 }, anim = 'eat' },
-  painkillers  = { effects = { fatigue = 10 }, anim = 'eat' },
   antibiotics  = { effects = { antibiotics = true }, anim = 'eat' },
   -- shelf goods: small, fast, everywhere until the shelves are bare
   chocolate_bar = { effects = { hunger = 10, fatigue = 4 }, anim = 'eat' },
@@ -59,10 +58,36 @@ QBCore.Functions.CreateUseableItem('purify_tabs', function(src)
   TriggerClientEvent('ox_lib:notify', src, { title = 'Water purified.', type = 'success' })
 end)
 
+-- LOCATIONAL TREATMENT (v0.22): each item treats ONLY its wound type. Using one from the
+-- inventory picks the worst matching wound on you; the wheel and the F1 body scan pick a part.
+local TargetedMeds = {
+  bandage = { scratch = 2, bite = 3, laceration = 3, gunshot = 5 },
+  ripped_sheet = { scratch = 2 },
+  splint = { fracture = 4 },
+  painkillers = { bruise = 1 },
+}
+for item, kinds in pairs(TargetedMeds) do
+  QBCore.Functions.CreateUseableItem(item, function(src)
+    local wounds = {}; pcall(function() wounds = N():getWounds(src) or {} end)
+    local best, bestSev
+    for part, w in pairs(wounds) do
+      local sev = (not w.treated) and kinds[w.kind] or nil
+      if sev and (not best or sev > bestSev) then best, bestSev = part, sev end
+    end
+    if not best then
+      if item == 'painkillers' then -- nothing to treat: a little relief anyway
+        if exports.ox_inventory:RemoveItem(src, item, 1) then TriggerClientEvent('outbreak:anim:play', src, 'eat', 3000); N():consume(src, { fatigue = 10 }) end
+      else TriggerClientEvent('ox_lib:notify', src, { title = 'Nothing on you needs that.', description = 'Bandage: bleeds. Splint: breaks. Painkillers: bruises.', type = 'inform' }) end
+      return
+    end
+    TriggerClientEvent('outbreak:client:treatSelf', src, best, item)
+  end)
+end
+
 -- Treatment: bandages/sheets/splints are NOT generic useables. They target a body part via the wheel.
 -- Client: TriggerServerEvent('outbreak:server:treat', part, item)  (self)  or ('outbreak:server:treatOther', targetSrc, part, item)
 local function treat(src, target, part, item)
-  if not ({ bandage = true, ripped_sheet = true, splint = true })[item] then return end
+  if not ({ bandage = true, ripped_sheet = true, splint = true, painkillers = true })[item] then return end
   if exports.ox_inventory:GetItemCount(src, item) < 1 then
     TriggerClientEvent('ox_lib:notify', src, { title = 'You don\'t have one.', type = 'error' }) return end
   if item == 'ripped_sheet' and math.random() < 0.3 then

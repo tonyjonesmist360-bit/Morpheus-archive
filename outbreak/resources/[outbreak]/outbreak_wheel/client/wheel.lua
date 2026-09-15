@@ -35,13 +35,13 @@ local function build()
   if #wounds > 0 then
     local sub = {}
     for _, w in ipairs(wounds) do
-      local item = (w.kind == 'fracture') and 'splint' or (has('bandage') and 'bandage' or 'ripped_sheet')
+      local item = (w.kind == 'fracture') and 'splint' or (w.kind == 'bruise') and 'painkillers' or (has('bandage') and 'bandage' or 'ripped_sheet')
       sub[#sub + 1] = { label = ('%s: %s'):format(w.part:gsub('_', ' '), w.kind), icon = 'bandage',
         onSelect = function()
           if not has(item) then lib.notify({ title = 'Need a ' .. item:gsub('_', ' '), type = 'error' }) return end
           local mult = 1.0
           pcall(function() mult = exports.outbreak_skills:effects('medicine').bandageTime; if exports.outbreak_skills:hasTrait('hemophobic') then mult = mult * 2 end end)
-          if exports.outbreak_emotes:action('treat', math.floor((item == 'splint' and 12000 or 6000) * mult), 'Treating ' .. w.part:gsub('_', ' ')) then
+          if exports.outbreak_emotes:action(item == 'painkillers' and 'eat' or 'treat', math.floor((item == 'splint' and 12000 or item == 'painkillers' and 3000 or 6000) * mult), 'Treating ' .. w.part:gsub('_', ' ')) then
             TriggerServerEvent('outbreak:server:treat', w.part, item)
           end
         end }

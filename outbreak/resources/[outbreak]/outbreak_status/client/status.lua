@@ -32,6 +32,7 @@ local SKILLS = { 'mechanics', 'medicine', 'stealth', 'fitness', 'scavenging' }
 
 local function gather()
   local needs   = ex(function() return exports.outbreak_needs:getNeeds() end, {}) or {}
+  local body    = ex(function() return exports.outbreak_needs:bodyScan() end, nil)
   local wounds  = ex(function() return exports.outbreak_needs:getWounds() end, {}) or {}
   local bleeding= ex(function() return exports.outbreak_needs:isBleeding() end, false)
   local ident   = ex(function() return lib.callback.await('outbreak:identity:get', false) end, nil)
@@ -58,6 +59,7 @@ local function gather()
   local home = ex(function() return lib.callback.await('outbreak:supply:home', false) end, nil)
   return {
     home = home,
+    body = body,
     identity = {
       callsign = ident and ident.callsign or nil,
       former   = ident and ident.former or nil,
@@ -109,6 +111,23 @@ end
 
 RegisterCommand('ob_status', show, false)
 RegisterNUICallback('close', function(_, cb) close(); cb('ok') end)
+-- click a region of the body scan: treat it with the first matching item you carry
+RegisterNUICallback('treat', function(d, cb)
+  cb('ok')
+  local part = d and d.part; if type(part) ~= 'string' then return end
+  local body = ex(function() return exports.outbreak_needs:bodyScan() end, nil)
+  local p = body and body.parts and body.parts[part]; if not p or not p.treat then return end
+  close()
+  local item
+  for _, it in ipairs(p.treat) do if (ex(function() return exports.ox_inventory:Search('count', it) end, 0) or 0) > 0 then item = it break end end
+  if not item then lib.notify({ title = 'Nothing for that.', description = p.fix or '', type = 'error' }) return end
+  local mult = 1.0
+  pcall(function() mult = exports.outbreak_skills:effects('medicine').bandageTime; if exports.outbreak_skills:hasTrait('hemophobic') then mult = mult * 2 end end)
+  local ms = item == 'splint' and 12000 or item == 'painkillers' and 3000 or 6000
+  if exports.outbreak_emotes:action(item == 'painkillers' and 'eat' or 'treat', math.floor(ms * mult), 'Treating ' .. part:gsub('_', ' ')) then
+    TriggerServerEvent('outbreak:server:treat', part, item)
+  end
+end)
 
 -- Never let the panel trap the player: Escape and Backspace both release focus.
 CreateThread(function()

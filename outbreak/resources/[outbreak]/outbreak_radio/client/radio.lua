@@ -82,7 +82,9 @@ CreateThread(function()
   end
 end)
 
--- No phones in the apocalypse
-CreateThread(function() while true do Wait(0) DisableControlAction(0, 27, true) end end)
+-- No phones in the apocalypse. This used to be a per-frame DisableControlAction(0, 27) loop;
+-- control 27 is also D-pad UP, which outbreak_binds maps to the inventory, so the loop ate the
+-- pad's inventory button every frame. The phone resources are disabled in the recipe instead
+-- (see server.cfg.additions header) - no input hook is needed here. CORE-MECHANICS.md #R1-1.
 
 exports('getChannel', function() return onChannel end)

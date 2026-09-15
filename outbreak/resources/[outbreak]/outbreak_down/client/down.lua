@@ -281,8 +281,11 @@ end)
 AddEventHandler('outbreak:tick', function(t)
   local until_ = LocalPlayer.state.recovering
   if until_ and GetCloudTimeAsInt() < until_ then
-    SetPedMoveRateOverride(t.ped, 0.6); RestorePlayerStamina(PlayerId(), 0.0)
-    DisableControlAction(0, 21, true) -- sprint
+    SetPedMoveRateOverride(t.ped, 0.6)
+    -- recovering = no sprint. Was a DisableControlAction from this 500 ms tick, which disables
+    -- the control for one frame in fifteen (a flicker, not a block). outbreak_needs owns the
+    -- sprint cut now; ask it. CORE-MECHANICS.md #R1-2.
+    pcall(function() exports.outbreak_needs:cutSprint('recovering') end)
   elseif until_ then LocalPlayer.state:set('recovering', nil, true) end
 end)
 

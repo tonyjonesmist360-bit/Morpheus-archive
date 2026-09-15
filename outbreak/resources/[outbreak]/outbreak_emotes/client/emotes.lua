@@ -87,7 +87,7 @@ AddEventHandler('outbreak:tick', function(t)
 end)
 
 -- ── WALK STYLE + CROUCH ──
-local walkStyle, crouched = nil, false
+local walkStyle, crouched, injured = nil, false, false
 local function loadSet(name)
   RequestAnimSet(name); local t = GetGameTimer()
   while not HasAnimSetLoaded(name) and GetGameTimer() - t < 2000 do Wait(10) end
@@ -97,6 +97,11 @@ local function applyWalk()
   local ped = PlayerPedId()
   if crouched then
     if loadSet(EmoteCfg.CrouchClipset) then SetPedMovementClipset(ped, EmoteCfg.CrouchClipset, 0.25) else lib.notify({ title = 'Crouch clipset INVALID: ' .. EmoteCfg.CrouchClipset, type = 'error' }) end
+    return
+  end
+  if injured then  -- an untreated leg break: the limp wins over any chosen walk style
+    local limp = EmoteCfg.InjuredClipset or 'move_m@injured'
+    if loadSet(limp) then SetPedMovementClipset(ped, limp, 0.5) else ResetPedMovementClipset(ped, 0.25) end
     return
   end
   local set = walkStyle and EmoteCfg.WalkStyles[walkStyle] or nil
@@ -141,6 +146,7 @@ end)
 -- clipsets are per-ped; reapply after a model change / respawn
 AddEventHandler('outbreak:client:respawn', function() SetTimeout(3000, applyWalk) end)
 exports('getWalkStyle', function() return walkStyle, crouched end)
+exports('setInjured', function(on) on = on and true or false; if on == injured then return end; injured = on; applyWalk() end)
 
 exports('play', playEmote)
 exports('stop', stopEmote)

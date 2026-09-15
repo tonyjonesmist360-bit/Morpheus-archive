@@ -11,6 +11,7 @@ AddEventHandler('outbreak:hud:update', function(state)
     hunger = state.hunger, thirst = state.thirst, fatigue = state.fatigue,
     health = GetEntityHealth(PlayerPedId()) - 100, -- GTA peds: 100-200
     bleeding = state.bleeding, infection = stage, wounds = state.wounds or {},
+    body = (function() local ok, b = pcall(function() return exports.outbreak_needs:bodyScan() end); return ok and b or nil end)(),
   }})
 end)
 

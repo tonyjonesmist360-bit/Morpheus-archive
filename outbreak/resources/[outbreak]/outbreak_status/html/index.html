@@ -89,6 +89,31 @@
   .sk em{font-style:normal;color:var(--faint);font-size:11.5px;margin-left:auto;
          font-variant-numeric:tabular-nums}
 
+  /* Body scan silhouette. Region fill = state; a cross = broken. Same palette, no new colour:
+     bruised is the FOOD amber, bleeding rust, broken blood, treated dim bone. */
+  .figure .r { fill: rgba(216,210,192,.06); stroke: rgba(216,210,192,.35); stroke-width: 1.2; transition: fill .4s; }
+  .figure .r.bruised  { fill: rgba(201,143,61,.75); }
+  .figure .r.bleeding { fill: var(--rust); animation: throb 1.2s infinite; }
+  .figure .r.broken   { fill: var(--blood); }
+  .figure .r.treated  { fill: rgba(216,210,192,.45); }
+  .figure .r.dirty    { stroke: #7d8a5c; stroke-width: 2; }
+  .figure .marks path { stroke: var(--bone); stroke-width: 2; fill: none; display: none; }
+  .figure .marks path.on { display: block; }
+  .figure.infected .r { stroke: #7d8a5c; }
+  /* Condition column: bars on the left, the body on the right. Hover a region for what is wrong
+     and what treats it; click it to treat with what you carry. */
+  .condwrap{display:flex;gap:14px;align-items:flex-start}
+  .condwrap>div:first-child{flex:1;min-width:0}
+  #bodybox{width:92px;flex:none;position:relative}
+  #bodybox .figure{width:92px;height:200px;overflow:visible;display:block}
+  #bodybox .r{cursor:pointer}
+  #bodybox .r:hover{stroke:var(--bone);stroke-width:2}
+  #tip{position:absolute;left:100px;top:0;width:210px;background:var(--deep);border:1px solid var(--line);
+       padding:8px 10px;font-size:12px;line-height:1.4;display:none;z-index:2;pointer-events:none}
+  #tip b{display:block;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--dim);margin-bottom:3px}
+  #tip .st{color:var(--rust);text-transform:capitalize}
+  #tip .fix{color:var(--faint);margin-top:4px;font-style:italic}
+  #bodykey{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);margin-top:6px;text-align:center}
   .wounds{margin-top:14px}
   .wd{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;
       border-bottom:1px solid var(--line)}
@@ -108,7 +133,22 @@
     <div class="chips" id="chips"></div>
   </header>
   <div class="grid">
-    <section><h2>Condition</h2><div id="cond"></div><div class="wounds" id="wounds"></div></section>
+    <section><h2>Condition</h2>
+      <div class="condwrap"><div><div id="cond"></div><div class="wounds" id="wounds"></div></div>
+        <div id="bodybox"><svg viewBox="0 0 60 130" class="figure">
+      <circle class="r" data-part="head" cx="30" cy="13" r="10"/>
+      <rect class="r" data-part="torso" x="18" y="26" width="24" height="42" rx="4"/>
+      <rect class="r" data-part="right_arm" x="5" y="27" width="10" height="40" rx="4"/>
+      <rect class="r" data-part="left_arm" x="45" y="27" width="10" height="40" rx="4"/>
+      <rect class="r" data-part="right_leg" x="18" y="71" width="11" height="54" rx="4"/>
+      <rect class="r" data-part="left_leg" x="31" y="71" width="11" height="54" rx="4"/>
+      <g class="marks">
+        <path data-part="head" d="M26 9 l8 8 M34 9 l-8 8"/><path data-part="torso" d="M25 42 l10 10 M35 42 l-10 10"/>
+        <path data-part="right_arm" d="M7 43 l6 6 M13 43 l-6 6"/><path data-part="left_arm" d="M47 43 l6 6 M53 43 l-6 6"/>
+        <path data-part="right_leg" d="M20 94 l7 7 M27 94 l-7 7"/><path data-part="left_leg" d="M33 94 l7 7 M40 94 l-7 7"/>
+      </g>
+    </svg><div id="bodykey">body scan</div><div id="tip"></div></div>
+      </div></section>
     <section><h2>Carrying</h2><div id="carry"></div></section>
     <section><h2>Skills</h2><div id="skills"></div></section>
     <section><h2>World</h2><div class="rows" id="world"></div></section>
@@ -133,8 +173,47 @@ function bar(tag,v,key){
     <div class="track"><div class="fill${low}" style="width:${v}%;background:${col}"></div></div></div>`;
 }
 
+  // paint the silhouette from a body scan {parts:{part:{state,dirty}}, infected}
+  const paintBody = (root, body) => {
+    if (!root || !body) return;
+    root.classList.toggle('infected', !!body.infected);
+    for (const el of root.querySelectorAll('.r')) {
+      const p = (body.parts || {})[el.dataset.part] || { state: 'healthy' };
+      el.className.baseVal = 'r ' + (p.state || 'healthy') + (p.dirty ? ' dirty' : '');
+    }
+    for (const m of root.querySelectorAll('.marks path')) {
+      const p = (body.parts || {})[m.dataset.part] || {};
+      m.classList.toggle('on', p.state === 'broken');
+    }
+  };
+let BODY = null;
+const PARTNAME = { head:'Head', torso:'Torso', left_arm:'Left arm', right_arm:'Right arm', left_leg:'Left leg', right_leg:'Right leg' };
+function renderBody(body){
+  BODY = body || null;
+  const box = $('bodybox');
+  paintBody(box, body || { parts:{} });
+  $('bodykey').textContent = body && body.infected ? 'body scan · infected' : 'body scan';
+}
+(function wireBody(){
+  const box = $('bodybox'), tip = $('tip');
+  box.addEventListener('mouseover', e => {
+    const r = e.target.closest('.r'); if (!r) return;
+    const part = r.dataset.part, p = (BODY && BODY.parts && BODY.parts[part]) || { state:'healthy', text:'Fine.' };
+    tip.innerHTML = `<b>${esc(PARTNAME[part]||part)}</b><span class="st">${esc(p.label||p.state)}</span> — ${esc(p.text||'')}` +
+      (p.fix ? `<div class="fix">${esc(p.fix)}${p.state!=='healthy'&&p.state!=='treated'?' · click to treat':''}</div>` : '');
+    tip.style.display = 'block'; tip.style.top = Math.max(0, r.getBoundingClientRect().top - box.getBoundingClientRect().top - 10) + 'px';
+  });
+  box.addEventListener('mouseout', e => { if (e.target.closest('.r')) tip.style.display = 'none'; });
+  box.addEventListener('click', e => {
+    const r = e.target.closest('.r'); if (!r) return;
+    const p = BODY && BODY.parts && BODY.parts[r.dataset.part];
+    if (!p || p.state === 'healthy' || p.state === 'treated') return;
+    fetch(`https://${GetParentResourceName()}/treat`, { method:'POST', body: JSON.stringify({ part: r.dataset.part }) });
+  });
+})();
 function render(d){
   const id=d.identity||{}, c=d.condition||{}, w=d.world||{};
+  renderBody(d.body);
   $('who').innerHTML = id.callsign ? esc(id.callsign) : '<em>unnamed survivor</em>';
   $('former').textContent = id.former ? '· ' + id.former : '';
 

@@ -29,6 +29,7 @@ EmoteCfg = {
     shady = 'move_m@shadyped@a', quick = 'move_m@quick', femme = 'move_f@sexy@a', flee = 'move_m@fire',
   },
   CrouchClipset = 'move_ped_crouched',
+  InjuredClipset = 'move_m@injured',   -- untreated leg fracture (outbreak_needs asks via setInjured)
   RestFatiguePerTick = 1.2,   -- every 5s while resting
   ListenRadius = 60.0,
 }
