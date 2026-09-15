@@ -5,6 +5,7 @@ local spawnZombie -- forward-declared: exports above call it
 local hotZone     -- forward-declared: exports above call it
 local variantOf = {} -- ped -> variant name (declared up here: the exports below read it)
 local suspicion = {}     -- ped -> 0..100
+local aggro = {}         -- ped -> true once it has charged; its combat task is then left alone
 local topSuspicion = 0   -- highest in range this tick, for the HUD eye
 local ZGROUP = `OUTBREAK_ZOMBIES`
 local DEBUG = function() return GlobalState.obDebug == true end
@@ -296,6 +297,7 @@ CreateThread(function()
       wasGhost = isGhost
       if isGhost then
         for ped in pairs(zombies) do
+          aggro[ped] = nil; suspicion[ped] = 0
           if DoesEntityExist(ped) and not IsEntityDead(ped) then ClearPedTasks(ped); TaskWanderStandard(ped, 10.0, 10) end
         end
       end
@@ -314,25 +316,35 @@ CreateThread(function()
     for ped in pairs(zombies) do
       if DoesEntityExist(ped) and not IsEntityDead(ped) then
         local d = #(GetEntityCoords(ped) - ppos)
-        local inCombat = IsPedInCombat(ped, me)
+        local fighting = IsPedInCombat(ped, me) or IsPedInMeleeCombat(ped)
         local canSee = d < sightRadius and HasEntityClearLosToEntity(ped, me, 17)
         local hears = d < hearRadius and noise > 25
-        if inCombat then suspicion[ped] = 100
-        elseif canSee then
-          local gain = S.gainPerTick * (vis / 50.0) * (d < sightRadius * 0.4 and S.closeBoost or 1.0)
-          suspicion[ped] = math.min(100, (suspicion[ped] or 0) + gain)
-          if suspicion[ped] < 100 and not IsPedInCombat(ped, me) then TaskTurnPedToFaceEntity(ped, me, 1200) end
+        if aggro[ped] then
+          -- ALREADY ON YOU: never touch its task again (a TaskTurn here interrupted every bite and
+          -- broke combat on 2026-09-15). It only lets go when it has lost you for good.
+          if not fighting and not canSee and d > sightRadius * 2.0 then
+            aggro[ped] = nil; suspicion[ped] = 0
+          else
+            suspicion[ped] = 100
+            if not fighting and not isGhost then TaskCombatPed(ped, me, 0, 16) end
+          end
         else
-          suspicion[ped] = math.max(0, (suspicion[ped] or 0) - S.decayPerTick)
-        end
-        local sees = canSee and (suspicion[ped] >= 100 or d < S.instantRadius)
-        if not isGhost and (sees or hears or (frenzy and d < 80.0)) then
-          suspicion[ped] = 100
-          TaskCombatPed(ped, me, 0, 16)
-          onZombieAggro(ped)
+          if canSee then
+            local gain = S.gainPerTick * (vis / 50.0) * (d < sightRadius * 0.4 and S.closeBoost or 1.0)
+            suspicion[ped] = math.min(100, (suspicion[ped] or 0) + gain)
+            if suspicion[ped] < 100 and not fighting then TaskTurnPedToFaceEntity(ped, me, 1200) end
+          else
+            suspicion[ped] = math.max(0, (suspicion[ped] or 0) - S.decayPerTick)
+          end
+          local sees = canSee and (suspicion[ped] >= 100 or d < S.instantRadius)
+          if not isGhost and (sees or hears or (frenzy and d < 80.0) or fighting) then
+            suspicion[ped] = 100; aggro[ped] = true
+            TaskCombatPed(ped, me, 0, 16)
+            onZombieAggro(ped)
+          end
         end
         if d < sightRadius * 1.5 and (suspicion[ped] or 0) > top then top = suspicion[ped] end
-      else suspicion[ped] = nil end
+      else suspicion[ped] = nil; aggro[ped] = nil end
     end
     topSuspicion = top
     TriggerEvent('outbreak:hud:sight', { visibility = vis, suspicion = top, sightRadius = sightRadius })
