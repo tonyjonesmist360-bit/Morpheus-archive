@@ -121,6 +121,38 @@ RegisterNetEvent('outbreak:wi:takeProp', function(model, pos)
   GlobalState.obHiddenProps = Hidden
 end)
 
+-- SCENE CLEAR (v0.22). DM scene props (item '__prop', placed by 'world') persist in the DB, so a
+-- scene run at the motel spawn leaves a roadblock outside the Sandy 24/7 forever. This removes
+-- system-placed items inside a radius and writes what it removed to cleared-<time>.json in this
+-- resource, so ob_scene_restore can put them back. Player-placed items are never touched.
+exports('clearSystemNear', function(pos, radius, includeNotes)
+  local gone = {}
+  for id, rec in pairs(Items) do
+    local system = rec.by == 'world' and (rec.item == '__prop' or (includeNotes and rec.item == 'note'))
+    if system and #(rec.pos - pos) <= radius then
+      gone[#gone + 1] = { id = id, item = rec.item, count = rec.count, metadata = rec.metadata, model = rec.model, pos = { x = rec.pos.x, y = rec.pos.y, z = rec.pos.z }, rot = { x = rec.rot.x, y = rec.rot.y, z = rec.rot.z }, byName = rec.byName }
+    end
+  end
+  for _, g in ipairs(gone) do remove(g.id) end
+  if #gone > 0 then
+    local name = ('cleared-%s.json'):format(os.date('%Y%m%d-%H%M%S'))
+    SaveResourceFile(GetCurrentResourceName(), name, json.encode({ at = os.time(), pos = { x = pos.x, y = pos.y, z = pos.z }, radius = radius, items = gone }), -1)
+    print(('^5[OB-WI]^7 scene clear: %d system props removed within %.0f m of %.1f,%.1f -> %s'):format(#gone, radius, pos.x, pos.y, name))
+    return #gone, name
+  end
+  return 0, nil
+end)
+exports('restoreCleared', function(name)
+  local raw = LoadResourceFile(GetCurrentResourceName(), name); if not raw then return 0 end
+  local ok, data = pcall(json.decode, raw); if not ok or not data or not data.items then return 0 end
+  local n = 0
+  for _, g in ipairs(data.items) do
+    local md = g.metadata or {}; md.model = md.model or g.model
+    if exports.outbreak_worlditems:placeSystem(g.item, g.count or 1, md, vector3(g.pos.x, g.pos.y, g.pos.z), vector3(g.rot.x, g.rot.y, g.rot.z), g.byName) then n = n + 1 end
+  end
+  print(('^5[OB-WI]^7 restored %d props from %s'):format(n, name))
+  return n
+end)
 exports('list', function() return Items end)
 exports('remove', remove)
 exports('restoreProp', function(id)
@@ -131,7 +163,7 @@ end)
 exports('hidden', function() return Hidden end)
 exports('placeSystem', function(item, count, metadata, pos, rot, byName) -- chains/NPCs place things too (no owner)
   local model = (metadata and metadata.model) or WorldItemsCfg.Models[item] or WorldItemsCfg.Fallback
-  local rec = { id = nextId, item = item, count = count or 1, metadata = metadata or {}, model = joaat(model), pos = pos, rot = rot or vector3(0, 0, 0), by = 'world', byName = byName or 'someone', at = os.time(), storage = WorldItemsCfg.Storage[item] ~= nil, locked = false }
+  local rec = { id = nextId, item = item, count = count or 1, metadata = metadata or {}, model = type(model) == 'number' and model or joaat(model), pos = pos, rot = rot or vector3(0, 0, 0), by = 'world', byName = byName or 'someone', at = os.time(), storage = WorldItemsCfg.Storage[item] ~= nil, locked = false }
   nextId = nextId + 1
   if rec.storage then local S = WorldItemsCfg.Storage[item]; exports.ox_inventory:RegisterStash('wi_' .. rec.id, item, S.slots, S.weight, nil) end
   if spawn(rec) then Items[rec.id] = rec; save(rec); return rec.id end

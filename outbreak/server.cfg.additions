@@ -68,6 +68,15 @@ ensure outbreak_worlditems
 ensure outbreak_dm
 ensure outbreak_supply
 ensure outbreak_director
+## progression - the story. intel: rumours, documents, the journal on J. opportunities: the five chains.
+## needs core, radio, items, faction, vehicles for chains 2 and 5. Migration 003_progression.sql.
+## Enabled 2026-09-15 for the F9 run. If the boot goes red, comment these two and restart.
+ensure outbreak_intel
+ensure outbreak_opportunities
+## craft - field crafting on K plus the workbench. needs items, emotes
+ensure outbreak_craft
+## mapkey - vanilla blips removed, the legend on /mapkey. needs core tick
+ensure outbreak_mapkey
 
 ## Layer 2 - presentation that reads everything
 ## status is the F1 panel. It reads client exports only.
@@ -86,13 +95,10 @@ ensure outbreak_debug
 ## Untested in play. If the boot goes red, comment this line and restart.
 ensure outbreak_vehicles
 
-## PROGRESSION - HELD until DESIGN-progression.md review and a slice pass
-# ensure outbreak_intel            after outbreak_core, outbreak_radio, outbreak_items
-# ensure outbreak_opportunities    after outbreak_intel, outbreak_faction
+## PROGRESSION and CRAFT are ENABLED above in the layer 1 block. Do not add them twice.
 
 ## EXTENDED - HELD until the slice passes FIRST_BOOT_CHECKLIST.md
 ## outbreak_vehicles is ENABLED above in the VEHICLES v2 block. Do not add it twice.
-# ensure outbreak_craft
 # ensure outbreak_military
 # ensure outbreak_stations
 # ensure outbreak_raiders

@@ -34,7 +34,9 @@ WorldItemsCfg = {
     [`v_ret_247_redwine`] = { item = 'beer', count = 1, seconds = 2 }, [`prop_food_bs_chips`] = { item = 'chips', count = 1, seconds = 2 }, [`prop_cs_bottle_01`] = { item = 'water_clean', count = 1, seconds = 2 },
     [`v_ret_ml_water`] = { item = 'water_clean', count = 1, seconds = 2 }, [`prop_food_cb_noodles`] = { item = 'noodle_bowl', count = 1, seconds = 2 },
   },
-  ShelfRestock = { hours = 36, nearCampHours = 8 },   -- "someone restocked" — faster when a camp with a trading habit is near
+  ShelfRestock = { hours = 36, nearCampHours = 8 },
+  -- STORES ARE LOOTING. Taking off a shelf is theft: noise every time, sometimes a can hits the floor.
+  Steal = { noise = 18, dropChance = 0.12, dropNoise = 45 },   -- "someone restocked" — faster when a camp with a trading habit is near
   MaxPlacedPerPlayer = 40, MaxDistance = 4.0, RotateStep = 10.0,
   NotePlaceableAsIntel = true,   -- a placed 'document' becomes environmental intel: reading it grants the intel without consuming it
   -- ENTROPY (server): the world pushes back

@@ -35,6 +35,33 @@ Actions.vehkeys = function(src, a)
     notify(a.target or src, 'Key · ' .. plate .. ' is in your pocket.', 'success')
   end)
 end
+-- SCENE CLEAR: undo a scene. Props (persisted) + unclaimed vehicles within radius of the DM.
+-- Backup JSON lands in outbreak_worlditems/; ob_scene_restore <file> puts the props back.
+Actions.sceneclear = function(src, a)
+  local p = a.pos and vector3(a.pos.x, a.pos.y, a.pos.z) or posOf(src)
+  local r = a.radius or 40.0
+  local props, file, vehs = 0, nil, 0
+  pcall(function() props, file = exports.outbreak_worlditems:clearSystemNear(p, r, a.notes == true) end)
+  pcall(function() vehs = exports.outbreak_vehicles:clearNear(p, r) end)
+  notify(src, ('Scene cleared: %d props, %d vehicles.'):format(props or 0, vehs or 0), 'success')
+  if file then notify(src, 'Backup: ' .. file, 'inform') end
+end
+RegisterCommand('ob_scene_clear', function(src, args)
+  if src ~= 0 and not dm(src) then return end
+  local x, y, z, r = tonumber(args[1]), tonumber(args[2]), tonumber(args[3]), tonumber(args[4]) or 40.0
+  if not (x and y and z) then print('usage: ob_scene_clear <x> <y> <z> [radius]   e.g. the Sandy 24/7: ob_scene_clear 1960.5 3740.6 32.3 45') return end
+  local props, file, vehs = 0, nil, 0
+  pcall(function() props, file = exports.outbreak_worlditems:clearSystemNear(vector3(x, y, z), r, false) end)
+  pcall(function() vehs = exports.outbreak_vehicles:clearNear(vector3(x, y, z), r) end)
+  print(('^6[OB-DM]^7 scene clear @ %.1f,%.1f r=%.0f: %d props (%s), %d vehicles'):format(x, y, r, props or 0, file or 'no backup needed', vehs or 0))
+  log(src, 'sceneclear', { x = x, y = y, z = z, r = r, props = props, vehicles = vehs, backup = file })
+end, true)
+RegisterCommand('ob_scene_restore', function(src, args)
+  if src ~= 0 and not dm(src) then return end
+  if not args[1] then print('usage: ob_scene_restore cleared-YYYYMMDD-HHMMSS.json') return end
+  local n = 0; pcall(function() n = exports.outbreak_worlditems:restoreCleared(args[1]) end)
+  print(('^6[OB-DM]^7 restored %d props'):format(n or 0))
+end, true)
 Actions.vehera = function(src, a) pcall(function() if exports.outbreak_vehicles:setEra(a.era, GetPlayerName(src)) then notify(src, 'Vehicle era: ' .. a.era, 'success') end end) end
 Actions.vehlock = function(src, a)
   pcall(function() local v, plate = exports.outbreak_vehicles:byNet(a.netId); if v then exports.outbreak_vehicles:set(plate, { locked = not v.locked }, 'dm lock'); notify(src, v.locked and 'Unlocked.' or 'Locked.') end end)

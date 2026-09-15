@@ -1,6 +1,6 @@
 # SYSTEMS CHECK — pass 2 (static)
 
-Resources: 37 · Lua files: 158 · migrations: 8 · items defined: 68 · commands: 88
+Resources: 38 · Lua files: 161 · migrations: 8 · items defined: 69 · commands: 91
 
 
 ## ERROR (0)

@@ -132,6 +132,25 @@ CreateThread(function()
   end
 end)
 
+-- SCENE CLEAR: delete unoccupied, unclaimed vehicles inside a radius (DM spawns and strays).
+-- Claimed vehicles (a key exists) are never touched.
+exports('clearNear', function(pos, radius)
+  local n = 0
+  for _, ent in ipairs(GetAllVehicles()) do
+    if DoesEntityExist(ent) and #(GetEntityCoords(ent) - pos) <= radius then
+      local plate = (GetVehicleNumberPlateText(ent) or ''):gsub('%s+$', '')
+      local v = V[plate]
+      local occupied = false
+      for seat = -1, 6 do local p = GetPedInVehicleSeat(ent, seat); if p and p ~= 0 and IsPedAPlayer(p) then occupied = true end end
+      if not occupied and not (v and v.claimed) then
+        if v then ByNet[v.netId or -1] = nil; V[plate] = nil end
+        DeleteEntity(ent); n = n + 1
+      end
+    end
+  end
+  print(('^5[OB-VEH]^7 scene clear: %d vehicles removed within %.0f m of %.1f,%.1f'):format(n, radius, pos.x, pos.y))
+  return n
+end)
 exports('get', function(plate) return V[plate] end)
 exports('byNet', function(netId) return ByNet[netId] and V[ByNet[netId]] or nil, ByNet[netId] end)
 exports('set', function(plate, changes, reason)

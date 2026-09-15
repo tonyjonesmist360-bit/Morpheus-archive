@@ -36,6 +36,7 @@
 ['radio_coil']       = { label = 'Radio Coil',         weight = 900,  description = 'Repeater-grade. Burns out if the tower takes a beating mid-boot.' },
 ['radio_base']       = { label = 'Base Station Radio', weight = 8000, description = 'Set it up in your safehouse. Reach four times farther from home.', client = { image = 'radio.png' } },
 ['note']             = { label = 'Note',               weight = 5,    description = 'Blank. Write on it (/writenote), then set it down.', client = { image = 'paperbag.png' } },
+['old_cash']         = { label = 'Old Money',          weight = 2,    description = 'Paper from before. Burns well. Trade it if you find a fool.', client = { image = 'money.png' } },
 ['padlock']          = { label = 'Padlock',            weight = 300,  description = 'Keeps honest people out.', client = { image = 'lockpick.png' } },
 ['crate']            = { label = 'Wooden Crate',       weight = 9000, description = 'Set it down: 20 slots of storage. Lock it or lose it.' },
 ['duffel_bag']       = { label = 'Duffel Bag',         weight = 1200, description = 'Set it down: 12 slots. Light, easy to steal.', client = { image = 'paperbag.png' } },

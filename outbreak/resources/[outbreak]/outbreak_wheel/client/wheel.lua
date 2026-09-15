@@ -113,6 +113,7 @@ local function build()
     local w = 0; for _, x in pairs(n.wounds or {}) do if not x.treated then w = w + 1 end end
     lib.notify({ title = ('Food %d  Water %d  Rest %d'):format(n.hunger, n.thirst, n.fatigue), description = ('%d open wound(s). %s'):format(w, n.infected and 'INFECTED.' or 'No fever.'), type = 'inform', duration = 6000 }) end }
   items[#items + 1] = { label = 'Set something down', icon = 'hand', onSelect = function() ExecuteCommand('placeitem') end }
+  items[#items + 1] = { label = 'Map key', icon = 'map', onSelect = function() ExecuteCommand('mapkey') end }
   items[#items + 1] = { label = 'Skills', icon = 'graduation-cap', onSelect = function() ExecuteCommand('skills') end }
   if GetResourceState('outbreak_intel') == 'started' then items[#items + 1] = { label = 'Journal', icon = 'book', onSelect = function() ExecuteCommand('journal') end } end
   if GetResourceState('outbreak_craft') == 'started' then items[#items + 1] = { label = 'Craft', icon = 'hammer', onSelect = function() ExecuteCommand('craft') end } end

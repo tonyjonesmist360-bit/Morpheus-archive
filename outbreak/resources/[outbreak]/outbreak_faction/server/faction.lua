@@ -47,6 +47,50 @@ RegisterCommand('setfaction', function(src, args)
   TriggerClientEvent('ox_lib:notify', target, { title = 'You are now: ' .. job, type = 'inform' })
 end, true)
 
+-- ── JOIN / LEAVE in the world (v0.22). The armory / cache target asks; rep decides. ──
+local lastSwitch = {}
+local function standingWord(v)
+  for _, b in ipairs(FactionCfg.Standing) do if v <= b[1] then return b[2] end end
+  return 'kin'
+end
+RegisterNetEvent('outbreak:server:joinFaction', function(which)
+  local src = source
+  local F = which == 'military' and FactionCfg.Military or which == 'raider' and FactionCfg.Raider or nil
+  if not F then return end
+  local p = QBCore.Functions.GetPlayer(src); if not p then return end
+  local cur = jobOf(src)
+  if cur == F.job then TriggerClientEvent('ox_lib:notify', src, { title = 'You already are.', type = 'inform' }) return end
+  if lastSwitch[src] and os.time() - lastSwitch[src] < FactionCfg.Join.cooldownMinutes * 60 then
+    TriggerClientEvent('ox_lib:notify', src, { title = 'Not so fast.', description = 'You just changed sides. Give it a while.', type = 'error' }) return
+  end
+  local r = exports.outbreak_faction:getRep(src, which)
+  if r < FactionCfg.Join.minRep then TriggerClientEvent('ox_lib:notify', src, { title = 'They will not have you.', description = ('%s: %s.'):format(FactionCfg.Names[which], standingWord(r)), type = 'error' }) return end
+  if cur == 'military' or cur == 'raider' then exports.outbreak_faction:addRep(src, cur, -FactionCfg.Join.leaveRepCost, 'walked out') end
+  p.Functions.SetJob(F.job, 0)
+  lastSwitch[src] = os.time()
+  TriggerClientEvent('ox_lib:notify', src, { title = 'You are with ' .. FactionCfg.Names[which] .. ' now.', description = 'Their channel is yours. So are their enemies.', type = 'success', duration = 8000 })
+  print(('^5[OB-FACTION]^7 %s joined %s'):format(GetPlayerName(src), which))
+end)
+RegisterNetEvent('outbreak:server:leaveFaction', function()
+  local src = source; local cur = jobOf(src)
+  if cur ~= 'military' and cur ~= 'raider' then return end
+  local p = QBCore.Functions.GetPlayer(src); if not p then return end
+  exports.outbreak_faction:addRep(src, cur, -FactionCfg.Join.leaveRepCost, 'walked out')
+  p.Functions.SetJob('unemployed', 0)
+  lastSwitch[src] = os.time()
+  TriggerClientEvent('ox_lib:notify', src, { title = 'On your own again.', type = 'inform' })
+end)
+-- standings read-model for the journal and F1: every faction, number + word
+lib.callback.register('outbreak:faction:standings', function(src)
+  local out = {}
+  for _, f in ipairs({ 'military', 'raider', 'enclave' }) do
+    local v = exports.outbreak_faction:getRep(src, f)
+    out[#out + 1] = { id = f, name = FactionCfg.Names[f], value = v, word = standingWord(v), blurb = FactionCfg.Blurbs[f], mine = jobOf(src) == f }
+  end
+  return out
+end)
+exports('standingWord', standingWord)
+
 -- ── REPUTATION SERVICE ──
 -- exports.outbreak_faction:getRep(src, 'military'|'raider'|'enclave')   -> number
 -- exports.outbreak_faction:addRep(src, faction, delta, reason)           -> new value (server only)

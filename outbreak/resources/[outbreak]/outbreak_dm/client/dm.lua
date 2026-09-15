@@ -44,6 +44,8 @@ local function menu()
     { title = 'Cache crate', onSelect = function() local i = lib.inputDialog('Cache', { { type = 'input', label = 'Label', default = 'Cache' }, { type = 'input', label = 'Items (name:count, comma)', default = 'mre:4,bandage:4,ammo-9:20' } })
         if i then local items = {}; for pair in i[2]:gmatch('[^,]+') do local n, c = pair:match('^%s*([%w%-_]+)%s*:%s*(%d+)'); if n then items[#items + 1] = { n, tonumber(c) } end end; act('cache', { label = i[1], items = items }) end end },
     { title = 'Clear my spawns', description = 'deletes NPCs/vehicles you spawned', onSelect = function() for _, e in ipairs(spawned) do if DoesEntityExist(e) then DeleteEntity(e) end end; spawned = {} end },
+    { title = 'Clear scene here (40 m)', icon = 'broom', description = 'removes scene props and unclaimed vehicles around you; a backup file is written', onSelect = function()
+        if lib.alertDialog({ header = 'Clear scene', content = 'Every scene prop and every unclaimed, empty vehicle within 40 m goes. Player-placed items and keyed cars stay. Backup is written.', centered = true, cancel = true }) == 'confirm' then act('sceneclear', { radius = 40.0 }) end end },
   } })
 
   lib.registerContext({ id = 'dm_story', title = 'Story', menu = 'dm_main', options = {

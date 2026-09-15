@@ -2,21 +2,29 @@
 CreateThread(function()
   local models = {}
   for model in pairs(LootCfg.Containers) do models[#models + 1] = model end
-  exports.ox_target:addModel(models, {
-    {
-      label = 'Search',
-      icon = 'fa-solid fa-magnifying-glass',
-      onSelect = function(data)
-        local entity = data.entity
-        local model = GetEntityModel(entity)
-        local pos = GetEntityCoords(entity)
-        local containerId = ('%d_%d_%d'):format(math.floor(pos.x), math.floor(pos.y), model)
-        if exports.outbreak_emotes:action('search', LootCfg.SearchSeconds * 1000, 'Searching...') then
-          TriggerServerEvent('outbreak:server:search', containerId, LootCfg.Containers[model])
-        end
-      end,
-    },
-  })
+  -- one target per loot table so a till says "Force the register", not "Search" (stores are looting)
+  local byTable = {}
+  for model, tbl in pairs(LootCfg.Containers) do byTable[tbl] = byTable[tbl] or {}; table.insert(byTable[tbl], model) end
+  for tbl, list in pairs(byTable) do
+    local label = (LootCfg.Labels or {})[tbl] or 'Search'
+    local noise = (LootCfg.Noise or {})[tbl]
+    exports.ox_target:addModel(list, {
+      {
+        label = label,
+        icon = noise and 'fa-solid fa-hand-fist' or 'fa-solid fa-magnifying-glass',
+        onSelect = function(data)
+          local entity = data.entity
+          local model = GetEntityModel(entity)
+          local pos = GetEntityCoords(entity)
+          local containerId = ('%d_%d_%d'):format(math.floor(pos.x), math.floor(pos.y), model)
+          if noise then TriggerEvent('outbreak:noise:spike', noise) end
+          if exports.outbreak_emotes:action(noise and 'pry' or 'search', LootCfg.SearchSeconds * 1000, noise and (label .. '...') or 'Searching...') then
+            TriggerServerEvent('outbreak:server:search', containerId, LootCfg.Containers[model])
+          end
+        end,
+      },
+    })
+  end
 end)
 
 RegisterNetEvent('outbreak:client:noiseSpike', function(v) TriggerEvent('outbreak:noise:spike', v) end)

@@ -11,12 +11,15 @@ CreateThread(function()
   local models = {}
   for m in pairs(WorldItemsCfg.Shelves) do models[#models + 1] = m end
   exports.ox_target:addModel(models, { {
-    label = 'Grab', icon = 'fa-solid fa-hand-holding',
+    label = 'Steal', icon = 'fa-solid fa-mask',
     canInteract = function(e) return Entity(e).state.worldItem == nil end,
     onSelect = function(d)
       local t = WorldItemsCfg.Shelves[GetEntityModel(d.entity)]; if not t then return end
       local pos = GetEntityCoords(d.entity)
-      if exports.outbreak_emotes:action('search', t.seconds * 1000, 'Grabbing item...') then
+      local S = WorldItemsCfg.Steal or {}
+      TriggerEvent('outbreak:noise:spike', S.noise or 18)
+      if math.random() < (S.dropChance or 0) then TriggerEvent('outbreak:noise:spike', S.dropNoise or 45); lib.notify({ title = 'A can hits the floor.', description = 'Loud.', type = 'error', duration = 2500 }) end
+      if exports.outbreak_emotes:action('search', t.seconds * 1000, 'Stuffing it in your bag...') then
         TriggerServerEvent('outbreak:wi:takeProp', GetEntityModel(d.entity), vector3(pos.x, pos.y, pos.z))
         SetEntityAsMissionEntity(d.entity, true, true); DeleteObject(d.entity)
       end

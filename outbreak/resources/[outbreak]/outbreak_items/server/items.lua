@@ -42,6 +42,12 @@ for item, def in pairs(Useables) do
   end)
 end
 
+-- DEAD MONEY: counting it does nothing but remind you.
+QBCore.Functions.CreateUseableItem('old_cash', function(src)
+  local n = exports.ox_inventory:GetItemCount(src, 'old_cash')
+  TriggerClientEvent('ox_lib:notify', src, { title = ('$%d, more or less.'):format(n * 20), description = 'In a world that stopped counting. Someone might take it off you for a can.', type = 'inform', duration = 6000 })
+end)
+
 -- Distraction: the wheel asks, the server takes the can, the client throws it (outbreak_noise).
 local Throwable = { soda = true, beer = true }
 RegisterNetEvent('outbreak:server:throwDistraction', function(item)

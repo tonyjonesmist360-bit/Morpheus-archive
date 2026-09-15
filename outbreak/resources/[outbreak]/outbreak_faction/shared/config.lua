@@ -15,4 +15,14 @@ FactionCfg = {
     Camp = { coords = vec3(1385.3, 3618.8, 34.98), stash = 'raider_cache', slots = 40, weight = 150000 }, -- Sandy Shores boneyard
   },
   -- Military-job players are allies of checkpoint soldiers; raider-job players are hostile to them.
+  -- JOINING (v0.22): at the armory / the boneyard cache. Rep gates it; leaving costs rep with the ones you leave.
+  Join = { minRep = -10, leaveRepCost = 25, cooldownMinutes = 30 },
+  -- Standing words for the journal / F1. Bands on reputation -100..100.
+  Standing = { { -40, 'hostile' }, { -1, 'wary' }, { 39, 'neutral' }, { 79, 'trusted' }, { 100, 'kin' } },
+  Names = { military = 'Military Remnant', raider = 'Boneyard raiders', enclave = 'The Enclave' },
+  Blurbs = {
+    military = 'What is left of Zancudo. Channel 7. They hold the gate and the armory, and they remember who helped.',
+    raider   = 'The Boneyard crew out of Sandy Shores. Channel 13. They take what they want and call it trade.',
+    enclave  = 'The settlements that talk to each other on channel 4. Doors, stockpiles, people who remember your name.',
+  },
 }
