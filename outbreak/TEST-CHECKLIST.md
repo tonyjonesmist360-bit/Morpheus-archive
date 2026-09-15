@@ -101,5 +101,15 @@ from here). Mark each ✓ / ✗ and `/bug` anything that fails so the position a
 - [ ] Runner at night → "It twists out of your grip", half health, noise, it fights you. Bloater → "Not that one."
 - [ ] Skills → stealth XP +10 per quiet kill
 
+## 9e · v0.21 — vehicles: era, keys, admin list
+- [ ] Boot log: no red `[OB-VEH] qbx_vehiclekeys is running` line. If there is one, `stop qbx_vehiclekeys` in the console and retry the next line; if that fixes entry, comment its ensure out of server.cfg (your call, tell me)
+- [ ] Walk up to 5 parked ambient cars: ~4 open. Sit in one → no "No keys — press [E]" prompt on more than half of them (keys in the ignition); the rest need the splice. `ob_debug 1` prints `[OB-VEH]` lines on register
+- [ ] F10 → Admin → Vehicle kit → **Spawn (search)** → type "reb" → Rebel. It appears beside you, "Spawned. The key is in your pocket.", a Vehicle Key item with the plate; door opens, engine runs, ox_target → Lock / unlock works
+- [ ] **Spawn by model name** → `kamacho` (DLC) → spawns if the server has it, else "Unknown vehicle model"
+- [ ] Aim at any ambient car → Vehicle kit → **Give me the key** → key in pocket, it unlocks and runs, fuel ≥ 80
+- [ ] Vehicle kit → **World era** → live → "Vehicle era: live"; `restart outbreak_vehicles` → the same 5 cars now: ~3 locked, batteries dead, tanks near empty. Switch back to early
+- [ ] Console: `ob_vehera` (no arg) prints the current era
+- [ ] (v0.20.2) `/crouch`, then swing at a zombie → you stand for the hit and re-crouch ~1.5 s after
+
 ## 10 · Still v0.16 (if not yet walked)
 - [ ] `SMOKE-SCRIPT.md §14` S1–S8: settlement ledger, cooking, consumption, morale behaviours, stranger, rumour, F1 Home column

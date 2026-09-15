@@ -584,3 +584,28 @@ melee combat, so the tick never sees `melee`.
 declarations would have been the `hotZone` bug again in a different shape. diag3 check 6 only knew
 `local function`; 6b now flags a top-level `local NAME = ...` used earlier in the file. Regression-tested
 by un-hoisting `variantOf`.
+
+## 2026-09-15 — v0.20.2 / v0.21.0: combat and vehicles
+
+**Player could not hit.** `move_ped_crouched` (the `/crouch` clipset) blocks melee in GTA itself. Fix in
+`outbreak_emotes`: while crouched, an attack input resets the clipset for the swing and reapplies it
+1.5 s after `IsPedInMeleeCombat` clears. Zombies had also been cancelling their own attacks: the v0.19
+suspicion loop called `TaskTurnPedToFaceEntity` whenever line of sight flickered. `aggro[ped]` now
+latches once a zombie charges and only clears when it neither sees nor fights you beyond 2× sight radius.
+
+**Could not enter vehicles.** Two causes stack. Ours: the v2 roll locked 55 % of everything and none had
+keys. Tony wants day-one cars that mostly work, decaying to the scavenging game when the crew joins, so
+`VehCfg.Eras` holds two roll tables, `setr ob_veh_era` picks one at boot, `setEra` / `ob_vehera` / the DM
+vehicle kit switch at runtime, and `GlobalState.obVehEra` shows it. Only first-seen cars roll; unclaimed
+state is in memory so a restart re-rolls everything. Theirs (unverified on the live box): the QBox recipe
+ships `qbx_vehiclekeys`, which locks any car you hold none of *its* keys for and blocks the driver door.
+`state.lua` prints a red boot line if it is started; `giveKeys` mirrors every key we hand out to it via
+`exports.qbx_vehiclekeys:GiveKeys(src, ent)` (name from memory) so DM spawns are enterable either way.
+Recommended: comment its ensure out; outbreak_vehicles owns locks and keys. Not done here — cfg outside
+our block is Tony's.
+
+**Keys on spawn.** `Actions.vehicle` now gives the key (our `vehicle_key` with plate metadata) after
+`spawnManaged`; the client-spawn fallback reports its netId back through `vehkeys`, which registers the
+car if unseen and forces a running state. Vehicle kit gained Give me the key, Lock / unlock, World era.
+`DMCfg.Vehicles` is now `{ model, label }` pairs (100+ base-game models, from memory - unverified) behind a
+searchable select; bare strings still work.

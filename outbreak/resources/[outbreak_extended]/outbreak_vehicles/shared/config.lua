@@ -1,6 +1,17 @@
 VehCfg = {
-  -- Deterministic first-seen roll (plate+model), server-side
+  -- Deterministic first-seen roll (plate+model), server-side. These are the 'live' numbers;
+  -- the active ERA below overrides them.
   LockedChance = 0.55, DeadBatteryChance = 0.40, FuelRange = { 2, 35 }, KeyInGloveboxChance = 0.15, MissingPartChance = 0.20,
+  -- ERA: how the world's cars are found.
+  --   early = the outbreak just happened. Most cars run, most have fuel, half still have the keys in them.
+  --   live  = months in. Locked, dead, dry, stripped. The scavenging game.
+  -- Boot default comes from `setr ob_veh_era early` in server.cfg (early if unset). Switch at runtime
+  -- from the DM Vehicle kit or `ob_vehera live` in the txAdmin console. Only cars seen for the FIRST
+  -- time after the switch roll the new era; a restart re-rolls every unclaimed car.
+  Eras = {
+    early = { LockedChance = 0.15, DeadBatteryChance = 0.10, MissingPartChance = 0.05, FuelRange = { 30, 80 }, KeyInGloveboxChance = 0.35, KeysInIgnitionChance = 0.60 },
+    live  = { LockedChance = 0.55, DeadBatteryChance = 0.40, MissingPartChance = 0.20, FuelRange = { 2, 35 },  KeyInGloveboxChance = 0.15, KeysInIgnitionChance = 0.0 },
+  },
   -- Items
   KeyItem = 'vehicle_key', LockpickItem = 'crowbar_tool', BatteryItem = 'car_battery', SiphonItem = 'hose_kit', RepairItem = 'engine_parts', CanItem = 'gas_can_small',
   -- Burn: percent of tank per real minute at 60 km/h, scaled by speed and class; idling burns 25%

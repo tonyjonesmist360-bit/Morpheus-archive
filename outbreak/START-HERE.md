@@ -1,6 +1,19 @@
-# START HERE — Outbreak v0.20.0
+# START HERE — Outbreak v0.21.0
 
-## What changed since v0.19.0
+## What changed since v0.20.0
+
+| | |
+|---|---|
+| **Vehicles: era** | `setr ob_veh_era early` (new cfg line, default early). **early** = day one: 15 % locked, 10 % dead battery, 5 % missing part, 30–80 % fuel, and 60 % still have the **keys in the ignition** (unlocked, runs, no splice). **live** = the old scavenging numbers. Switch when the crew joins: cfg line, `ob_vehera live` in the console, or F10 → Admin → Vehicle kit → World era. Only cars seen for the first time after the switch roll the new table; a restart re-rolls every unclaimed car. |
+| **Keys on spawn** | Every DM-spawned vehicle drops a `vehicle_key` (plate in metadata) in your pocket and starts unlocked, hotwired, battery ok, 80 % fuel. Vehicle kit → **Give me the key** does the same for the car you sit in or aim at (and fixes its state). **Lock / unlock** added. If `qbx_vehiclekeys` is running, every key we hand out is mirrored to it (export name unverified) and the boot log says in red that it should be commented out. |
+| **Admin vehicle list** | 100+ base-game models in a searchable picker, grouped by pickup / SUV / van / truck / service / military / bike / boat. **Spawn by model name** takes any model. |
+| **Crouch melee** | (v0.20.2) attacking while crouched drops the crouch for the swing and re-crouches after. Zombies no longer cancel their own attacks (aggro flag). |
+
+Deploy: `02-copy-resources` then `07-update-cfg -Apply` (one new `setr` line), restart `outbreak_vehicles` and `outbreak_dm`. Checklist: `TEST-CHECKLIST.md §9e`.
+
+---
+
+## v0.20.0 — What changed since v0.19.0
 
 | | |
 |---|---|

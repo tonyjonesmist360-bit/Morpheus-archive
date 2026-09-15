@@ -16,7 +16,32 @@ DMCfg = {
     { id = 'radio_op',      label = 'Radio Operator',     model = 's_m_m_scientist_01',role = 'repeater chain' },
   },
   Peds = { survivor = { 'a_m_y_hipster_01', 'a_f_y_tourist_01', 'a_m_m_farmer_01' }, raider = { 'g_m_y_lost_01', 'g_m_y_lost_02', 'g_m_y_salvagoon_01' }, military = { 's_m_y_marine_01', 's_m_y_marine_03' } },
-  Vehicles = { 'rebel', 'bodhi2', 'barracks', 'crusader', 'ambulance', 'towtruck', 'pbus', 'dloader', 'sanchez', 'dinghy' },
+  -- Admin spawn list: { model, label }. Base-game models only (no DLC) so every one exists on a stock
+  -- server; add DLC models freely. "Spawn by model name" takes anything. Model names from memory - unverified.
+  Vehicles = {
+    -- pickups / offroad
+    { 'rebel', 'Rebel (rusty pickup)' }, { 'rebel2', 'Rebel (clean)' }, { 'bodhi2', 'Bodhi (open pickup)' }, { 'sadler', 'Sadler (work pickup)' }, { 'bison', 'Bison' }, { 'bobcatxl', 'Bobcat XL' },
+    { 'rancherxl', 'Rancher XL' }, { 'sandking', 'Sandking (lifted)' }, { 'sandking2', 'Sandking XL' }, { 'mesa', 'Mesa' }, { 'mesa3', 'Mesa (off-road)' }, { 'dloader', 'Duneloader (dune buggy)' }, { 'bfinjection', 'BF Injection' },
+    { 'dubsta3', 'Dubsta 6x6' }, { 'guardian', 'Guardian (heavy pickup)' }, { 'kalahari', 'Kalahari (jeep)' },
+    -- suvs / cars
+    { 'seminole', 'Seminole (SUV)' }, { 'baller', 'Baller' }, { 'cavalcade', 'Cavalcade' }, { 'granger', 'Granger' }, { 'patriot', 'Patriot' }, { 'dubsta', 'Dubsta' }, { 'landstalker', 'Landstalker' }, { 'gresley', 'Gresley' }, { 'habanero', 'Habanero' },
+    { 'asea', 'Asea (sedan)' }, { 'premier', 'Premier' }, { 'emperor', 'Emperor' }, { 'emperor2', 'Emperor (rusty)' }, { 'washington', 'Washington' }, { 'stanier', 'Stanier' }, { 'ingot', 'Ingot (wagon)' }, { 'regina', 'Regina (wagon)' }, { 'blista', 'Blista (hatch)' }, { 'issi2', 'Issi' }, { 'dilettante', 'Dilettante' },
+    { 'surfer', 'Surfer (VW bus)' }, { 'surfer2', 'Surfer (rusty)' }, { 'journey', 'Journey (RV)' }, { 'camper', 'Camper (RV)' }, { 'taco', 'Taco van' },
+    -- vans / trucks
+    { 'youga', 'Youga (van)' }, { 'burrito3', 'Burrito (van)' }, { 'rumpo', 'Rumpo (van)' }, { 'speedo', 'Speedo (van)' }, { 'pony', 'Pony (van)' }, { 'boxville', 'Boxville (box truck)' }, { 'mule', 'Mule (box truck)' }, { 'benson', 'Benson (box truck)' },
+    { 'pounder', 'Pounder' }, { 'phantom', 'Phantom (semi)' }, { 'hauler', 'Hauler (semi)' }, { 'packer', 'Packer (semi)' }, { 'tanker', 'Tanker trailer' }, { 'trailers', 'Box trailer' },
+    { 'towtruck', 'Tow truck' }, { 'towtruck2', 'Tow truck (small)' }, { 'flatbed', 'Flatbed' }, { 'scrap', 'Scrap truck' }, { 'utillitruck', 'Utility truck' }, { 'utillitruck3', 'Utility truck (small)' }, { 'tiptruck', 'Tipper' }, { 'mixer', 'Cement mixer' }, { 'rubble', 'Rubble' }, { 'tractor2', 'Tractor' }, { 'trash', 'Garbage truck' },
+    -- service / emergency
+    { 'ambulance', 'Ambulance' }, { 'firetruk', 'Fire truck' }, { 'police', 'Police cruiser' }, { 'police2', 'Police (Buffalo)' }, { 'police3', 'Police (Interceptor)' }, { 'sheriff', 'Sheriff cruiser' }, { 'sheriff2', 'Sheriff SUV' }, { 'policet', 'Police transporter' }, { 'riot', 'Riot van' },
+    { 'pbus', 'Prison bus' }, { 'bus', 'City bus' }, { 'coach', 'Coach' }, { 'rentalbus', 'Rental bus' }, { 'tourbus', 'Tour bus' }, { 'airbus', 'Airport bus' },
+    -- military
+    { 'barracks', 'Barracks (troop truck)' }, { 'barracks2', 'Barracks (semi)' }, { 'barracks3', 'Barracks (short)' }, { 'crusader', 'Crusader (jeep)' }, { 'insurgent', 'Insurgent (turret)' }, { 'insurgent2', 'Insurgent (no turret)' }, { 'technical', 'Technical (gun truck)' }, { 'brickade', 'Brickade (armoured)' }, { 'stockade', 'Stockade (armoured van)' },
+    -- bikes
+    { 'sanchez', 'Sanchez (dirt bike)' }, { 'sanchez2', 'Sanchez (livery)' }, { 'enduro', 'Enduro' }, { 'bati', 'Bati 801' }, { 'hexer', 'Hexer (chopper)' }, { 'daemon', 'Daemon (chopper)' }, { 'blazer', 'Blazer (quad)' }, { 'bagger', 'Bagger' }, { 'faggio', 'Faggio (scooter)' },
+    { 'bmx', 'BMX' }, { 'cruiser', 'Cruiser bicycle' }, { 'scorcher', 'Scorcher (mountain bike)' }, { 'fixter', 'Fixter (road bike)' },
+    -- boats
+    { 'dinghy', 'Dinghy' }, { 'dinghy2', 'Dinghy (2-seat)' }, { 'suntrap', 'Suntrap' }, { 'seashark', 'Seashark (jetski)' }, { 'speeder', 'Speeder' }, { 'jetmax', 'Jetmax' }, { 'squalo', 'Squalo' }, { 'tug', 'Tug' }, { 'marquis', 'Marquis (sailboat)' }, { 'predator', 'Police boat' },
+  },
   -- Saved teleport locations for the admin menu. Add your own with /coords (copies a vec4 to the clipboard).
   Locations = {
     { label = 'Sandy Shores motel (spawn)', pos = vec4(1961.24, 3742.4, 32.34, 300.0) },

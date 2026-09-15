@@ -17,8 +17,27 @@ Actions.zombies = function(src, a) TriggerClientEvent('outbreak:dm:spawnZombies'
 Actions.peds = function(src, a) TriggerClientEvent('outbreak:dm:spawnPeds', src, a, posOf(src, a.offset)) end
 Actions.vehicle = function(src, a)
   local p = posOf(src, a.offset)
-  local ok, ent = pcall(function() local e = exports.outbreak_vehicles:spawnManaged(a.model, p, GetEntityHeading(GetPlayerPed(src)), ('DM' .. math.random(1000, 9999)), a.state or { locked = false, battery = 'ok', fuel = 50, hotwired = true }) return e end)
-  if not ok or not ent then TriggerClientEvent('outbreak:dm:spawnVehicle', src, a.model, p) end
+  local ok, ent, netId = pcall(function() return exports.outbreak_vehicles:spawnManaged(a.model, p, GetEntityHeading(GetPlayerPed(src)), ('DM' .. math.random(1000, 9999)), a.state or { locked = false, battery = 'ok', fuel = 80, hotwired = true }) end)
+  if ok and ent and ent ~= 0 then
+    if netId and a.keys ~= false then pcall(function() exports.outbreak_vehicles:giveKeys(a.target or src, netId) end); notify(src, 'Spawned. The key is in your pocket.', 'success') end
+  else TriggerClientEvent('outbreak:dm:spawnVehicle', src, a.model, p) end
+end
+-- keys + a running state for any networked vehicle (client-spawned fallback, or the one you aim at)
+Actions.vehkeys = function(src, a)
+  if not a.netId then return end
+  pcall(function()
+    local Veh = exports.outbreak_vehicles
+    local v, plate = Veh:byNet(a.netId)
+    if not v then TriggerEvent('outbreak:veh:register', a.netId); v, plate = Veh:byNet(a.netId) end
+    if not plate then notify(src, 'No state for that vehicle yet. Drive it a moment and try again.', 'error') return end
+    if a.fix ~= false then Veh:set(plate, { locked = false, battery = 'ok', hotwired = true, part = false, fuel = math.max(v.fuel or 0, 80) }, 'dm keys') end
+    Veh:giveKeys(a.target or src, a.netId, plate)
+    notify(a.target or src, 'Key · ' .. plate .. ' is in your pocket.', 'success')
+  end)
+end
+Actions.vehera = function(src, a) pcall(function() if exports.outbreak_vehicles:setEra(a.era, GetPlayerName(src)) then notify(src, 'Vehicle era: ' .. a.era, 'success') end end) end
+Actions.vehlock = function(src, a)
+  pcall(function() local v, plate = exports.outbreak_vehicles:byNet(a.netId); if v then exports.outbreak_vehicles:set(plate, { locked = not v.locked }, 'dm lock'); notify(src, v.locked and 'Unlocked.' or 'Locked.') end end)
 end
 Actions.props = function(src, a) local p = posOf(src); for _, pr in ipairs(a.list or {}) do pcall(function() exports.outbreak_worlditems:placeSystem('__prop', 1, { model = pr[1] }, p + vector3(pr[2] or 0, pr[3] or 0, 0), vector3(0, 0, GetEntityHeading(GetPlayerPed(src))), 'the scene') end) end end
 Actions.cache = function(src, a)

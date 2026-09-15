@@ -1,5 +1,17 @@
 -- outbreak_dm/client/dm.lua — the director's menu. Everything is a request; the server checks ace.
 local function act(action, a) TriggerServerEvent('outbreak:dm:do', action, a or {}) end
+-- searchable vehicle picker over DMCfg.Vehicles ({ model, label } pairs, or bare strings)
+local function pickVehicle(cb)
+  local o = {}
+  for _, e in ipairs(DMCfg.Vehicles) do
+    local m, l = e, e
+    if type(e) == 'table' then m, l = e[1], (e[2] or e[1]) end
+    o[#o + 1] = { value = m, label = l .. '  (' .. m .. ')' }
+  end
+  table.sort(o, function(a, b) return a.label < b.label end)
+  local i = lib.inputDialog('Vehicle', { { type = 'select', label = 'Model', options = o, searchable = true, required = true } })
+  if i and i[1] then cb(i[1]) end
+end
 local spawned = {}
 local ghost = false
 
@@ -28,7 +40,7 @@ local function menu()
     { title = 'Survivors (friendly, with a line)', onSelect = function() local i = lib.inputDialog('Survivors', { { type = 'number', label = 'Count', default = 2 }, { type = 'input', label = 'What they say', default = 'We don\'t want trouble.' } }); if i then act('peds', { kind = 'survivor', count = i[1], hostile = false, line = i[2] }) end end },
     { title = 'Raiders (hostile)', onSelect = function() local i = lib.inputDialog('Raiders', { { type = 'number', label = 'Count', default = 3 }, { type = 'select', label = 'Armed with', options = { { value = 'WEAPON_BAT', label = 'Bats' }, { value = 'WEAPON_PUMPSHOTGUN', label = 'Shotguns' }, { value = 'WEAPON_PISTOL', label = 'Pistols' } }, default = 'WEAPON_BAT' } }); if i then act('peds', { kind = 'raider', count = i[1], hostile = true, weapon = i[2] }) end end },
     { title = 'Military patrol', onSelect = function() act('peds', { kind = 'military', count = 3, hostile = false, weapon = 'WEAPON_CARBINERIFLE' }) end },
-    { title = 'Vehicle', onSelect = function() local o = {}; for _, m in ipairs(DMCfg.Vehicles) do o[#o + 1] = { value = m, label = m } end; local i = lib.inputDialog('Vehicle', { { type = 'select', label = 'Model', options = o, required = true } }); if i then act('vehicle', { model = i[1], offset = { 3, 3 } }) end end },
+    { title = 'Vehicle', description = 'keys land in your pocket', onSelect = function() pickVehicle(function(m) act('vehicle', { model = m, offset = { 3, 3 } }) end) end },
     { title = 'Cache crate', onSelect = function() local i = lib.inputDialog('Cache', { { type = 'input', label = 'Label', default = 'Cache' }, { type = 'input', label = 'Items (name:count, comma)', default = 'mre:4,bandage:4,ammo-9:20' } })
         if i then local items = {}; for pair in i[2]:gmatch('[^,]+') do local n, c = pair:match('^%s*([%w%-_]+)%s*:%s*(%d+)'); if n then items[#items + 1] = { n, tonumber(c) } end end; act('cache', { label = i[1], items = items }) end end },
     { title = 'Clear my spawns', description = 'deletes NPCs/vehicles you spawned', onSelect = function() for _, e in ipairs(spawned) do if DoesEntityExist(e) then DeleteEntity(e) end end; spawned = {} end },
@@ -70,10 +82,15 @@ local function menu()
     { title = 'Freeze / release zombie AI', description = 'the ones loaded around you', onSelect = function() act('zfreeze', {}) end },
   } })
   lib.registerContext({ id = 'dm_vehkit', title = 'Vehicle kit', menu = 'dm_admin', description = 'Acts on the vehicle you sit in, or aim at', options = {
-    { title = 'Spawn', onSelect = function() local o = {}; for _, m in ipairs(DMCfg.Vehicles) do o[#o + 1] = { value = m, label = m } end; local i = lib.inputDialog('Vehicle', { { type = 'select', label = 'Model', options = o, required = true } }); if i then act('vehicle', { model = i[1], offset = { 3, 3 } }) end end },
+    { title = 'Spawn (search)', icon = 'car', description = 'searchable list, keys land in your pocket', onSelect = function() pickVehicle(function(m) act('vehicle', { model = m, offset = { 3, 3 } }) end) end },
+    { title = 'Spawn by model name', description = 'any GTA model, e.g. kamacho', onSelect = function() local i = lib.inputDialog('Vehicle', { { type = 'input', label = 'Model name', required = true } }); if i then act('vehicle', { model = i[1]:lower(), offset = { 3, 3 } }) end end },
+    { title = 'Give me the key', icon = 'key', description = 'and make it run: unlocked, battery, part, fuel', onSelect = function() act('vehkit', { op = 'keys' }) end },
+    { title = 'Lock / unlock', onSelect = function() act('vehkit', { op = 'lock' }) end },
     { title = 'Repair', onSelect = function() act('vehkit', { op = 'repair' }) end },
     { title = 'Refuel', onSelect = function() act('vehkit', { op = 'refuel' }) end },
     { title = 'Delete', onSelect = function() act('vehkit', { op = 'delete' }) end },
+    { title = ('World era: %s'):format(GlobalState.obVehEra or '?'), icon = 'clock', description = 'early = cars mostly run, keys in half of them. live = locked, dead, dry. Cars seen from now on roll the new table',
+      onSelect = function() local i = lib.inputDialog('Vehicle era', { { type = 'select', label = 'Era', options = { { value = 'early', label = 'early - day one, most cars run' }, { value = 'live', label = 'live - months in, scavenge for parts' } }, default = GlobalState.obVehEra or 'early', required = true } }); if i then act('vehera', { era = i[1] }) end end },
   } })
   lib.registerContext({ id = 'dm_admin', title = 'Admin', menu = 'dm_main', options = {
     { title = 'Player panel', icon = 'users', description = 'health, needs, location; heal / feed / revive / freeze / tp / spectate', onSelect = function() TriggerEvent('outbreak:dm:openPanel') end },
@@ -151,8 +168,11 @@ RegisterNetEvent('outbreak:dm:spawnPeds', function(a, pos)
   end
 end)
 RegisterNetEvent('outbreak:dm:spawnVehicle', function(model, pos)
-  local m = joaat(model); RequestModel(m); while not HasModelLoaded(m) do Wait(10) end
+  local m = joaat(model); RequestModel(m); local t0 = GetGameTimer(); while not HasModelLoaded(m) and GetGameTimer() - t0 < 5000 do Wait(10) end
+  if not HasModelLoaded(m) then lib.notify({ title = 'Unknown vehicle model: ' .. tostring(model), type = 'error' }) return end
   local v = CreateVehicle(m, pos.x, pos.y, pos.z, GetEntityHeading(PlayerPedId()), true, true); spawned[#spawned + 1] = v
+  local t1 = GetGameTimer(); while not NetworkGetEntityIsNetworked(v) and GetGameTimer() - t1 < 2000 do Wait(50) end
+  if NetworkGetEntityIsNetworked(v) then act('vehkeys', { netId = NetworkGetNetworkIdFromEntity(v) }) end
 end)
 RegisterNetEvent('outbreak:dm:cache', function(id, label, pos, model)
   if #(GetEntityCoords(PlayerPedId()) - pos) > 300.0 then return end

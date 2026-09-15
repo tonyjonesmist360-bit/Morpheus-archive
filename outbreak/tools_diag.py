@@ -83,7 +83,7 @@ for r,d in res.items():
             target=m.group(1) or m.group(2); name=m.group(3)
             pre=c[max(0,m.start()-160):m.start()]
             calls.append((r,s,target,name,'pcall' in pre))
-EXT_RES={'ox_inventory','ox_target','pma-voice','illenium-appearance','qb-core','qbx_core','mm_radio','ox_lib','oxmysql','bob74_ipl'}
+EXT_RES={'ox_inventory','ox_target','pma-voice','illenium-appearance','qb-core','qbx_core','mm_radio','ox_lib','oxmysql','bob74_ipl','qbx_vehiclekeys'}
 for (r,s,target,name,g) in calls:
     if target in EXT_RES: continue
     if target not in res: find('ERROR',r,f'{s}: calls exports.{target}:{name}() but resource does not exist'); continue

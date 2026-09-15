@@ -10,6 +10,34 @@ end
 
 local function classProfile(class) return VehCfg.Classes[class] or VehCfg.Classes[1] end
 
+-- era: which roll table first-seen cars use (see VehCfg.Eras)
+local era = GetConvar('ob_veh_era', 'early')
+if not VehCfg.Eras[era] then era = 'early' end
+GlobalState.obVehEra = era
+local function E(k) local t = VehCfg.Eras[era]; local v = t and t[k]; if v == nil then v = VehCfg[k] end; return v end
+exports('era', function() return era end)
+local function setEra(name, reason)
+  if not VehCfg.Eras[name] then return false end
+  era = name; GlobalState.obVehEra = era
+  print(('^5[OB-VEH]^7 era -> %s (%s). Cars seen from now on roll the %s table; restart to re-roll everything.'):format(era, reason or '-', era))
+  return true
+end
+exports('setEra', setEra)
+RegisterCommand('ob_vehera', function(src, args)
+  if src ~= 0 and not IsPlayerAceAllowed(src, 'outbreak.dm') then return end
+  local name = args[1]
+  if not name or not VehCfg.Eras[name] then print(('^5[OB-VEH]^7 era is %s. Usage: ob_vehera early|live'):format(era)) return end
+  setEra(name, src == 0 and 'console' or GetPlayerName(src))
+end, true)
+-- qbx_vehiclekeys locks every car you hold none of ITS keys for and blocks the driver door. We own
+-- locks and keys here; both running means nobody can get into anything. Say so at boot.
+CreateThread(function()
+  Wait(2000)
+  if GetResourceState('qbx_vehiclekeys') == 'started' then
+    print('^1[OB-VEH] qbx_vehiclekeys is running.^7 It locks every vehicle you have no qbx key for, on top of outbreak_vehicles. Recommended: comment its ensure line out of server.cfg. Until then every key we hand out is mirrored to it.')
+  end
+end)
+
 local function publish(plate)
   local v = V[plate]; if not v or not v.netId then return end
   local ent = NetworkGetEntityFromNetworkId(v.netId)
@@ -40,13 +68,15 @@ RegisterNetEvent('outbreak:veh:register', function(netId)
   local model = GetEntityModel(ent)
   if not V[plate] then
     local prof = classProfile(0) -- server has no GetVehicleClass; client sends class on register (below) else default
+    local keysIn = seeded(plate, model, 'ign') < (E('KeysInIgnitionChance') or 0)   -- keys still in it: unlocked, runs
+    local fr = E('FuelRange')
     V[plate] = {
       model = model, netId = netId,
-      locked = seeded(plate, model, 'lock') < VehCfg.LockedChance,
-      battery = seeded(plate, model, 'bat') < VehCfg.DeadBatteryChance and 'dead' or 'ok',
-      fuel = VehCfg.FuelRange[1] + seeded(plate, model, 'fuel') * (VehCfg.FuelRange[2] - VehCfg.FuelRange[1]),
-      hotwired = false, part = seeded(plate, model, 'part') < VehCfg.MissingPartChance and 'engine_parts' or nil,
-      keyInside = seeded(plate, model, 'key') < VehCfg.KeyInGloveboxChance,
+      locked = (not keysIn) and seeded(plate, model, 'lock') < E('LockedChance'),
+      battery = seeded(plate, model, 'bat') < E('DeadBatteryChance') and 'dead' or 'ok',
+      fuel = fr[1] + seeded(plate, model, 'fuel') * (fr[2] - fr[1]),
+      hotwired = keysIn, part = seeded(plate, model, 'part') < E('MissingPartChance') and 'engine_parts' or nil,
+      keyInside = seeded(plate, model, 'key') < E('KeyInGloveboxChance'),
       claimed = false, owner = nil, noise = prof.noise, burn = prof.burn, data = {},
     }
   else

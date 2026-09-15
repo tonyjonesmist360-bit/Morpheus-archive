@@ -15,4 +15,4 @@
 
 **Not tested against anything yet.** "Tested against" above means "written to the API of". See INTEGRATION_REPORT.md.
 
-Pack: outbreak v0.20.0 — 27 slice resources, 8 extended, 2 progression; 8 migrations, 23 tables. Lua 5.4 everywhere (`lua54 'yes'`). All resources `fx_version 'cerulean'`.
+Pack: outbreak v0.21.0 — 27 slice resources, 8 extended, 2 progression; 8 migrations, 23 tables. Lua 5.4 everywhere (`lua54 'yes'`). All resources `fx_version 'cerulean'`.

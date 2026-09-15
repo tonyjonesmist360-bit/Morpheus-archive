@@ -14,6 +14,21 @@ local function hasKey(src, plate)
 end
 local function has(src, item, n) return exports.ox_inventory:GetItemCount(src, item) >= (n or 1) end
 
+-- ONE place hands out keys: our vehicle_key item (plate in metadata) and, while qbx_vehiclekeys is
+-- still running, its key too so its door lock does not fight ours. Export name unverified.
+local function giveKeys(src, netId, plate)
+  if not plate then local _, p = S():byNet(netId); plate = p end
+  if not plate then return false end
+  if not hasKey(src, plate) then exports.ox_inventory:AddItem(src, VehCfg.KeyItem, 1, { plate = plate, description = 'Key · ' .. plate }) end
+  if GetResourceState('qbx_vehiclekeys') == 'started' then
+    local ent = NetworkGetEntityFromNetworkId(netId)
+    if ent and ent ~= 0 then pcall(function() exports.qbx_vehiclekeys:GiveKeys(src, ent) end) end
+  end
+  return true
+end
+exports('giveKeys', giveKeys)
+exports('hasKey', hasKey)
+
 -- lock / unlock with a key
 RegisterNetEvent('outbreak:veh:toggleLock', function(netId)
   local src = source; local ent = near(src, netId); if not ent then return end
@@ -32,7 +47,7 @@ RegisterNetEvent('outbreak:veh:pried', function(netId)
   -- glovebox key?
   if v.keyInside then
     v.keyInside = false
-    exports.ox_inventory:AddItem(src, VehCfg.KeyItem, 1, { plate = plate, description = 'Key · ' .. plate })
+    giveKeys(src, netId, plate)
     notify(src, 'Keys in the glovebox. Lucky.', 'success')
   end
 end)
@@ -111,7 +126,7 @@ RegisterNetEvent('outbreak:veh:claim', function(netId)
   local src = source; local ent = near(src, netId); if not ent then return end
   local v, plate = S():byNet(netId); if not v or v.claimed then return end
   if not exports.ox_inventory:RemoveItem(src, 'key_blank', 1) then notify(src, 'You need a key blank to cut a key.', 'error') return end
-  exports.ox_inventory:AddItem(src, VehCfg.KeyItem, 1, { plate = plate, description = 'Key · ' .. plate })
+  giveKeys(src, netId, plate)
   S():set(plate, { claimed = true, owner = cid(src) }, 'claimed')
   notify(src, 'It\'s yours now. It\'ll be where you left it.', 'success')
 end)

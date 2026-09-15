@@ -13,6 +13,9 @@
 setr ob_debug 1
 ## motel | airport | paleto
 set  ob_scenario "motel"
+## vehicle era: early = day one, most cars run and half have keys in them. live = locked, dead, dry
+## switch to live when the crew joins. Runtime switch: ob_vehera live in the console
+setr ob_veh_era early
 add_ace group.admin outbreak.debug allow
 ## outbreak.admin gates /ob_revive <id> - glitch insurance, keep this for the crew
 add_ace group.admin outbreak.admin allow

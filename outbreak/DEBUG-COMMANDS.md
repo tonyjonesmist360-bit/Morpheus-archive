@@ -92,6 +92,7 @@ being downed has taken chat away from you.
 | `ob_walk` | debug | Toggle: prints the model name of whatever you aim at. Use it along 24/7 shelves. |
 | `ob_scan <radius>` | debug | Lists nearby prop models. Use it inside a house for search spots. |
 | `ob_look` | debug | Print what you are aiming at. |
+| `ob_vehera [early\|live]` | dm / console | Vehicle era: early = day one, cars mostly run with keys in them; live = locked, dead, dry. No arg prints the current era. Cars seen from now on roll the new table; restart re-rolls all unclaimed. |
 | `ob_debugmenu` | debug | Context menu of the above. |
 
 > Movement clipsets (`WalkStyles`) have **no** validity check — `SetPedMovementClipset` fails

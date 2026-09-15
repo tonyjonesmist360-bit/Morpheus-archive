@@ -176,6 +176,10 @@ RegisterNetEvent('outbreak:dm:vehicle', function(op)
   if v == 0 then lib.notify({ title = 'No vehicle: sit in one or aim at one.', type = 'error' }) return end
   if op == 'repair' then SetVehicleFixed(v); SetVehicleDeformationFixed(v); SetVehicleEngineHealth(v, 1000.0); SetVehicleBodyHealth(v, 1000.0); SetVehicleDirtLevel(v, 0.0); lib.notify({ title = 'Repaired.', type = 'success' })
   elseif op == 'refuel' then SetVehicleFuelLevel(v, 100.0); if NetworkGetEntityIsNetworked(v) then act('vehfuel', { netId = NetworkGetNetworkIdFromEntity(v) }) end; lib.notify({ title = 'Refuelled.', type = 'success' })
+  elseif op == 'keys' or op == 'lock' then
+    if not NetworkGetEntityIsNetworked(v) then lib.notify({ title = 'That vehicle is not networked.', type = 'error' }) return end
+    if op == 'keys' then SetVehicleFixed(v); SetVehicleEngineHealth(v, 1000.0) end
+    act(op == 'keys' and 'vehkeys' or 'vehlock', { netId = NetworkGetNetworkIdFromEntity(v) })
   elseif op == 'delete' then
     if NetworkGetEntityIsNetworked(v) then act('entitydel', { netId = NetworkGetNetworkIdFromEntity(v) }) else SetEntityAsMissionEntity(v, true, true); DeleteEntity(v) end
     lib.notify({ title = 'Deleted.', type = 'inform' })
