@@ -120,7 +120,24 @@ RegisterCommand('crouch', function()
   if LocalPlayer.state.downState then return end
   crouched = not crouched
   applyWalk()
+  lib.notify({ title = crouched and 'Crouched.' or 'Standing.', description = crouched and 'Swinging stands you up for the hit.' or nil, type = 'inform', duration = 2000 })
 end, false)
+-- move_ped_crouched blocks melee entirely (GTA, not us). While crouched, an attack input drops
+-- the clipset for the swing and puts it back after, so a crouched player can still fight.
+CreateThread(function()
+  local standingFor = 0
+  while true do
+    if crouched then
+      Wait(0)
+      local ped = PlayerPedId()
+      if standingFor == 0 and (IsControlJustPressed(0, 140) or IsControlJustPressed(0, 141) or IsControlJustPressed(0, 142) or IsControlJustPressed(0, 24)) then
+        ResetPedMovementClipset(ped, 0.05); standingFor = GetGameTimer() + 1500
+      elseif standingFor > 0 and GetGameTimer() > standingFor and not IsPedInMeleeCombat(ped) then
+        standingFor = 0; applyWalk()
+      end
+    else standingFor = 0; Wait(250) end
+  end
+end)
 -- clipsets are per-ped; reapply after a model change / respawn
 AddEventHandler('outbreak:client:respawn', function() SetTimeout(3000, applyWalk) end)
 exports('getWalkStyle', function() return walkStyle, crouched end)
