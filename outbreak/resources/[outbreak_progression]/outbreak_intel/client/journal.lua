@@ -17,6 +17,9 @@ local function extras()
     for _, s in ipairs(steps or {}) do ex.objectives[#ex.objectives + 1] = { text = s.text, done = s.done, kind = 'guide' } end
   end)
   pcall(function()
+    for _, f in ipairs(exports.outbreak_items:lootLog() or {}) do ex.objectives[#ex.objectives + 1] = { text = f.where .. ': ' .. f.text, kind = 'find', done = true } end
+  end)
+  pcall(function()
     local h = lib.callback.await('outbreak:supply:home', false)
     if h then for _, n in ipairs(h.needs or {}) do ex.objectives[#ex.objectives + 1] = { text = (h.label or 'Home') .. ': ' .. n.text, status = n.status, kind = 'home' } end end
   end)

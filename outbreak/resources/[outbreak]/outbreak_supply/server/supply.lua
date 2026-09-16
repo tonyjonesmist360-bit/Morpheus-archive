@@ -130,7 +130,9 @@ local function model(id, forSrc)
   local stockOut, needs = {}, {}
   local allGood = true
   for _, c in ipairs(C.Categories) do
-    local perDay = (C.PerResidentPerDay[c] or 0) * s.residents
+    local rate = C.PerResidentPerDay[c] or 0
+    do local t = GlobalState.obTune; if t then if c == 'food' and tonumber(t['supply.foodPerResidentDay']) then rate = tonumber(t['supply.foodPerResidentDay']) elseif c == 'water' and tonumber(t['supply.waterPerResidentDay']) then rate = tonumber(t['supply.waterPerResidentDay']) end end end
+    local perDay = rate * s.residents
     local reserve = (C.Reserve[c] or 0) * scale
     local st, days, ask, pct = statusOf(units[c], perDay, reserve)
     if s.residents == 0 and st == 'critical' then st = 'low' end

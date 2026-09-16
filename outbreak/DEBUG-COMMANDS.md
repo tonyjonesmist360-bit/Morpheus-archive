@@ -92,6 +92,9 @@ being downed has taken chat away from you.
 | `ob_walk` | debug | Toggle: prints the model name of whatever you aim at. Use it along 24/7 shelves. |
 | `ob_scan <radius>` | debug | Lists nearby prop models. Use it inside a house for search spots. |
 | `ob_look` | debug | Print what you are aiming at. |
+| `ob_spot <house_id> <table> <name>` / `ob_spot_del <id>` | debug/dm | Place or move a named interior search spot where you stand. |
+| `ob_site_here <id> <table> <label>` | debug | Prints a `LootCfg.Sites` line for where you stand (fix gun store / vault coords). |
+| see `ADMIN-COMMANDS.md` | admin | time / weather / spawn / trigger / settle / loot / logs / server stats / tune / mute / kick / ban / hotfix |
 | `ob_scene_clear <x> <y> <z> [r]` | dm / console | Removes DM scene props and unclaimed empty vehicles in the radius; backup JSON in outbreak_worlditems. Sandy 24/7: `ob_scene_clear 1960.5 3740.6 32.3 45`. |
 | `ob_scene_restore <file>` | dm / console | Puts a `cleared-*.json` back. |
 | `tutorial [off]` | — | Replay / stop the first-ten-minutes guide. |

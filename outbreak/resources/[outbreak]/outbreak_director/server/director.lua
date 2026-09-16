@@ -8,6 +8,7 @@ local last, pending, nextId = {}, {}, 1
 local function cd(house, a) return os.time() - (last[house .. ':' .. a] or 0) >= (D.Cooldowns[a] or 0) * 60 end
 local function mark(house, a) last[house .. ':' .. a] = os.time() end
 local function logDb(house, action, detail)
+  pcall(function() exports.outbreak_log:log('director.' .. tostring(action), 0, { house = house, detail = detail }) end)
   pcall(function() MySQL.prepare('INSERT INTO outbreak_director_log (house_id, action, detail) VALUES (?, ?, ?)', { house, action, tostring(detail or ''):sub(1, 250) }) end)
   if GlobalState.obDebug then print(('^5[OB-DIRECTOR]^7 %s: %s - %s'):format(house, action, tostring(detail or ''))) end
 end
@@ -24,6 +25,7 @@ local function nearestPlayer(srcs, pos, maxD)
   end
   return best, bd
 end
+local function W(k) local t = GlobalState.obTune; local v = t and tonumber(t['director.weight.' .. k]); return v or D.Weights[k] end
 local function pick(c)
   local total = 0; for _, x in ipairs(c) do total = total + x.w end
   if total <= 0 then return nil end
@@ -137,14 +139,14 @@ local function evaluate()
       local function add(a, w) if (w or 0) > 0 and cd(m.id, a) then c[#c + 1] = { a = a, w = w } end end
       local food, med = m.stock.food, m.stock.medicine
       local fed = (m.residents == 0 and food.units >= 4) or (food.days ~= nil and food.days >= 2)
-      if m.residents < m.targetResidents and fed and m.morale >= 45 then add('stranger', D.Weights.stranger) end
-      if food.status == 'critical' or food.status == 'low' then add('rumor_food', D.Weights.rumor_food) end
-      if med.status == 'critical' or med.status == 'low' then add('rumor_medicine', D.Weights.rumor_medicine) end
+      if m.residents < m.targetResidents and fed and m.morale >= 45 then add('stranger', W('stranger')) end
+      if food.status == 'critical' or food.status == 'low' then add('rumor_food', W('rumor_food')) end
+      if med.status == 'critical' or med.status == 'low' then add('rumor_medicine', W('rumor_medicine')) end
       local inTide = false
       do local t = GlobalState.obTide; if t and t.pos and m.door and #(m.door - t.pos) <= (t.radius or 0) then inTide = true end end
       if m.residents > 0 and ((m.barricade or 0) < 1 or m.stock.ammo.status ~= 'good' or inTide) then add('probe', D.Weights.probe * (inTide and (D.Tide and D.Tide.probeWeightMult or 3) or 1)) end
-      if m.residents > 0 and m.morale < 30 then add('unrest', D.Weights.unrest) end
-      if m.allGood then add('trader', D.Weights.trader); add('quiet', D.Weights.quiet) end
+      if m.residents > 0 and m.morale < 30 then add('unrest', W('unrest')) end
+      if m.allGood then add('trader', W('trader')); add('quiet', W('quiet')) end
       add('nothing', D.Weights.nothing)
       local a = pick(c)
       if a and Actions[a] then
@@ -211,6 +213,17 @@ RegisterNetEvent('outbreak:director:sendAway', function(id)
 end)
 
 exports('evaluate', evaluate)
+-- admin suite: run ONE action at ONE settlement now (`trigger encounter <action> [house]`)
+exports('runAction', function(action, houseId)
+  local fn = Actions[action]; if not fn then return false, 'unknown action' end
+  local id = houseId
+  if not id then pcall(function() for k in pairs(exports.outbreak_supply:settlements() or {}) do id = k break end end) end
+  if not id then return false, 'no settlement' end
+  local m = model(id); if not m then return false, 'no model for ' .. tostring(id) end
+  local ok, res = pcall(fn, m, keyholders(id))
+  if ok then mark(id, action); logDb(id, action, tostring(res)) end
+  return ok, ok and (res or 'ran') or tostring(res)
+end)
 RegisterCommand('ob_defend', function(src, args)
   if src ~= 0 and not IsPlayerAceAllowed(src, 'outbreak.debug') then return end
   local id = args[1]; if not id then return end

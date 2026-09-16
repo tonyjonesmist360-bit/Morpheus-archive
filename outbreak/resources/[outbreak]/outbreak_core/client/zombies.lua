@@ -171,7 +171,9 @@ local function pickVariant()
     if v and not (v.nightOnly and not night) and math.random() < 0.6 then return zoneBias, v end
   end
   local total, pool = 0, {}
+  local mix = GlobalState.obTune or {}
   for name, v in pairs(OutbreakCfg.Variants) do
+    local tw = tonumber(mix['zombies.mix.' .. name]); if tw then v = setmetatable({ weight = tw }, { __index = v }) end
     if not (v.nightOnly and not night) then total = total + v.weight; pool[#pool + 1] = { name, v } end
   end
   local r = math.random() * total
@@ -238,8 +240,9 @@ end
 CreateThread(function()
   while true do
     Wait(2500)
-    local target = OutbreakCfg.MaxPerPlayer
-    if isNight() then target = math.floor(target * OutbreakCfg.NightMultiplier) end
+    local T = GlobalState.obTune or {}
+    local target = tonumber(T['zombies.maxPerPlayer']) or OutbreakCfg.MaxPerPlayer
+    if isNight() then target = math.floor(target * (tonumber(T['zombies.nightMultiplier']) or OutbreakCfg.NightMultiplier)) end
     local ppos = GetEntityCoords(PlayerPedId())
     -- multiplayer density fix: players sharing an area split the quota
     local nearby = 1
@@ -308,9 +311,10 @@ CreateThread(function()
     -- quiet (crouch) shrinks their senses to half; max noise triples them
     local senseMult = 0.5 + (noise / 100.0) * 2.5
     local frenzy = wm.frenzy and (GetGameTimer() % 90000) < 3000 -- thunder: a 3s agitation window every 90s
-    local hearRadius = OutbreakCfg.AggroRadius * senseMult
+    local aggroRadius = tonumber((GlobalState.obTune or {})['zombies.aggroRadius']) or OutbreakCfg.AggroRadius
+    local hearRadius = aggroRadius * senseMult
     local vis = currentVisibility()
-    local sightRadius = OutbreakCfg.AggroRadius * (vis / 50.0)
+    local sightRadius = aggroRadius * (vis / 50.0)
     local S = OutbreakCfg.Suspicion
     local top = 0
     for ped in pairs(zombies) do
@@ -372,7 +376,7 @@ AddEventHandler('gameEventTriggered', function(name, args)
   local victim, attacker = args[1], args[2]
   if zombies[victim] and IsEntityDead(victim) then tryResurrect(victim) end
   if victim == PlayerPedId() and zombies[attacker] then
-    local chance = OutbreakCfg.InfectionChancePerHit
+    local chance = tonumber((GlobalState.obTune or {})['infection.chancePerHit']) or OutbreakCfg.InfectionChancePerHit
     pcall(function() if exports.outbreak_skills:hasTrait('thick_skinned') then chance = chance * 0.75 end end)
     if math.random() < chance then
       TriggerEvent('outbreak:client:infected')

@@ -1,4 +1,31 @@
-# START HERE — Outbreak v0.22.0 — OVERNIGHT SHEET #2
+# START HERE — Outbreak v0.23.0 — SHEET #3 BUGFIXES + INFRASTRUCTURE 1–5
+
+**Deploy:** extract, `robocopy` into `C:\Outbreak\pack`, then `02-copy-resources` → `03-apply-migrations` (new `009_house_spots.sql`, 24 tables)
+→ `04-paste-ins -Only all` (items + **shops: replaces ox_inventory/data/shops.lua with an empty table — no Ammunation, no cashier, no licence**)
+→ `08-disable-commerce` (preview, then `-Apply`: comments the recipe's bank / shop / vehiclekeys ensure lines out)
+→ `07-update-cfg -Apply` (two new ensure lines at the top of Layer 0) → start. F9 has new sections **8 BUGFIXES** and **9 OPS**.
+
+## What changed since v0.22.0
+
+| | |
+|---|---|
+| **Bugfix 1 · gun stores** | No shop, no licence, no money: the shops file is blanked by the paste-in. Ammunation racks and safes are **loot sites** (`LootCfg.Sites`, sphere zones, coordinates from memory — `/ob_site_here` prints a corrected line). Racks: melee, the odd pistol/shotgun, 9 mm, gun oil. Safes: pin-sweep, ammo, weapon kit. |
+| **Bugfix 2 · banks** | `08-disable-commerce.ps1` comments the bank resource out of the recipe cfg (name list in the header; add the real one with `-Extra`). Bank vaults are loot sites: pin-sweep, old money by the armful, the odd document. Map key already hides bank blips. |
+| **Bugfix 3 · house loot inside** | Houses with an interior are searched **inside** at named spots (`Search kitchen counter`…), ox_target zones from `outbreak_house_spots`. Seeded five per interior around the entry; walk to the real counter and `/ob_spot <house> <table> <name>` moves one. Door menu for interior houses now says *Search inside*. Exterior-only houses keep their named door menu. Every find is announced with **where** and lands in the journal (Objectives → recent finds). |
+| **1 · Tuning** | `outbreak_tuning`: 33 knobs in `tuning.json`, `ob_tune set key value` live (schedules re-read their minutes; consumers read `GlobalState.obTune`). `BALANCE-TUNING.md`. |
+| **2 · Admin suite** | `time set`, `weather set`, `spawn mob`, `trigger encounter`, `settle morale/residents`, `loot reset`, `event log`, `server stats`, `hotfix reload`. `ADMIN-COMMANDS.md`. |
+| **3 · Logging** | `outbreak_log`: daily files `logs/YYYY-MM-DD.log`, `date | src:name:cid | kind | json`; `/logs kind:faction player:12 date: text:`. Hooked: joins/drops, faction join/leave/standing, deaths, house claims, loot, DM actions, director actions, admin commands, moderation, tuning. |
+| **4 · Performance** | 1 s heartbeat measures server loop lateness; alert over `ops.perfAlertMs`; `server stats`; a `perf.report` log line every 6 h. Per-resource CPU stays txAdmin's job (not readable from Lua). |
+| **5 · Backups** | `ops/restore-backup.ps1 -Date YYYYMMDD -Apply` (files moved aside, DB dumped first, undoable); retention 7 days. |
+| **6 · Restart** | warnings at 60/15/5/1 min before `ops.restartHour`, flush at 0. **Needs you:** set txAdmin's restart schedule to the same hour. |
+| **9 · Moderation** | `mute/unmute/kick/ban/unban/bans` with `bans.json` and `mod.*` log lines. Mute blocks chat, radio PTT and voice. |
+| **10 · Hotfix** | `hotfix reload <resource>` = a logged single-resource restart. |
+
+**Not built (by design):** infra 7 doc is in; 8 leaderboards skipped (fun, later). Sheet #4 lanes: not started — see the summary for the recommendation.
+
+---
+
+# v0.22.0 — OVERNIGHT SHEET #2
 
 **Deploy:** extract, `robocopy` into `C:\Outbreak\pack`, then `02-copy-resources` → `04-paste-ins -Only items` (three new
 items) → `07-update-cfg -Apply` (five new ensure lines) → start the server. No new migration. **Then:** `TEST-GUIDE.md`

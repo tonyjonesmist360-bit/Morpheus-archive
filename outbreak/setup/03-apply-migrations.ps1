@@ -58,7 +58,7 @@ if (-not $DryRun) {
     Step "Verify"
     $n = (Invoke-Sql "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$DbName' AND table_name LIKE 'outbreak\_%';" |
           Select-Object -Last 1).ToString().Trim()
-    if ($n -eq '23') { Ok "23 outbreak_ tables present" } else { Bad "$n outbreak_ tables, expected 23" }
+    if ($n -eq '24') { Ok "24 outbreak_ tables present" } else { Bad "$n outbreak_ tables, expected 24" }
 }
 
 Write-Host ""

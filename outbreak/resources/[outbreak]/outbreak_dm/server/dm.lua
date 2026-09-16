@@ -3,6 +3,7 @@ local QBCore = exports['qb-core']:GetCoreObject()
 local function dm(src) return src == 0 or IsPlayerAceAllowed(src, DMCfg.Ace) end
 local function log(src, action, data)
   MySQL.insert('INSERT INTO outbreak_dm_log (actor, action, data, at) VALUES (?, ?, ?, NOW())', { src == 0 and 'console' or GetPlayerName(src), action, json.encode(data or {}) })
+  pcall(function() exports.outbreak_log:log('dm.' .. action, src, data or {}) end)
   print(('^6[OB-DM]^7 %s: %s %s'):format(src == 0 and 'console' or GetPlayerName(src), action, json.encode(data or {})))
 end
 local function notify(src, t, ty) if src ~= 0 then TriggerClientEvent('ox_lib:notify', src, { title = t, type = ty or 'inform' }) end end
@@ -123,6 +124,66 @@ Actions.vehkit = function(src, a) TriggerClientEvent('outbreak:dm:vehicle', src,
 Actions.givesearch = function(src, a) TriggerClientEvent('outbreak:dm:giveSearch', src, a.target or src) end
 Actions.announce = function(src, a) if a.text and a.text ~= '' then ExecuteCommand(('announce %s'):format(tostring(a.text):gsub('[\r\n]', ' '))) end end
 Actions.voicereset = function(src, a) TriggerClientEvent('outbreak:client:voiceReset', a.target or src) end
+
+-- ── ADMIN COMMAND SUITE (v0.23). One-word commands with a verb, ace outbreak.admin or console. ──
+local function adminOk(src) return src == 0 or IsPlayerAceAllowed(src, 'outbreak.admin') or dm(src) end
+local function say(src, t) if src == 0 then print(t) else TriggerClientEvent('chat:addMessage', src, { args = { 'ADMIN', t } }) end end
+local function alog(src, kind, d) log(src, kind, d); pcall(function() exports.outbreak_log:log('admin.' .. kind, src, d) end) end
+RegisterCommand('time', function(src, a)   -- /time set <hour>
+  if not adminOk(src) then return end
+  local h = tonumber(a[2] or a[1]); if not h then say(src, 'usage: /time set <0-23>') return end
+  pcall(function() exports.outbreak_world:setTime(math.floor(h) % 24) end); say(src, ('time set to %02d:00'):format(math.floor(h) % 24)); alog(src, 'time', { hour = h })
+end, true)
+RegisterCommand('weather', function(src, a)   -- /weather set <TYPE>
+  if not adminOk(src) then return end
+  local w = (a[2] or a[1] or ''):upper(); if w == '' then say(src, 'usage: /weather set CLEAR|CLOUDS|OVERCAST|FOGGY|RAIN|THUNDER|CLEARING') return end
+  pcall(function() exports.outbreak_world:setWeather(w) end); say(src, 'weather: ' .. w); alog(src, 'weather', { type = w })
+end, true)
+RegisterCommand('spawn', function(src, a)   -- /spawn mob <zombie|runner|bloater|screamer|horde|survivor|raider|military> [count]
+  if not adminOk(src) or src == 0 then return end
+  local kind, n = (a[2] or 'zombie'):lower(), tonumber(a[3]) or 5
+  if a[1] ~= 'mob' then say(src, 'usage: /spawn mob <zombie|runner|bloater|screamer|horde|survivor|raider|military> [count]') return end
+  if kind == 'horde' then Actions.horde(src, { size = n })
+  elseif kind == 'zombie' then Actions.zombies(src, { count = n })
+  elseif kind == 'runner' or kind == 'bloater' or kind == 'screamer' or kind == 'shambler' then Actions.zombies(src, { count = n, variant = kind })
+  else Actions.peds(src, { kind = kind, count = n, hostile = kind == 'raider' }) end
+  say(src, ('spawned %d %s'):format(n, kind)); alog(src, 'spawn', { kind = kind, count = n })
+end, true)
+RegisterCommand('trigger', function(src, a)   -- /trigger encounter <stranger|rumor_food|rumor_medicine|probe|unrest|trader|tide|director> [house]
+  if not adminOk(src) then return end
+  local what = a[2]; if a[1] ~= 'encounter' or not what then say(src, 'usage: /trigger encounter <stranger|rumor_food|rumor_medicine|probe|unrest|trader|tide|director> [house_id]') return end
+  local ok, res = false, 'no director'
+  if what == 'director' then ok = pcall(function() exports.outbreak_director:evaluate() end); res = 'pass ran'
+  elseif what == 'tide' then ok = pcall(function() ExecuteCommand('ob_tide') end); res = 'tide moved'
+  else pcall(function() ok, res = exports.outbreak_director:runAction(what, a[3]) end) end
+  say(src, (ok and 'ok: ' or 'failed: ') .. tostring(res)); alog(src, 'trigger', { what = what, house = a[3], ok = ok })
+end, true)
+RegisterCommand('settle', function(src, a)   -- /settle morale <value> [house] | /settle residents <+n|-n> [house]
+  if not adminOk(src) then return end
+  local op, v = a[1], tonumber(a[2]); local house = a[3]
+  if not op or not v then say(src, 'usage: /settle morale <0-100> [house_id]  |  /settle residents <+n|-n> [house_id]') return end
+  if not house then pcall(function() for k in pairs(exports.outbreak_supply:settlements() or {}) do house = k break end end) end
+  if not house then say(src, 'no settlement exists yet') return end
+  if op == 'morale' then
+    local cur = 50; pcall(function() cur = exports.outbreak_supply:getSettlement(house).morale end)
+    pcall(function() exports.outbreak_supply:modify(house, { morale = v - cur }, 'admin set morale') end); say(src, ('%s morale -> %d'):format(house, v))
+  elseif op == 'residents' then Actions.settlement(src, { house = house, residents = v }); say(src, ('%s residents %+d'):format(house, v)) end
+  alog(src, 'settle', { op = op, value = v, house = house })
+end, true)
+RegisterCommand('loot', function(src, a)   -- /loot reset
+  if not adminOk(src) then return end
+  if a[1] ~= 'reset' then say(src, 'usage: /loot reset') return end
+  local n = 0; pcall(function() n = exports.outbreak_items:resetLoot() end)
+  say(src, ('loot reset: %d container(s) fresh again'):format(n or 0)); alog(src, 'lootreset', { cleared = n })
+end, true)
+RegisterCommand('hotfix', function(src, a)   -- /hotfix reload <resource>
+  if not adminOk(src) then return end
+  local r = a[2] or a[1]; if not r or not r:find('^outbreak_') then say(src, 'usage: /hotfix reload <outbreak_resource>') return end
+  if GetResourceState(r) == 'missing' then say(src, 'no such resource: ' .. r) return end
+  alog(src, 'hotfix', { resource = r })
+  say(src, 'restarting ' .. r .. ' (players keep playing; that resource re-reads its files)')
+  ExecuteCommand('restart ' .. r)
+end, true)
 
 -- player panel: everything an admin needs to see per player, in one row
 lib.callback.register('outbreak:dm:panel', function(src)

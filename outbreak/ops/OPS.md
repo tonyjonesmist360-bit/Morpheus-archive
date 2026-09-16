@@ -33,3 +33,17 @@ Anyone not on it is rejected at the queue. Keep `sv_lan 0` and forward 30120 TCP
 - `SELECT * FROM outbreak_memorial ORDER BY died_at DESC LIMIT 10;` — the wall.
 - `SELECT * FROM outbreak_dm_log ORDER BY at DESC LIMIT 20;` — what the director did.
 - Backup folder has today's files.
+
+## v0.23 — day-to-day operations
+| Need | Do |
+|---|---|
+| Roll back to a date | stop the server → `powershell -ExecutionPolicy Bypass -File .\ops\restore-backup.ps1 -Date 20260916 -Apply` (current files move aside first; DB dumped before restore) |
+| List backups | `restore-backup.ps1` with no arguments |
+| Weekly restore test | `verify-backup.ps1 -RestoreTest` (scratch DB) |
+| Retention | `backup.bat` keeps `KEEP_DAYS=7` |
+| Daily restart | txAdmin → Settings → FXServer → Restart schedule `04:00`. The pack warns players at 60/15/5/1 min before `ops.restartHour` (tuning) and flushes state at 0. Keep the two in step. |
+| Tune a number | console `ob_tune set loot.multiplier 1.5` (live). `ob_tune` lists. `BALANCE-TUNING.md`. |
+| Read the day | `logs kind:faction` / `logs kind:death` / `logs player:12` / `logs date:2026-09-15 text:zancudo`; `event log` for the last 30 |
+| Health | `server stats` (players, loop lateness, memory, schedules). Per-resource CPU: txAdmin Resources page or `resmon 1` in F8 |
+| Moderation | `mute <id> [min] [reason]`, `unmute`, `kick <id> [reason]`, `ban <id> <min|perm> [reason]`, `unban <license|name>`, `bans`. All logged under `mod.*` |
+| Hotfix a resource | `hotfix reload outbreak_minigames` (a restart of that one resource, logged) |

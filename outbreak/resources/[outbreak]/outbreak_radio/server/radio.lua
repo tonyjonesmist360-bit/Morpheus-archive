@@ -33,6 +33,7 @@ end)
 -- battery drain: 1 battery per 45 min of being tuned in (client reports channel>0 every 5 min)
 local tuned = {}
 RegisterNetEvent('outbreak:server:radioHeartbeat', function(on)
+  do local m = false; pcall(function() m = exports.outbreak_log:isMuted(source) end); if m then return end end
   local src = source
   if not on then tuned[src] = nil return end
   tuned[src] = (tuned[src] or 0) + 1

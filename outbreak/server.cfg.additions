@@ -23,6 +23,10 @@ add_ace group.admin outbreak.admin allow
 add_ace group.admin outbreak.dm allow
 
 ## Layer 0 - presentation with no deps
+## tuning: every magic number, hot-reloadable. ob_tune in the console. FIRST so everything reads it
+ensure outbreak_tuning
+## log: daily event log, /logs, server stats, restart warnings, mute/kick/ban
+ensure outbreak_log
 ensure outbreak_minigames
 ensure outbreak_binds
 ## chat: OOC + announce. needs the stock chat resource only

@@ -140,6 +140,7 @@ AddEventHandler('outbreak:server:bledOutInternal', function(src, cause)
   local cid = p.PlayerData.citizenid
   local name = (p.PlayerData.charinfo.firstname or '?') .. ' ' .. (p.PlayerData.charinfo.lastname or '')
   local mode = DownCfg.DeathMode
+  pcall(function() exports.outbreak_log:log('death.' .. mode, src, { name = name, cause = cause }) end)
 
   if mode == 'keep' then TriggerClientEvent('outbreak:client:respawn', src) return end
 

@@ -8,7 +8,20 @@ HousingCfg = {
   TapPerHour = 4,                  -- murky water from a claimed house's tap, per house, per real hour (the grid is down; so is the pressure)
   -- Every house has searchable spots (persistent cooldown via outbreak_items loot service) and,
   -- if the occupant roll misses, an environmental story shown on first entry.
+  -- Exterior-only houses (no interior to enter) keep a door menu of these three.
   SearchSpots = { { name = 'Kitchen cupboards', table = 'house' }, { name = 'Bathroom cabinet', table = 'medical' }, { name = 'Bedroom drawers', table = 'house' } },
+  -- INTERIOR SPOTS (v0.23 bugfix 3). Houses with an interior are searched INSIDE, at named spots that are
+  -- ox_target zones ("Search kitchen counter"). Spots live in outbreak_house_spots; this seeds each interior
+  -- on first boot with five spots spread around the entry anchor. Walk to the real counter / bed / cabinet and
+  -- `/ob_spot <house_id> <table> <name>` to move one (same name = replace). Debug ace.
+  InteriorSpotDefaults = {
+    { name = 'Kitchen counter',     table = 'house',   dx =  3.0, dy =  2.0 },
+    { name = 'Bedroom drawers',     table = 'house',   dx = -3.0, dy =  3.0 },
+    { name = 'Bathroom cabinet',    table = 'medical', dx = -3.0, dy = -2.0 },
+    { name = 'Living room shelves', table = 'house',   dx =  2.5, dy = -3.0 },
+    { name = 'Office desk',         table = 'tools',   dx =  0.0, dy =  4.5 },
+  },
+  SpotRadius = 1.6,
   Stories = {
     'A calendar on the wall, every day crossed off until the 14th. Nothing after.',
     'Two plates on the table, one clean. A chair pushed back like someone left in a hurry.',

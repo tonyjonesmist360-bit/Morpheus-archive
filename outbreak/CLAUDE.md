@@ -18,6 +18,8 @@ resources/[outbreak]/              the slice + services (ensured)
 resources/[outbreak_extended]/     held (commented out) — vehicles v2, craft, military, stations, raiders, camps, broadcast, map
 resources/[outbreak_progression]/  ENSURED since v0.22 — outbreak_intel, outbreak_opportunities (5 chains)
 CORE-MECHANICS.md                  the protected-mechanics list + review rule: read before touching controls/clipsets/tasks
+outbreak_tuning/shared/defaults.lua every magic number; consumers read GlobalState.obTune (BALANCE-TUNING.md). New knob = new key here
+outbreak_log                       exports.outbreak_log:log(kind, src, details) for anything an admin would ask "why" about (ADMIN-COMMANDS.md)
 TEST-GUIDE.md                      GENERATED from outbreak_debug/client/shakedown.lua by tools/gen_test_guide.py - never hand-edit
 sql/migrations/001..008            apply in order, idempotent
 tools_diag*.py + tools_luac.py     static analyzers — run ALL FOUR after every patch:

@@ -33,6 +33,7 @@ RegisterNetEvent('outbreak:group:create', function(name)
   groups[nextId] = g; memberOf[src] = nextId; nextId = nextId + 1
   Player(src).state:set('crew', g.id, true)
   push(g); notify(src, 'Crew formed: ' .. name, 'Invite people from the wheel. They will see your pins and your vitals.', 'success')
+  pcall(function() exports.outbreak_log:log('crew.create', src, { name = name }) end)
 end)
 RegisterNetEvent('outbreak:group:invite', function(target)
   local src = source; target = tonumber(target)

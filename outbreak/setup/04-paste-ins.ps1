@@ -8,7 +8,7 @@
     Both edits are backed up, marker-guarded (safe to re-run) and brace-checked.
     Use -Only items | jobs to do one. -Force skips the confirmation prompt.
 #>
-param([string]$Base, [ValidateSet('both','items','jobs')][string]$Only = 'both', [switch]$DryRun, [switch]$Force)
+param([string]$Base, [ValidateSet('both','items','jobs','shops','all')][string]$Only = 'both', [switch]$DryRun, [switch]$Force)
 
 . "$PSScriptRoot\_common.ps1"
 $pack = Get-PackRoot
@@ -26,7 +26,7 @@ function Confirm-Or-Exit($what) {
 }
 
 # ---------------------------------------------------------------- items
-if ($Only -eq 'both' -or $Only -eq 'items') {
+if ($Only -eq 'both' -or $Only -eq 'all' -or $Only -eq 'items') {
     Step "ox_inventory items.lua"
     $target  = Join-Path $res '[ox]\ox_inventory\data\items.lua'
     $snippet = Join-Path $pack 'resources\[outbreak]\outbreak_items\data\ox_items_snippet.lua'
@@ -96,7 +96,7 @@ if ($Only -eq 'both' -or $Only -eq 'items') {
 }
 
 # ---------------------------------------------------------------- jobs
-if ($Only -eq 'both' -or $Only -eq 'jobs') {
+if ($Only -eq 'both' -or $Only -eq 'all' -or $Only -eq 'jobs') {
     Step "qbx_core jobs.lua"
     $target  = Join-Path $res '[qbx]\qbx_core\shared\jobs.lua'
     $snippet = Join-Path $pack 'resources\[outbreak]\outbreak_faction\data\jobs_snippet.lua'
@@ -154,6 +154,25 @@ if ($Only -eq 'both' -or $Only -eq 'jobs') {
                     }
                 }
             }
+        }
+    }
+}
+
+# ---------------------------------------------------------------- shops (v0.23: no commerce)
+if ($Only -eq 'all' -or $Only -eq 'shops') {
+    Step "ox_inventory shops.lua -> no shops (gun stores and stores become loot)"
+    $target  = Join-Path $res '[ox]\ox_inventory\data\shops.lua'
+    $snippet = Join-Path $pack 'resources\[outbreak]\outbreak_items\data\ox_shops_snippet.lua'
+    if (-not (Test-FileExists $target))  { Bad "not found: $target" }
+    elseif (-not (Test-FileExists $snippet)) { Bad "not found: $snippet" }
+    else {
+        $cur = Get-Content -LiteralPath $target -Raw
+        if ($cur -match 'OUTBREAK: NO COMMERCE') { Ok "already applied" }
+        elseif ($DryRun) { Note "would back up and replace $target with the empty shop table" }
+        elseif (Confirm-Or-Exit 'shops.lua') {
+            Backup-File -Path $target | Out-Null
+            Write-TextNoBom -Path $target -Lines @(Get-Content -LiteralPath $snippet)
+            Ok "shops.lua replaced: no Ammunation, no 24/7 cashier, no licence, no prices. restart ox_inventory (or the server)"
         }
     }
 }

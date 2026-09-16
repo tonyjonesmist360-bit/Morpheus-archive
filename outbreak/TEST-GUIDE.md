@@ -105,6 +105,42 @@ Core mechanics first on purpose: if K1 or K4 fail, stop and tell me before anyth
 | T9 | 9 First ten minutes | /tutorial (or a brand-new character) | 8 numbered lines at the top in order; a sound per step; step 7 sets a waypoint to the nearest safehouse and ends when you reach it |
 | T10 | 10 Journal as quest log | J -> Objectives | guide steps (done/open) and your settlement needs listed; Factions tab per S2 |
 
+## 8 BUGFIXES
+
+| # | Test | Do | Expect |
+|---|---|---|---|
+| G1 | Gun store: weapons free to take | Sandy Shores Ammunation, walk to the rack (zone may need /ob_site_here if the marker is off) | "Take weapons off the rack" target; items land in pockets |
+| G2 | No licence, no money | same store, look for any shop prompt at the counter | none. No "Open shop", no licence text, Old Money untouched |
+| G3 | Ammo safe | the safe zone behind the counter | "Force the ammo safe" -> pin sweep -> ammo / pistol / weapon kit; loud ripple |
+| G4 | Gun store shopkeeper gone | look behind the counter | no ped selling anything |
+| N1 | Bank NPC gone | Fleeca Legion Square, walk in | no teller, no bank prompt |
+| N2 | Bank menu unavailable | any ATM or bank counter, press E | nothing opens |
+| N3 | Bank is a loot location | the vault room zone | "Crack the vault" target |
+| N4 | Vault pin sweep | do it | pin sweep (4-5 pins), Old Money x40-120, maybe a document; a loud ripple |
+| L1 | House loot no longer at the door | Grove St house door menu | "Search inside" note only; no Kitchen/Bathroom/Bedroom entries at the door |
+| L2 | Interior spots exist | Go inside, look around the entry | five "Search ..." zones: kitchen counter, bedroom drawers, bathroom cabinet, living room shelves, office desk (seeded near the entry) |
+| L3 | Move a spot to the real kitchen | walk to the kitchen counter: /ob_spot grove_house house Kitchen counter | "Moved: Kitchen counter"; the zone is now there for everyone, and after a restart |
+| L4 | Place bedroom / bathroom / living / office | /ob_spot grove_house house Bedroom drawers ; /ob_spot grove_house medical Bathroom cabinet ; ... (repeat per interior house) | each moves; /ob_spot_del <id> removes one |
+| L5 | Prompt shows the location name | aim at a spot | "Search kitchen counter" (not "Search") |
+| L6 | Find shows where + journal | search it; then J -> Objectives | "Kitchen counter: canned beans x2" notify; the same line under Objectives as a recent find |
+| L7 | Exterior-only house keeps a named door menu | Sandy bungalow door | Search the house -> Kitchen cupboards / Bathroom cabinet / Bedroom drawers still work, finds named |
+| L8 | Picked clean respects tuning | search twice; ob_tune set loot.respawnMinutes 1; wait a minute; search | refused, then allowed after the change (no restart) |
+
+## 9 OPS
+
+| # | Test | Do | Expect |
+|---|---|---|---|
+| O1 | Tuning live | console: ob_tune ; ob_tune set zombies.maxPerPlayer 30 | list prints; within a minute more zombies around you; ob_tune reset |
+| O2 | Schedules re-read | ob_tune set director.everyMin 1 ; ob_tune set director.everyMax 2 ; server stats | schedules line shows director 1-2 min; a pass fires within ~3 min (logs kind:director) |
+| O3 | Admin suite | /time set 23 ; /weather set THUNDER ; /spawn mob runner 3 ; /trigger encounter rumor_food ; /settle morale 10 ; /loot reset | each acts and answers in chat |
+| O4 | Logs | console: logs ; logs kind:admin ; event log | today's lines, format date | src:name:cid | kind | json |
+| O5 | Server stats | server stats | players, uptime, memory, loop avg/worst lateness, schedules |
+| O6 | Restart warning | console: restart_warn 5 | banner + notify + radio static line; logs kind:ops |
+| O7 | Mute | /mute <friend id> 1 test ; they type in chat and key the radio | chat refused, radio silent, unmuted after a minute |
+| O8 | Kick / ban / unban | /ban <friend id> 1 test ; they reconnect ; /unban <name> | dropped with the reason; refused for a minute; then in |
+| O9 | Hotfix reload | /hotfix reload outbreak_minigames | that resource restarts; you keep playing |
+| O10 | Restore preview (offline) | PowerShell: ops\\restore-backup.ps1 then -Date <today> | lists backups; preview names what would move aside |
+
 ## 6 PRIOR SHEET
 
 | # | Test | Do | Expect |
@@ -135,4 +171,4 @@ Core mechanics first on purpose: if K1 or K4 fail, stop and tell me before anyth
 | G1 | Controller: Up inv, Down wheel, Left radio, B cancel | pad | all four |
 
 ---
-Generated 2026-09-15 by tools/gen_test_guide.py from shakedown.lua (71 steps). Edit the Lua, rerun the script.
+Generated 2026-09-16 by tools/gen_test_guide.py from shakedown.lua (97 steps). Edit the Lua, rerun the script.

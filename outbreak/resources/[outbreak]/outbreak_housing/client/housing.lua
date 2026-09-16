@@ -50,7 +50,10 @@ local function doorMenu(h)
   if not info.owner and h.interior then
     opts[#opts + 1] = { title = 'Shelter inside (no claim)', icon = 'person-shelter', description = 'Wait out the night. Anyone can walk in.', onSelect = function() inside = h.id; teleport(h.interior, h.interior.w) end }
   end
-  if not info.owner or info.hasKey then
+  if (not info.owner or info.hasKey) and h.interior then
+    opts[#opts + 1] = { title = 'Search inside', icon = 'magnifying-glass', description = 'Kitchen, bedroom, bathroom... the drawers are in there, not at the door.', readOnly = true }
+  end
+  if (not info.owner or info.hasKey) and not h.interior then
     local sub = {}
     for i, sp in ipairs(HousingCfg.SearchSpots) do
       sub[#sub + 1] = { title = sp.name, onSelect = function()
@@ -103,6 +106,23 @@ CreateThread(function()
     BeginTextCommandSetBlipName('STRING'); AddTextComponentString(h.label); EndTextCommandSetBlipName(blip)
   end
 end)
+
+-- INTERIOR SPOTS: sphere zones named after the place. Rebuilt whenever the server publishes the list.
+local spotZones = {}
+local function drawSpots(list)
+  for _, z in ipairs(spotZones) do pcall(function() exports.ox_target:removeZone(z) end) end
+  spotZones = {}
+  for _, s in ipairs(list or {}) do
+    local z = exports.ox_target:addSphereZone({ coords = vec3(s.x, s.y, s.z), radius = HousingCfg.SpotRadius or 1.6, options = { {
+      label = 'Search ' .. s.name:lower(), icon = 'fa-solid fa-magnifying-glass',
+      onSelect = function()
+        if exports.outbreak_emotes:action('search', 6000, 'Searching ' .. s.name:lower() .. '...') then TriggerServerEvent('outbreak:server:spotSearch', s.id) end
+      end } } })
+    spotZones[#spotZones + 1] = z
+  end
+end
+AddStateBagChangeHandler('obHouseSpots', 'global', function(_, _, value) Wait(0); drawSpots(value) end)
+CreateThread(function() Wait(4000); drawSpots(GlobalState.obHouseSpots) end)
 
 RegisterNetEvent('outbreak:client:forceLock', function(data)
   TriggerEvent('outbreak:noise:spike', 30)

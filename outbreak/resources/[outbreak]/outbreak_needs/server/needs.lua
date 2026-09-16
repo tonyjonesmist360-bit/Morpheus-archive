@@ -25,6 +25,7 @@ AddEventHandler('QBCore:Server:PlayerLoaded', function(player)
   push(src)
 end)
 AddEventHandler('playerDropped', function() save(source); S[source] = nil end)
+AddEventHandler('outbreak:server:flush', function(src) if S[src] then save(src) end end)   -- pre-restart nudge (outbreak_log)
 CreateThread(function() while true do Wait(60000) for src in pairs(S) do save(src) end end end)
 
 local function bleeding(st)
@@ -102,7 +103,8 @@ local function consume(src, effects)
     if type(st[k]) == 'number' then st[k] = math.max(0, math.min(100, st[k] + v)) end
   end
   if effects.antibiotics and st.infectedAt then
-    if os.time() - st.infectedAt < NeedsCfg.Infection.cureWithinHours * 3600 then
+    local cureH = tonumber((GlobalState.obTune or {})['infection.cureWithinHours']) or NeedsCfg.Infection.cureWithinHours
+    if os.time() - st.infectedAt < cureH * 3600 then
       st.infected = false; st.infectedAt = nil
       TriggerClientEvent('ox_lib:notify', src, { title = 'Caught it early.', description = 'The fever never comes.', type = 'success', duration = 6000 })
     else
@@ -160,7 +162,8 @@ CreateThread(function()
       for part, w in pairs(st.wounds) do
         if w.treated and os.time() - (w.at or 0) > 3 * 3600 then st.wounds[part] = nil; changed = true end
         -- a dirty wound left open long enough turns: the infection comes from the wound, not the bite
-        if w.dirty and not w.treated and not st.infected and os.time() - (w.at or 0) > (NeedsCfg.Infection.dirtyMinutes or 20) * 60 then
+        local dirtyM = tonumber((GlobalState.obTune or {})['infection.dirtyMinutes']) or NeedsCfg.Infection.dirtyMinutes or 20
+        if w.dirty and not w.treated and not st.infected and os.time() - (w.at or 0) > dirtyM * 60 then
           w.dirty = nil; infect(src, ('The %s on your %s has gone bad.'):format((NeedsCfg.WoundTypes[w.kind] or {}).label or 'wound', part:gsub('_', ' '))); changed = false
         end
       end

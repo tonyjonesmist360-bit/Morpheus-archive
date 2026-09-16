@@ -67,7 +67,7 @@ function render() {
   }).join('') : `<div class="empty">Nothing here yet. ${TABS[S.tab].id==='rumors'?'Listen to the radio. Read what you find.':''}</div>`;
   const e = es[S.row]; const d = document.getElementById('detail');
   if (!e) { d.innerHTML = ''; return; }
-  if (e.obj) { d.innerHTML = `<h2>${e.obj.text}</h2><div class="meta">${e.obj.kind==='guide'?'first ten minutes':'settlement need'} · ${e.obj.done?'done':(e.obj.status||'open')}</div>`; return; }
+  if (e.obj) { d.innerHTML = `<h2>${e.obj.text}</h2><div class="meta">${e.obj.kind==='guide'?'first ten minutes':e.obj.kind==='find'?'recent find':'settlement need'} · ${e.obj.kind==='find'?'found':(e.obj.done?'done':(e.obj.status||'open'))}</div>`; return; }
   if (e.fac) {
     const f = e.fac, pct = Math.round((f.value + 100) / 2);
     d.innerHTML = `<h2>${f.name}</h2><div class="meta">standing: ${f.word} · ${f.value > 0 ? '+' : ''}${f.value}${f.mine ? ' · yours' : ''}</div>

@@ -43,6 +43,7 @@ RegisterNetEvent('outbreak:server:claimHouse', function(id)
   local h = houses[id]; if not h or h.owner then return end
   local p = QBCore.Functions.GetPlayer(src); if not p then return end
   h.owner = p.PlayerData.citizenid; save(id)
+  pcall(function() exports.outbreak_log:log('house.claim', src, { house = id }) end)
   local c = cfg(id)
   exports.ox_inventory:AddItem(src, HousingCfg.KeyItem, 1, { house = id, description = 'Key to ' .. c.label })
   TriggerClientEvent('ox_lib:notify', src, { title = 'Claimed. You pocket the key.', description = 'Hand copies to whoever you trust.', type = 'success' })
@@ -92,8 +93,71 @@ RegisterNetEvent('outbreak:server:houseSearch', function(id, spotIdx)
   local src = source
   local h = houses[id]; local spot = HousingCfg.SearchSpots[spotIdx]; if not h or not spot then return end
   if h.owner and not hasKey(src, id) then return end  -- owned house: keyholders only (forced entry is the stash, not the drawers)
-  exports.outbreak_items:search(src, ('house_%s_%d'):format(id, spotIdx), spot.table)
+  local hc; for _, x in ipairs(HousingCfg.Houses) do if x.id == id then hc = x end end
+  if hc and hc.interior then return end  -- interior houses are searched inside, at their spots
+  exports.outbreak_items:search(src, ('house_%s_%d'):format(id, spotIdx), spot.table, spot.name)
 end)
+
+-- ── INTERIOR SPOTS (v0.23): DB rows, seeded from config, published as a GlobalState read-model ──
+local Spots = {}   -- id -> { id, house, name, tbl, pos }
+local function publishSpots()
+  local out = {}
+  for id, s in pairs(Spots) do out[#out + 1] = { id = id, house = s.house, name = s.name, tbl = s.tbl, x = s.pos.x, y = s.pos.y, z = s.pos.z } end
+  GlobalState.obHouseSpots = out
+end
+CreateThread(function()
+  Wait(500)
+  for _, r in ipairs(MySQL.query.await('SELECT * FROM outbreak_house_spots') or {}) do
+    Spots[r.id] = { id = r.id, house = r.house_id, name = r.name, tbl = r.tbl, pos = vector3(r.x, r.y, r.z) }
+  end
+  -- seed: every interior house with no rows yet gets the default spread around its anchor
+  for _, h in ipairs(HousingCfg.Houses) do
+    if h.interior then
+      local has = false; for _, s in pairs(Spots) do if s.house == h.id then has = true break end end
+      if not has then
+        for _, d in ipairs(HousingCfg.InteriorSpotDefaults or {}) do
+          local pos = vector3(h.interior.x + d.dx, h.interior.y + d.dy, h.interior.z)
+          local id = MySQL.insert.await('INSERT INTO outbreak_house_spots (house_id, name, tbl, x, y, z) VALUES (?, ?, ?, ?, ?, ?)', { h.id, d.name, d.table, pos.x, pos.y, pos.z })
+          if id then Spots[id] = { id = id, house = h.id, name = d.name, tbl = d.table, pos = pos } end
+        end
+      end
+    end
+  end
+  publishSpots()
+end)
+RegisterNetEvent('outbreak:server:spotSearch', function(spotId)
+  local src = source; local s = Spots[spotId]; if not s then return end
+  local h = houses[s.house]; if not h then return end
+  if h.owner and not hasKey(src, s.house) then TriggerClientEvent('ox_lib:notify', src, { title = 'Not your house.', type = 'error' }) return end
+  if #(GetEntityCoords(GetPlayerPed(src)) - s.pos) > (HousingCfg.SpotRadius or 1.6) + 2.5 then return end
+  exports.outbreak_items:search(src, ('spot_%d'):format(spotId), s.tbl, s.name)
+end)
+-- /ob_spot <house_id> <table> <name...>  (debug ace): place or move a spot where you stand. /ob_spot_del <id>.
+local function spotAllowed(src) return src == 0 or IsPlayerAceAllowed(src, 'outbreak.debug') or IsPlayerAceAllowed(src, 'outbreak.dm') end
+RegisterCommand('ob_spot', function(src, a)
+  if not spotAllowed(src) or src == 0 then return end
+  local house, tbl = a[1], a[2]; local name = #a > 2 and table.concat(a, ' ', 3) or nil
+  if not house or not tbl or not name or not houses[house] then TriggerClientEvent('ox_lib:notify', src, { title = 'Usage: /ob_spot <house_id> <house|medical|tools|trash> <name>', type = 'error' }) return end
+  local pos = GetEntityCoords(GetPlayerPed(src))
+  local existing; for id, s in pairs(Spots) do if s.house == house and s.name == name then existing = id end end
+  if existing then
+    MySQL.update('UPDATE outbreak_house_spots SET tbl = ?, x = ?, y = ?, z = ? WHERE id = ?', { tbl, pos.x, pos.y, pos.z, existing })
+    Spots[existing].tbl = tbl; Spots[existing].pos = pos
+  else
+    local id = MySQL.insert.await('INSERT INTO outbreak_house_spots (house_id, name, tbl, x, y, z) VALUES (?, ?, ?, ?, ?, ?)', { house, name, tbl, pos.x, pos.y, pos.z })
+    Spots[id] = { id = id, house = house, name = name, tbl = tbl, pos = pos }
+  end
+  publishSpots()
+  TriggerClientEvent('ox_lib:notify', src, { title = (existing and 'Moved: ' or 'Placed: ') .. name, description = house .. ' · ' .. tbl, type = 'success' })
+  pcall(function() exports.outbreak_log:log('house.spot', src, { house = house, name = name, tbl = tbl, x = pos.x, y = pos.y, z = pos.z }) end)
+end, false)
+RegisterCommand('ob_spot_del', function(src, a)
+  if not spotAllowed(src) then return end
+  local id = tonumber(a[1]); if not id or not Spots[id] then return end
+  MySQL.update('DELETE FROM outbreak_house_spots WHERE id = ?', { id }); Spots[id] = nil; publishSpots()
+  if src ~= 0 then TriggerClientEvent('ox_lib:notify', src, { title = 'Spot removed.', type = 'inform' }) end
+end, false)
+exports('spots', function() return Spots end)
 
 -- The tap: a trickle of murky water for keyholders, rate-limited per house per hour.
 local tap = {}   -- house_id -> { hour = floor(os.time()/3600), n = draws }

@@ -637,3 +637,24 @@ vitals come from a client-set statebag (`obCrew`) - read-only presentation, noth
 **Needs Tony:** `ensure qbx_vehiclekeys` out of the recipe cfg; `ox_inventory/data/shops.lua` blanked if any shop
 survives (E5); model/sprite/sound names flagged unverified in START-HERE; `ob_scene_clear` is a DB delete (backed
 up) and is left for him to run.
+
+## 2026-09-16 — v0.23.0: Sheet #3 bugfixes + infrastructure 1–5
+
+**Gun stores / banks were never ours.** Ammunation and the 24/7 counters are ox_inventory's `data/shops.lua`
+(licence + price), banks are a recipe resource. The pack rule is "no ox internals except documented paste-ins",
+so the fix is a third paste-in (an empty shops table, backed up) and `08-disable-commerce.ps1`, which previews
+and then comments the recipe's commerce ensure lines out. Loot sites replace them; sphere zones, so no prop
+names to be wrong - only coordinates, which `/ob_site_here` corrects in one line.
+
+**House loot at the door** was the door *menu*: "Search the house → Kitchen cupboards" from outside. Interior
+houses now have DB-backed spots and the menu says so. Seeded positions are offsets from the entry anchor, so
+they will sit in the wrong room until `/ob_spot` moves them - that is the F9 step.
+
+**Tuning.** One `GlobalState.obTune` table; consumers read it at use time, so a `set` lands on the next tick
+or next scheduler loop (`scheduleEvent` now stores min/max in a table it re-reads). Nothing restarts.
+
+**Logging.** `io.open` append to a dated file (same pattern shakedown.log used); `SaveResourceFile` only to
+create the folder. Per-resource CPU is not readable from server Lua; documented, `server stats` covers the loop.
+
+**Trust / safety.** Bans key on the licence identifier; `playerConnecting` defers. `chatMessage` is cancelled
+for muted players; radio PTT heartbeat refuses; `MumbleSetPlayerMuted` is a server native (unverified in play).

@@ -178,7 +178,8 @@ exports('spawnManaged', function(model, pos, heading, plate, state, kind)  -- ch
   publish(plate)
   return ent, V[plate].netId
 end)
-CreateThread(function() while true do Wait(120000) for plate, v in pairs(V) do if v.claimed then save(plate) end end end end)
+CreateThread(function() while true do Wait(120000) for plate, v in pairs(V) do if v.claimed or v.keyed then save(plate) end end end end)
+AddEventHandler('outbreak:server:flush', function() for plate, v in pairs(V) do if v.claimed or v.keyed then save(plate) end end end)   -- pre-restart nudge
 
 -- marina wrecks: managed boats, unclaimed, deterministic like everything else (ambient boats are disabled by outbreak_map)
 CreateThread(function()

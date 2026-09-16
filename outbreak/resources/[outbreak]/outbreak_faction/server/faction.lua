@@ -68,6 +68,7 @@ RegisterNetEvent('outbreak:server:joinFaction', function(which)
   if cur == 'military' or cur == 'raider' then exports.outbreak_faction:addRep(src, cur, -FactionCfg.Join.leaveRepCost, 'walked out') end
   p.Functions.SetJob(F.job, 0)
   lastSwitch[src] = os.time()
+  pcall(function() exports.outbreak_log:log('faction.join', src, { which = which, from = cur }) end)
   TriggerClientEvent('ox_lib:notify', src, { title = 'You are with ' .. FactionCfg.Names[which] .. ' now.', description = 'Their channel is yours. So are their enemies.', type = 'success', duration = 8000 })
   print(('^5[OB-FACTION]^7 %s joined %s'):format(GetPlayerName(src), which))
 end)
@@ -78,6 +79,7 @@ RegisterNetEvent('outbreak:server:leaveFaction', function()
   exports.outbreak_faction:addRep(src, cur, -FactionCfg.Join.leaveRepCost, 'walked out')
   p.Functions.SetJob('unemployed', 0)
   lastSwitch[src] = os.time()
+  pcall(function() exports.outbreak_log:log('faction.leave', src, { from = cur }) end)
   TriggerClientEvent('ox_lib:notify', src, { title = 'On your own again.', type = 'inform' })
 end)
 -- standings read-model for the journal and F1: every faction, number + word
@@ -109,6 +111,7 @@ exports('addRep', function(src, f, delta, reason)
   rep[src][f] = math.max(-100, math.min(100, (rep[src][f] or 0) + delta))
   MySQL.prepare('INSERT INTO outbreak_reputation (citizenid, faction, value) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value)', { id, f, rep[src][f] })
   if GlobalState.obDebug then print(('^5[OB-REP]^7 %s %s %+d (%s) -> %d'):format(id, f, delta, reason or '-', rep[src][f])) end
+  pcall(function() exports.outbreak_log:log('faction.standing_change', src, { faction = f, delta = delta, value = rep[src][f], reason = reason }) end)
   TriggerClientEvent('outbreak:client:rep', src, f, rep[src][f], reason)
   return rep[src][f]
 end)

@@ -26,5 +26,8 @@ REM so -Path silently matches nothing and the zip comes out missing the resource
 powershell -NoProfile -command "Compress-Archive -LiteralPath '%SERVER%\resources\[outbreak]','%SERVER%\resources\[outbreak_extended]','%SERVER%\resources\[outbreak_progression]','%SERVER%\server.cfg' -DestinationPath '%OUT%\resources_%STAMP%.zip' -Force"
 if errorlevel 1 echo WARNING: resource archive reported an error.
 
-forfiles /p "%OUT%" /m *.* /d -14 /c "cmd /c del @path" 2>nul
+REM Retention: KEEP_DAYS of backups (7 per the ops sheet). Older dumps/zips are deleted by this line only.
+set KEEP_DAYS=7
+forfiles /p "%OUT%" /m db_*.sql /d -%KEEP_DAYS% /c "cmd /c del @path" 2>nul
+forfiles /p "%OUT%" /m resources_*.zip /d -%KEEP_DAYS% /c "cmd /c del @path" 2>nul
 echo Backup done: %STAMP%
