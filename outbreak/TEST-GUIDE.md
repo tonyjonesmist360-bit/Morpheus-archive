@@ -141,6 +141,19 @@ Core mechanics first on purpose: if K1 or K4 fail, stop and tell me before anyth
 | O9 | Hotfix reload | /hotfix reload outbreak_minigames | that resource restarts; you keep playing |
 | O10 | Restore preview (offline) | PowerShell: ops\\restore-backup.ps1 then -Date <today> | lists backups; preview names what would move aside |
 
+## 10 AUTHORITY
+
+| # | Test | Do | Expect |
+|---|---|---|---|
+| A1 | Pin sweep still works (token round-trip) | force a padlocked crate / a locked house | minigame plays; on win the stash opens as before; F8 clean |
+| A2 | Forged result does nothing | F8: TriggerServerEvent("outbreak:wi:forced", <crate id>)  (find the id with Look closer / ob_state) | nothing opens; with ob_debug 1 the console prints an [OB-AUTH] refusal |
+| A3 | Zombie wound still lands (witness) | get scratched by a zombie | Scratch/Bite lands as before. If it does NOT, tell me: weaponDamageEvent may be silent for NPC melee and the health witness must carry it |
+| A4 | Forged wound refused | F8: TriggerServerEvent("outbreak:server:wound", "head", "gunshot") while untouched | no wound; logs kind:needs.woundRejected has a line |
+| A5 | Fists are bruises whatever is claimed | friend punches you | bruise, never a laceration |
+| A6 | Battery / parts are skill checks | dead-battery car, Install battery | pry minigame first (unless mechanics >= 5), then the swap |
+| A7 | Strip a car | unclaimed running car -> Pull the battery / Strip engine parts | check, then the item in pockets and the car dead / part missing |
+| A8 | Too fast is refused | ask a friend to spam-win a minigame with a macro (or set pins very high and win instantly) | refused; logs kind:minigame.reject shows "too fast" |
+
 ## 6 PRIOR SHEET
 
 | # | Test | Do | Expect |
@@ -171,4 +184,4 @@ Core mechanics first on purpose: if K1 or K4 fail, stop and tell me before anyth
 | G1 | Controller: Up inv, Down wheel, Left radio, B cancel | pad | all four |
 
 ---
-Generated 2026-09-16 by tools/gen_test_guide.py from shakedown.lua (97 steps). Edit the Lua, rerun the script.
+Generated 2026-09-18 by tools/gen_test_guide.py from shakedown.lua (105 steps). Edit the Lua, rerun the script.

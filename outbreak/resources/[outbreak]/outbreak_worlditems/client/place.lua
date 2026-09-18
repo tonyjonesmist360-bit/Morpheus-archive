@@ -72,7 +72,8 @@ CreateThread(function()
       onSelect = function(d)
         local w = wiOf(d.entity); local pins = (WorldItemsCfg.Storage[w.item] or {}).pins or 3
         TriggerEvent('outbreak:noise:spike', 30)
-        if exports.outbreak_minigames:play('pinsweep', { pins = pins, speed = 1.0 }) then TriggerServerEvent('outbreak:wi:forced', w.id) else TriggerEvent('outbreak:noise:spike', 70) end
+        local ok, token = exports.outbreak_minigames:play('pinsweep', { pins = pins, speed = 1.0 }, 'wi:force:' .. tostring(w.id))
+        if ok then TriggerServerEvent('outbreak:wi:forced', w.id, token) else TriggerEvent('outbreak:noise:spike', 70) end
       end },
     { label = 'Read', icon = 'fa-solid fa-book-open', canInteract = function(e) local w = wiOf(e); return w and (w.note or w.intel) end,
       onSelect = function(d)

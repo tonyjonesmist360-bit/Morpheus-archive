@@ -39,11 +39,19 @@ RegisterNetEvent('outbreak:veh:toggleLock', function(netId)
   notify(src, v.locked and 'Unlocked.' or 'Locked.')
 end)
 
--- pry (client won the pry minigame — trust gap #1; server still requires the crowbar and proximity)
-RegisterNetEvent('outbreak:veh:pried', function(netId)
+-- Q1: every skill-check result is a server token; a mechanic above SkipLevel is waived (the server reads the level itself)
+local function skillOk(src, token, target)
+  local lvl = 0; pcall(function() lvl = exports.outbreak_skills:getLevel(src, 'mechanics') end)
+  if lvl >= VehCfg.Mechanics.SkipLevel then return true end
+  local ok = exports.outbreak_minigames:consume(src, token, target)
+  return ok
+end
+-- pry (server-authorised: token + timing window + crowbar + proximity)
+RegisterNetEvent('outbreak:veh:pried', function(netId, token)
   local src = source; local ent = near(src, netId); if not ent then return end
   local v, plate = S():byNet(netId); if not v or not v.locked then return end
   if not has(src, VehCfg.LockpickItem) then return end
+  do local ok = exports.outbreak_minigames:consume(src, token, 'veh:pry:' .. tostring(netId)); if not ok then return end end
   S():set(plate, { locked = false }, 'pried')
   -- glovebox key?
   if v.keyInside then
@@ -53,32 +61,55 @@ RegisterNetEvent('outbreak:veh:pried', function(netId)
   end
 end)
 
--- hotwire (client won splice — trust gap; server requires unlocked + no key needed)
-RegisterNetEvent('outbreak:veh:hotwired', function(netId)
+-- hotwire (server-authorised splice; unlocked required)
+RegisterNetEvent('outbreak:veh:hotwired', function(netId, token)
   local src = source; local ent = near(src, netId); if not ent then return end
   local v, plate = S():byNet(netId); if not v or v.hotwired then return end
   if v.locked then return end
+  do local ok = exports.outbreak_minigames:consume(src, token, 'veh:splice:' .. tostring(netId)); if not ok then return end end
   S():set(plate, { hotwired = true }, 'hotwired')
   pcall(function() exports.outbreak_skills:grantXP(src, 'hotwire') end)
 end)
 
--- battery
-RegisterNetEvent('outbreak:veh:battery', function(netId)
+-- battery (skill check or mechanic)
+RegisterNetEvent('outbreak:veh:battery', function(netId, token)
   local src = source; local ent = near(src, netId); if not ent then return end
   local v, plate = S():byNet(netId); if not v or v.battery ~= 'dead' then return end
+  if not skillOk(src, token, 'veh:battery:' .. tostring(netId)) then return end
   if not exports.ox_inventory:RemoveItem(src, VehCfg.BatteryItem, 1) then notify(src, 'You need a battery.', 'error') return end
   S():set(plate, { battery = 'ok' }, 'battery'); notify(src, 'It cranks. It lives.', 'success')
   pcall(function() exports.outbreak_skills:grantXP(src, 'battery') end)
 end)
 
--- part
-RegisterNetEvent('outbreak:veh:part', function(netId)
+-- part (skill check or mechanic)
+RegisterNetEvent('outbreak:veh:part', function(netId, token)
   local src = source; local ent = near(src, netId); if not ent then return end
   local v, plate = S():byNet(netId); if not v or not v.part then return end
+  if not skillOk(src, token, 'veh:part:' .. tostring(netId)) then return end
   if not exports.ox_inventory:RemoveItem(src, v.part, 1) then notify(src, 'Missing: ' .. v.part:gsub('_', ' '), 'error') return end
   local lvl = 0; pcall(function() lvl = exports.outbreak_skills:getLevel(src, 'mechanics') end)
   if math.random() < lvl * 0.04 then exports.ox_inventory:AddItem(src, v.part, 1); notify(src, 'You saved the old part. Handy.', 'success') end
   S():set(plate, { part = false }, 'part fitted'); notify(src, 'Fitted. Good enough to roll.', 'success')
+  pcall(function() exports.outbreak_skills:grantXP(src, 'repair') end)
+end)
+
+-- STRIP (Q1 addendum): pull a working battery or the engine parts out of an unclaimed car. Skill check, then the car is worse.
+RegisterNetEvent('outbreak:veh:stripBattery', function(netId, token)
+  local src = source; local ent = near(src, netId); if not ent then return end
+  local v, plate = S():byNet(netId); if not v or v.battery ~= 'ok' or v.claimed then return end
+  if not skillOk(src, token, 'veh:battery:' .. tostring(netId)) then return end
+  if not exports.ox_inventory:CanCarryItem(src, VehCfg.BatteryItem, 1) then notify(src, 'Too heavy.', 'error') return end
+  exports.ox_inventory:AddItem(src, VehCfg.BatteryItem, 1)
+  S():set(plate, { battery = 'dead' }, 'battery pulled'); notify(src, 'Battery out. This one is dead now.', 'success')
+  pcall(function() exports.outbreak_skills:grantXP(src, 'battery') end)
+end)
+RegisterNetEvent('outbreak:veh:stripPart', function(netId, token)
+  local src = source; local ent = near(src, netId); if not ent then return end
+  local v, plate = S():byNet(netId); if not v or v.part or v.claimed or v.boat then return end
+  if not skillOk(src, token, 'veh:part:' .. tostring(netId)) then return end
+  if not exports.ox_inventory:CanCarryItem(src, VehCfg.RepairItem, 1) then notify(src, 'Too heavy.', 'error') return end
+  exports.ox_inventory:AddItem(src, VehCfg.RepairItem, 1)
+  S():set(plate, { part = VehCfg.RepairItem, hotwired = false }, 'parts stripped'); notify(src, 'Parts out. It will not run again without them.', 'success')
   pcall(function() exports.outbreak_skills:grantXP(src, 'repair') end)
 end)
 

@@ -37,8 +37,9 @@ CreateThread(function()
       label = 'Crack the camp cache', icon = 'fa-solid fa-box-open',
       canInteract = function() return aliveGuards(c.id) == 0 end,
       onSelect = function()
-        if exports.outbreak_minigames:play('pry', { pulls = 4, width = 14 }) then
-          TriggerServerEvent('outbreak:server:campCleared', c.id)
+        local ok, token = exports.outbreak_minigames:play('pry', { pulls = 4, width = 14 }, 'camp:crack:' .. c.id)
+        if ok then
+          TriggerServerEvent('outbreak:server:campCleared', c.id, token)
         else TriggerEvent('outbreak:noise:spike', 65) end
       end } } })
   end

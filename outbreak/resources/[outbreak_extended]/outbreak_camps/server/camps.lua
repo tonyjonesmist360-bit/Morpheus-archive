@@ -15,7 +15,8 @@ local function restock(stash, table_)
   for _, l in ipairs(table_) do exports.ox_inventory:AddItem(stash, l[1], l[2]) end
 end
 
-RegisterNetEvent('outbreak:server:campCleared', function(id)
+RegisterNetEvent('outbreak:server:campCleared', function(id, token)
+  do local ok = exports.outbreak_minigames:consume(source, token, 'camp:crack:' .. tostring(id)); if not ok then return end end  -- Q1
   local c
   for _, x in ipairs(CampCfg.Camps) do if x.id == id then c = x end end
   if not c then return end
@@ -47,6 +48,7 @@ CreateThread(function()
   end
 end)
 
-RegisterNetEvent('outbreak:server:convoyLooted', function()
+RegisterNetEvent('outbreak:server:convoyLooted', function(token)
+  do local ok = exports.outbreak_minigames:consume(source, token, 'convoy:loot'); if not ok then return end end  -- Q1
   exports.ox_inventory:forceOpenInventory(source, 'stash', CampCfg.Convoy.cargoStash)
 end)

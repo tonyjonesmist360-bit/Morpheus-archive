@@ -13,7 +13,8 @@ RegisterNetEvent('outbreak:opp:cache:site', function(pos, patrol)
     { label = 'Pry the footlocker', icon = 'fa-solid fa-box-open', canInteract = function() local o = exports.outbreak_opportunities:getOpportunities()[ID]; return o and o.state == 'active' and o.stage == 3 and o.chosen == 'dig' end,
       onSelect = function()
         TriggerEvent('outbreak:noise:spike', 35)
-        if exports.outbreak_minigames:play('pry', { pulls = 4, width = 14 }) then TriggerServerEvent('outbreak:opp:report', ID, 'opened', {})
+        local ok, token = exports.outbreak_minigames:play('pry', { pulls = 4, width = 14 }, 'opp:' .. ID .. ':opened')
+        if ok then TriggerServerEvent('outbreak:opp:report', ID, 'opened', { token = token })
         else TriggerEvent('outbreak:noise:spike', 75); lib.notify({ title = 'The lid screams. So does the patrol.', type = 'error' }) end
       end },
   } })

@@ -64,12 +64,68 @@ RegisterNetEvent('outbreak:server:needsTick', function(f)
   push(src)
 end)
 
--- wounds: client-detected, server-stored, rate-limited
-RegisterNetEvent('outbreak:server:wound', function(part, kind)
-  local src = source; local st = S[src]; if not st then return end
+-- Q2 · SERVER-VISIBLE DAMAGE (closes KNOWN_LIMITATIONS #2). Two independent witnesses:
+--   1) OneSync's weaponDamageEvent, which names the victim entity and the weapon;
+--   2) a 500 ms health sample of every player ped (the server reads ped health under OneSync).
+-- A wound report is accepted only if one of them saw this player take damage in the last WoundWitnessMs.
+-- An unarmed weaponType witnessed by the server downgrades any reported kind to a bruise.
+local WoundWitnessMs = 2000
+local lastHit, lastDrop, lastHealth = {}, {}, {}
+local UNARMED = `WEAPON_UNARMED`
+AddEventHandler('weaponDamageEvent', function(sender, data)
+  if type(data) ~= 'table' then return end
+  local ids = {}
+  if data.hitGlobalId and data.hitGlobalId ~= 0 then ids[#ids + 1] = data.hitGlobalId end
+  for _, g in ipairs(data.hitGlobalIds or {}) do if g and g ~= 0 then ids[#ids + 1] = g end end
+  if #ids == 0 then return end
+  local now = GetGameTimer()
+  for _, p in ipairs(GetPlayers()) do
+    local s = tonumber(p); local ped = GetPlayerPed(s)
+    if ped and ped ~= 0 then
+      local nid = NetworkGetNetworkIdFromEntity(ped)
+      for _, g in ipairs(ids) do if g == nid then lastHit[s] = { at = now, weapon = data.weaponType, by = sender } end end
+    end
+  end
+end)
+CreateThread(function()
+  while true do
+    Wait(500)
+    local now = GetGameTimer()
+    for _, p in ipairs(GetPlayers()) do
+      local s = tonumber(p); local ped = GetPlayerPed(s)
+      if ped and ped ~= 0 then
+        local h = GetEntityHealth(ped)
+        if lastHealth[s] and h < lastHealth[s] then lastDrop[s] = now end
+        lastHealth[s] = h
+      end
+    end
+  end
+end)
+AddEventHandler('playerDropped', function() lastHit[source] = nil; lastDrop[source] = nil; lastHealth[source] = nil end)
+local function witnessed(src)
+  local now = GetGameTimer()
+  local hit = lastHit[src]; if hit and now - hit.at < WoundWitnessMs then return true, hit end
+  if lastDrop[src] and now - lastDrop[src] < WoundWitnessMs then return true, nil end
+  return false
+end
+exports('witnessed', witnessed)
+
+-- wounds: client-detected, server-witnessed, server-stored, rate-limited
+local function applyWound(src, part, kind, force)
+  local st = S[src]; if not st then return end
   local now = GetGameTimer()
   if lastWound[src] and now - lastWound[src] < NeedsCfg.WoundRateLimitMs then return end
   lastWound[src] = now
+  do
+    local ok, hit = witnessed(src)
+    if force then ok = true; hit = nil end   -- debug path (ob_wound): no witness needed
+    if not ok then
+      pcall(function() exports.outbreak_log:log('needs.woundRejected', src, { part = part, kind = kind, why = 'no server-visible damage' }) end)
+      if GlobalState.obDebug then print(('^3[OB-AUTH]^7 wound %s/%s from %s refused: nothing hit them'):format(tostring(part), tostring(kind), src)) end
+      return
+    end
+    if hit and hit.weapon == UNARMED and kind ~= 'bruise' then kind = 'bruise' end
+  end
   local def = NeedsCfg.WoundTypes[kind]; if not def then return end
   local valid = false
   for _, p in ipairs(NeedsCfg.Parts) do if p == part then valid = true end end
@@ -82,7 +138,15 @@ RegisterNetEvent('outbreak:server:wound', function(part, kind)
   st.bleeding = bleeding(st) > 0
   TriggerClientEvent('ox_lib:notify', src, { title = def.label .. ' — ' .. part:gsub('_', ' '), description = def.bleed > 0 and 'You\'re bleeding.' or (kind == 'bruise' and 'That will bruise.') or 'It won\'t take weight.', type = 'error' })
   push(src)
+end
+RegisterNetEvent('outbreak:server:wound', function(part, kind) applyWound(source, part, kind, false) end)
+-- debug: /ob_wound goes through here so the witness check does not eat test wounds (debug convar + ace)
+RegisterNetEvent('outbreak:debug:wound', function(part, kind)
+  local src = source
+  if not GlobalState.obDebug or not IsPlayerAceAllowed(src, 'outbreak.debug') then return end
+  applyWound(src, part, kind, true)
 end)
+exports('inflict', function(src, part, kind) applyWound(src, part, kind, true) end)
 
 local function infect(src, why)
   local st = S[src]; if not st or st.infected then return end

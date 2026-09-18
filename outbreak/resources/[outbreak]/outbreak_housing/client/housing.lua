@@ -127,9 +127,10 @@ CreateThread(function() Wait(4000); drawSpots(GlobalState.obHouseSpots) end)
 RegisterNetEvent('outbreak:client:forceLock', function(data)
   TriggerEvent('outbreak:noise:spike', 30)
   local pins = 2 + (data.barricade or 0)
-  if exports.outbreak_minigames:play('pinsweep', { pins = pins, speed = 1.0 + pins * 0.1 }) then
+  local ok, token = exports.outbreak_minigames:play('pinsweep', { pins = pins, speed = 1.0 + pins * 0.1 }, 'house:force:' .. tostring(data.id))
+  if ok then
     lib.notify({ title = 'You\'re in.', type = 'success' })
-    TriggerServerEvent('outbreak:server:forcedEntry', data.id)
+    TriggerServerEvent('outbreak:server:forcedEntry', data.id, token)
   else
     TriggerEvent('outbreak:noise:spike', 75)
     lib.notify({ title = 'The lock jams shut.', type = 'error' })

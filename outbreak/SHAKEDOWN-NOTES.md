@@ -658,3 +658,27 @@ create the folder. Per-resource CPU is not readable from server Lua; documented,
 
 **Trust / safety.** Bans key on the licence identifier; `playerConnecting` defers. `chatMessage` is cancelled
 for muted players; radio PTT heartbeat refuses; `MumbleSetPlayerMuted` is a server native (unverified in play).
+
+## 2026-09-18 — v0.24.0: build queue Q0 (offline part), Q1, Q2
+
+**Q0 status.** Cannot be finished offline: `/ob_animcheck`, `/ob_models`, `/ob_walk` and the tuning evening
+need the server. Deferred list, re-read: pad key names - fixed since v0.17 (RAGE index names, K14 tests it);
+live-tree cfg drift - closed by `07-update-cfg.ps1`; `outbreak_core` restart stopping dependents - FiveM
+behaviour, documented (restart the server, or `hotfix reload` a leaf); illenium creator - still needs the
+standalone test in play; qbx_radialmenu / seatbelt - still "first suspect" until the smoke run. Nothing
+new to fix without the F9 results.
+
+**Q1.** One token service in `outbreak_minigames/server/tokens.lua`; `play(game, opts, target)` now returns
+`ok, token`. Windows come from the game's own numbers (pins, pulls, length) so a bot returning "won" in
+200 ms is refused as *too fast* and logged. Every caller and every handler in the pack was updated, held
+groups included, so enabling them later does not reopen the hole. Vehicle mechanics: battery and parts now
+need the check unless mechanics ≥ 5 (server reads the level itself), and unclaimed cars can be stripped for
+a battery or parts. A forged `outbreak:wi:forced` / `outbreak:server:forcedEntry` without a token is a no-op.
+
+**Q2.** `weaponDamageEvent` is the OneSync server event that names the victim entity; whether it fires for
+NPC-on-player melee on this build is the F9 question (A3). The health sample is the fallback witness, so a
+real hit is never refused even if the event is silent; the check only bites when *nothing* server-visible
+happened. `/ob_wound` moved to a debug-only event so test wounds still land.
+
+**Not started:** Q3 (server-side population). It depends on Q0's tuning numbers and is the one entry where a
+mistake breaks the core loop; it should not be built without a boot in reach.

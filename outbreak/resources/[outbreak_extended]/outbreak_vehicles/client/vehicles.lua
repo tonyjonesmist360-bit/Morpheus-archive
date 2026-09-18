@@ -35,7 +35,8 @@ AddEventHandler('outbreak:tick', function(t)
     if reason ~= lastReason then lib.showTextUI(reason, { icon = 'car' }); lastReason = reason end
     if reason:find('splice') and IsControlJustPressed(0, 38) then
       lib.hideTextUI(); lastReason = nil
-      if exports.outbreak_minigames:play('splice', { length = 5, showMs = 1800 }) then TriggerServerEvent('outbreak:veh:hotwired', netOf(t.veh))
+      local ok, token = exports.outbreak_minigames:play('splice', { length = 5, showMs = 1800 }, 'veh:splice:' .. netOf(t.veh))
+      if ok then TriggerServerEvent('outbreak:veh:hotwired', netOf(t.veh), token)
       else TriggerEvent('outbreak:noise:spike', 35) end
     end
   else
@@ -52,6 +53,18 @@ AddStateBagChangeHandler('veh', nil, function(bag, key, value)
   Wait(0); SetVehicleDoorsLocked(ent, value and value.locked and 2 or 1)
 end)
 
+-- a mechanic job: skill check (minigame with a server token) unless your mechanics level waives it, then the hands
+function mechanicJob(veh, kind, event, ms, label)
+  local M = VehCfg.Mechanics[kind]; local netId = netOf(veh)
+  local lvl = 0; pcall(function() lvl = exports.outbreak_skills:getLevel('mechanics') end)
+  local token = nil
+  if lvl < VehCfg.Mechanics.SkipLevel then
+    local ok; ok, token = exports.outbreak_minigames:play(M.game, M.opts, ('veh:%s:%s'):format(kind, netId))
+    if not ok then TriggerEvent('outbreak:noise:spike', 40); lib.notify({ title = 'Slipped.', description = 'Try again, or find someone who knows engines.', type = 'error' }) return end
+  end
+  if exports.outbreak_emotes:action('repair', ms, label) then TriggerServerEvent(event, netId, token) end
+end
+
 -- targets
 CreateThread(function()
   exports.ox_target:addGlobalVehicle({
@@ -60,15 +73,21 @@ CreateThread(function()
     { label = 'Pry the door', icon = 'fa-solid fa-door-open', item = VehCfg.LockpickItem, canInteract = function(e) local v = st(e); return v and v.locked end,
       onSelect = function(d)
         TriggerEvent('outbreak:noise:spike', 40)
-        if exports.outbreak_minigames:play('pry', { pulls = 3, width = 18 }) then TriggerServerEvent('outbreak:veh:pried', netOf(d.entity)); TriggerEvent('outbreak:noise:spike', 55)
+        local ok, token = exports.outbreak_minigames:play('pry', { pulls = 3, width = 18 }, 'veh:pry:' .. netOf(d.entity))
+        if ok then TriggerServerEvent('outbreak:veh:pried', netOf(d.entity), token); TriggerEvent('outbreak:noise:spike', 55)
         else TriggerEvent('outbreak:noise:spike', 70); lib.notify({ title = 'The crowbar skips off the frame. Loudly.', type = 'error' }) end
       end },
+    -- MECHANICS (Q1): battery and parts are a skill check. Level >= SkipLevel skips the game; the server knows your level too.
     { label = 'Install battery', icon = 'fa-solid fa-car-battery', item = VehCfg.BatteryItem, canInteract = function(e) local v = st(e); return v and v.battery == 'dead' end,
-      onSelect = function(d) if exports.outbreak_emotes:action('repair', 9000, 'Swapping battery...') then TriggerServerEvent('outbreak:veh:battery', netOf(d.entity)) end end },
+      onSelect = function(d) mechanicJob(d.entity, 'battery', 'outbreak:veh:battery', 9000, 'Swapping battery...') end },
     { label = 'Fit the missing part', icon = 'fa-solid fa-wrench', canInteract = function(e) local v = st(e); return v and v.part end,
       onSelect = function(d)
         local mult = 1.0; pcall(function() mult = exports.outbreak_skills:effects('mechanics').repairTime end)
-        if exports.outbreak_emotes:action('repair', math.floor(15000 * mult), 'Fitting...') then TriggerServerEvent('outbreak:veh:part', netOf(d.entity)) end end },
+        mechanicJob(d.entity, 'part', 'outbreak:veh:part', math.floor(15000 * mult), 'Fitting...') end },
+    { label = 'Pull the battery', icon = 'fa-solid fa-car-battery', canInteract = function(e) local v = st(e); return v and v.battery == 'ok' and not v.claimed end,
+      onSelect = function(d) mechanicJob(d.entity, 'battery', 'outbreak:veh:stripBattery', VehCfg.Mechanics.StripSeconds, 'Pulling the battery...') end },
+    { label = 'Strip engine parts', icon = 'fa-solid fa-screwdriver-wrench', canInteract = function(e) local v = st(e); return v and not v.part and not v.claimed and not v.boat end,
+      onSelect = function(d) mechanicJob(d.entity, 'part', 'outbreak:veh:stripPart', VehCfg.Mechanics.StripSeconds, 'Stripping parts...') end },
     { label = 'Siphon fuel', icon = 'fa-solid fa-gas-pump', item = VehCfg.SiphonItem, canInteract = function(e) local v = st(e); return v and v.fuel > 0 end,
       onSelect = function(d) if exports.outbreak_emotes:action('siphon', 10000, 'Siphoning...') then TriggerServerEvent('outbreak:veh:siphon', netOf(d.entity)) end end },
     { label = 'Cut a key (claim)', icon = 'fa-solid fa-key', item = 'key_blank', canInteract = function(e) local v = st(e); return v and v.hotwired and not v.claimed end,

@@ -178,8 +178,9 @@ AddEventHandler('outbreak:server:characterDied', function(citizenid)
 end)
 
 -- Forced entry: the minigame was won client-side; server grants a one-time stash open
-RegisterNetEvent('outbreak:server:forcedEntry', function(id)
+RegisterNetEvent('outbreak:server:forcedEntry', function(id, token)
   local src = source
+  do local ok, why = exports.outbreak_minigames:consume(src, token, 'house:force:' .. tostring(id)); if not ok then if GlobalState.obDebug then print(('^3[OB-AUTH]^7 forcedEntry refused for %s: %s'):format(src, why)) end return end end
   if not houses[id] then return end
   exports.ox_inventory:forceOpenInventory(src, 'stash', 'safehouse_' .. id)
 end)

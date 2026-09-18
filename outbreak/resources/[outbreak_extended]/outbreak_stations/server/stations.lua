@@ -38,8 +38,9 @@ RegisterNetEvent('outbreak:server:pump', function(id)
   TriggerClientEvent('ox_lib:notify', src, { title = ('The pump gives up ~%d%%, then sputters dry.'):format(pct), type = 'success' })
 end)
 
-RegisterNetEvent('outbreak:server:powerPump', function(id)
+RegisterNetEvent('outbreak:server:powerPump', function(id, token)
   local src = source
+  do local ok = exports.outbreak_minigames:consume(src, token, 'station:pump:' .. tostring(id)); if not ok then return end end  -- Q1
   local st = state[id]; if not st or st.kind ~= 'deadpump' then return end
   if exports.ox_inventory:RemoveItem(src, StationCfg.DeadPumpItem, 1) then
     st.kind = 'trickle'; st.dryUntil = 0; push()

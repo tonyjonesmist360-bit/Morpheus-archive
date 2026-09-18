@@ -36,8 +36,9 @@ RegisterNetEvent('outbreak:client:convoy', function(dir)
       return (d == 0 or IsEntityDead(d)) and GetEntitySpeed(e) < 1.0
     end,
     onSelect = function()
-      if exports.outbreak_minigames:play('pinsweep', { pins = 4, speed = 1.3 }) then
-        TriggerServerEvent('outbreak:server:convoyLooted')
+      local ok, token = exports.outbreak_minigames:play('pinsweep', { pins = 4, speed = 1.3 }, 'convoy:loot')
+      if ok then
+        TriggerServerEvent('outbreak:server:convoyLooted', token)
         TriggerEvent('outbreak:client:radioMsg', 7, 'MILITARY NET', 'Convoy hit! Convoy hit! Responding.')
       else TriggerEvent('outbreak:noise:spike', 80) end
     end } })

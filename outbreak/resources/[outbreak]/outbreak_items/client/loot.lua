@@ -36,13 +36,14 @@ CreateThread(function()
       label = label, icon = s.minigame and 'fa-solid fa-lock' or 'fa-solid fa-hand-holding',
       onSelect = function()
         if noise then TriggerEvent('outbreak:noise:spike', noise) end
+        local token = nil
         if s.minigame then
           local ok = false
-          pcall(function() ok = exports.outbreak_minigames:play(s.minigame, { pins = s.pins or 3, speed = 1.0 }) end)
+          pcall(function() ok, token = exports.outbreak_minigames:play(s.minigame, { pins = s.pins or 3, speed = 1.0 }, 'site:' .. s.id) end)
           if not ok then TriggerEvent('outbreak:noise:spike', 70); lib.notify({ title = 'It holds.', description = 'Louder than you wanted.', type = 'error' }) return end
         end
         if exports.outbreak_emotes:action(s.minigame and 'pry' or 'search', LootCfg.SearchSeconds * 1000, label .. '...') then
-          TriggerServerEvent('outbreak:server:search', 'site_' .. s.id, s.table, s.label)
+          TriggerServerEvent('outbreak:server:search', 'site_' .. s.id, s.table, s.label, token)
         end
       end } } })
   end

@@ -95,8 +95,9 @@ RegisterNetEvent('outbreak:wi:lock', function(id)
   end
   save(rec); Entity(rec.entity).state:set('worldItem', { id = rec.id, item = rec.item, count = rec.count, storage = true, locked = rec.locked, by = rec.byName }, true)
 end)
-RegisterNetEvent('outbreak:wi:forced', function(id)  -- pin sweep won client-side (trust gap #1)
+RegisterNetEvent('outbreak:wi:forced', function(id, token)  -- Q1: the pin sweep is server-authorised (token + timing window)
   local src = source; local rec = Items[id]; if not rec or not rec.locked or not near(src, rec.pos, 3.0) then return end
+  do local ok = exports.outbreak_minigames:consume(src, token, 'wi:force:' .. tostring(id)); if not ok then return end end
   rec.locked = false; save(rec); Entity(rec.entity).state:set('worldItem', { id = rec.id, item = rec.item, count = rec.count, storage = true, locked = false, by = rec.byName }, true)
   exports.ox_inventory:forceOpenInventory(src, 'stash', 'wi_' .. id)
 end)

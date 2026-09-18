@@ -1,4 +1,19 @@
-# START HERE — Outbreak v0.23.0 — SHEET #3 BUGFIXES + INFRASTRUCTURE 1–5
+# START HERE — Outbreak v0.24.0 — BUILD QUEUE Q1 + Q2 (server authority)
+
+**Deploy:** extract, `robocopy` into `C:\Outbreak\pack`, `02-copy-resources`, restart the server (no cfg, no migration, no items).
+F9 section **10 AUTHORITY** (A1–A8). Q0's in-game half (`/ob_animcheck`, `/ob_models`, `/ob_walk`, the tuning evening) is still yours.
+
+## What changed since v0.23.0
+
+| | |
+|---|---|
+| **Q1 · minigame tokens** | Every skill check asks the server first and hands a token back with the result; the server refuses missing, reused, wrong-target, too-fast or stale results (`KNOWN_LIMITATIONS` #1 closed). Vehicle batteries and parts are skill checks now (mechanics ≥ 5 waives), and unclaimed cars can be **stripped** for a battery or engine parts. |
+| **Q2 · witnessed wounds** | A wound report needs server-visible damage in the last 2 s (OneSync weapon damage event or a ped health drop); unarmed hits are bruises whatever the client says (#2 closed). `/ob_wound` still works through a debug path. |
+| **Q0** | Offline part done (Deferred list re-read, see SHAKEDOWN-NOTES). The rest needs the server. |
+
+---
+
+# v0.23.0 — SHEET #3 BUGFIXES + INFRASTRUCTURE 1–5
 
 **Deploy:** extract, `robocopy` into `C:\Outbreak\pack`, then `02-copy-resources` → `03-apply-migrations` (new `009_house_spots.sql`, 24 tables)
 → `04-paste-ins -Only all` (items + **shops: replaces ox_inventory/data/shops.lua with an empty table — no Ammunation, no cashier, no licence**)

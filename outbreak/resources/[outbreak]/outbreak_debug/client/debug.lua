@@ -7,7 +7,7 @@ RegisterCommand('ob_zombie', function(_, a)
 end, false)
 RegisterCommand('ob_wound', function(_, a)
   if not GlobalState.obDebug then return end
-  TriggerServerEvent('outbreak:server:wound', a[1] or 'left_arm', a[2] or 'bite')
+  TriggerServerEvent('outbreak:debug:wound', a[1] or 'left_arm', a[2] or 'bite')   -- debug path: bypasses the Q2 witness check
 end, false)
 RegisterCommand('ob_down', function(_, a)
   if not GlobalState.obDebug then return end

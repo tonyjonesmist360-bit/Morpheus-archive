@@ -61,6 +61,7 @@ O():registerOpportunity({
       if #(GetEntityCoords(GetPlayerPed(src)) - Cfg.site) > 8.0 then return end
       O():advance(ID, 3, src, {})
     elseif kind == 'opened' and r.stage == 3 and r.data.solution == 'dig' then
+      if not exports.outbreak_minigames:consume(src, p and p.token, 'opp:' .. ID .. ':opened') then return end  -- Q1
       if #(GetEntityCoords(GetPlayerPed(src)) - Cfg.site) > 5.0 then return end
       exports.ox_inventory:forceOpenInventory(src, 'stash', Cfg.stash)
       pcall(function() exports.outbreak_skills:grantXP(src, 'cache') end)

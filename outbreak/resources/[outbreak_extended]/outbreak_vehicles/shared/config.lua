@@ -45,4 +45,8 @@ VehCfg = {
   -- STASHES (v0.22): trunk and glovebox are ox stashes keyed by plate, so they persist with the car.
   Stashes = { trunk = { slots = 25, weight = 120000, label = 'Trunk' }, glovebox = { slots = 5, weight = 8000, label = 'Glovebox' }, boat = { slots = 15, weight = 60000, label = 'Hold' } },
   DragOut = { enabled = true, idleSeconds = 6, dragChance = 0.5 },
+  -- MECHANICS (Q1): fitting or pulling a battery / engine parts is a skill check. At or above SkipLevel
+  -- (outbreak_skills mechanics) the check is waived - a mechanic just does it. Every result is a
+  -- server token (outbreak_minigames) so a forged event without one does nothing.
+  Mechanics = { battery = { game = 'pry', opts = { pulls = 3, width = 16 } }, part = { game = 'splice', opts = { length = 4, showMs = 1800 } }, SkipLevel = 5, StripSeconds = 9000 },
 }

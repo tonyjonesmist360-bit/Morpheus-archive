@@ -92,6 +92,15 @@ local Steps = {
   { sec = '9 OPS', id = 'O8', label = 'Kick / ban / unban', cmd = '/ban <friend id> 1 test ; they reconnect ; /unban <name>', expect = 'dropped with the reason; refused for a minute; then in' },
   { sec = '9 OPS', id = 'O9', label = 'Hotfix reload', cmd = '/hotfix reload outbreak_minigames', expect = 'that resource restarts; you keep playing' },
   { sec = '9 OPS', id = 'O10', label = 'Restore preview (offline)', cmd = 'PowerShell: ops\\restore-backup.ps1 then -Date <today>', expect = 'lists backups; preview names what would move aside' },
+  -- ── 10 AUTHORITY (Q1 / Q2) ──
+  { sec = '10 AUTHORITY', id = 'A1', label = 'Pin sweep still works (token round-trip)', cmd = 'force a padlocked crate / a locked house', expect = 'minigame plays; on win the stash opens as before; F8 clean' },
+  { sec = '10 AUTHORITY', id = 'A2', label = 'Forged result does nothing', cmd = 'F8: TriggerServerEvent("outbreak:wi:forced", <crate id>)  (find the id with Look closer / ob_state)', expect = 'nothing opens; with ob_debug 1 the console prints an [OB-AUTH] refusal' },
+  { sec = '10 AUTHORITY', id = 'A3', label = 'Zombie wound still lands (witness)', cmd = 'get scratched by a zombie', expect = 'Scratch/Bite lands as before. If it does NOT, tell me: weaponDamageEvent may be silent for NPC melee and the health witness must carry it' },
+  { sec = '10 AUTHORITY', id = 'A4', label = 'Forged wound refused', cmd = 'F8: TriggerServerEvent("outbreak:server:wound", "head", "gunshot") while untouched', expect = 'no wound; logs kind:needs.woundRejected has a line' },
+  { sec = '10 AUTHORITY', id = 'A5', label = 'Fists are bruises whatever is claimed', cmd = 'friend punches you', expect = 'bruise, never a laceration' },
+  { sec = '10 AUTHORITY', id = 'A6', label = 'Battery / parts are skill checks', cmd = 'dead-battery car, Install battery', expect = 'pry minigame first (unless mechanics >= 5), then the swap' },
+  { sec = '10 AUTHORITY', id = 'A7', label = 'Strip a car', cmd = 'unclaimed running car -> Pull the battery / Strip engine parts', expect = 'check, then the item in pockets and the car dead / part missing' },
+  { sec = '10 AUTHORITY', id = 'A8', label = 'Too fast is refused', cmd = 'ask a friend to spam-win a minigame with a macro (or set pins very high and win instantly)', expect = 'refused; logs kind:minigame.reject shows "too fast"' },
   -- ── 6 PRIOR SHEET ──
   { sec = '6 PRIOR SHEET', id = 'P1', label = 'Walkie: screen, channel keys, prop + anim, hiss', cmd = 'N; ] and [; CapsLock', expect = 'radio screen; channel steps; radio in hand while talking; hiss at range' },
   { sec = '6 PRIOR SHEET', id = 'P2', label = 'Admin: noclip / god / spectate / entity gun', cmd = 'F10 -> Admin', expect = 'each works and turns off cleanly' },

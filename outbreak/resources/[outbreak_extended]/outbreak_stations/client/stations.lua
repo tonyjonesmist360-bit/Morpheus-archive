@@ -18,8 +18,9 @@ CreateThread(function()
       { label = 'Wire a battery to the pump', icon = 'fa-solid fa-car-battery', item = StationCfg.DeadPumpItem,
         canInteract = function() local st = (GlobalState.obStations or {})[s.id]; return st and st.kind == 'deadpump' end,
         onSelect = function()
-          if exports.outbreak_minigames:play('splice', { length = 6, showMs = 1600 }) then
-            TriggerServerEvent('outbreak:server:powerPump', s.id)
+          local ok, token = exports.outbreak_minigames:play('splice', { length = 6, showMs = 1600 }, 'station:pump:' .. s.id)
+          if ok then
+            TriggerServerEvent('outbreak:server:powerPump', s.id, token)
           else
             TriggerEvent('outbreak:noise:spike', 60)
             lib.notify({ title = 'Sparks. The pump stays dead.', type = 'error' })
