@@ -173,7 +173,9 @@ local function openStash(src, netId, which)
   if v.locked and not hasKey(src, plate) then notify(src, 'Locked.', 'error') return end
   local kind = (which == 'trunk' and v.boat) and 'boat' or which
   local def = VehCfg.Stashes[kind]; if not def then return end
-  local id = ('%s_%s'):format(which, plate)
+  -- NOT 'trunk_'/'glovebox_': ox_inventory treats ids starting with trunk/glove as its own vehicle inventories
+  -- and looks the entity up by plate ("no entity exists with given plate"). Our own prefix keeps it a plain stash.
+  local id = ('ob%s_%s'):format(which == 'trunk' and 'trunk' or 'glove', plate)
   if not stashes[id] then exports.ox_inventory:RegisterStash(id, def.label .. ' · ' .. plate, def.slots, def.weight, nil); stashes[id] = true end
   exports.ox_inventory:forceOpenInventory(src, 'stash', id)
 end
