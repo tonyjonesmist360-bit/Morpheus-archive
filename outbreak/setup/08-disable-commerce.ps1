@@ -9,14 +9,17 @@
 
     -Extra 'name1','name2' adds resources by exact folder name. -Keep 'name' spares one that matched a pattern.
 #>
-param([string]$Base, [switch]$Apply, [string[]]$Extra = @(), [string[]]$Keep = @())
+param([string]$Base, [switch]$Apply, [switch]$Jobs, [string[]]$Extra = @(), [string[]]$Keep = @())
 . "$PSScriptRoot\_common.ps1"
 $baseResolved = Resolve-Base -Base $Base
 $res = Join-Path $baseResolved 'resources'
 # exact names, plus patterns for the things that keep getting renamed between recipe versions
-$exact = @('qbx_bank','qb-banking','Renewed-Banking','okokBanking','ps-banking','qbx_pawnshop','qbx_vehicleshop','qb-vehicleshop','qbx_clothing','qb-clothing','qbx_shops','qb-shops','qbx_barbershop','qbx_tattooshop','qbx_ammunation','qb-weapons-shop','qbx_vehiclekeys','qbx_management','qbx_bossmenu','qbx_atm') + $Extra
-$patterns = @('*bank*','*shop*','*ammunation*','*vehiclekeys*','*atm*','*pawn*','*dealer*')
-Write-Host "OUTBREAK - disable commerce resources (stop lines in outbreak-commerce.cfg)" -ForegroundColor White
+$exact = @('qbx_bank','qb-banking','Renewed-Banking','okokBanking','ps-banking','qbx_pawnshop','qbx_vehicleshop','qb-vehicleshop','qbx_vehiclesales','qbx_clothing','qb-clothing','qbx_shops','qb-shops','qbx_barbershop','qbx_tattooshop','qbx_ammunation','qb-weapons-shop','qbx_vehiclekeys','qbx_management','qbx_bossmenu','qbx_atm','qbx_customs','qbx_cityhall') + $Extra
+$patterns = @('*bank*','*shop*','*ammunation*','*vehiclekeys*','*atm*','*pawn*','*dealer*','*sales*')
+# -Jobs: the recipe's paid jobs, races, drugs, robberies with police, prison. Nothing in them fits a dead world,
+# and several pay framework money. Kept: seatbelt, radialmenu, smallresources, adminmenu, chat_theme, binoculars, diving.
+if ($Jobs) { $exact += @('qbx_busjob','qbx_taxijob','qbx_towjob','qbx_garbagejob','qbx_truckerjob','qbx_newsjob','qbx_recyclejob','qbx_mechanicjob','qbx_scrapyard','qbx_lapraces','qbx_streetraces','qbx_vineyard','qbx_weed','qbx_drugs','qbx_carwash','qbx_garages','qbx_idcard','qbx_scoreboard','qbx_jewelery','qbx_bankrobbery','qbx_storerobbery','qbx_houserobbery','qbx_truckrobbery','qbx_fireworks','xt-prison','ultra-voltlab') }
+Write-Host "OUTBREAK - disable commerce resources (stop lines in outbreak-commerce.cfg)$(if ($Jobs) { ' + recipe jobs' })" -ForegroundColor White
 if (-not $Apply) { Warn "PREVIEW - nothing will be changed. Add -Apply to write." }
 if (-not (Test-Path -LiteralPath $res)) { Bad "resources folder not found: $res"; exit 1 }
 $dirs = Get-ChildItem -LiteralPath $res -Recurse -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'fxmanifest.lua') }
