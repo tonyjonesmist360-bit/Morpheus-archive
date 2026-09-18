@@ -107,7 +107,12 @@ local function publishSpots()
 end
 CreateThread(function()
   Wait(500)
-  for _, r in ipairs(MySQL.query.await('SELECT * FROM outbreak_house_spots') or {}) do
+  local okq, rows = pcall(function() return MySQL.query.await('SELECT * FROM outbreak_house_spots') end)
+  if not okq or type(rows) ~= 'table' then
+    print('^1[outbreak_housing] outbreak_house_spots is missing: run setup/03-apply-migrations.ps1 (009_house_spots.sql). Interior search spots are OFF until then.^7')
+    return
+  end
+  for _, r in ipairs(rows) do
     Spots[r.id] = { id = r.id, house = r.house_id, name = r.name, tbl = r.tbl, pos = vector3(r.x, r.y, r.z) }
   end
   -- seed: every interior house with no rows yet gets the default spread around its anchor
