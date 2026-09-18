@@ -6,13 +6,21 @@ local function scenario()
   return SpawnCfg.Scenarios[id] or SpawnCfg.Scenarios[SpawnCfg.Active], id
 end
 
+-- DEAD MONEY: the framework's cash and bank are zeroed on EVERY load (old characters, admin gives, anything the
+-- recipe pays out). The only money in the world is the old_cash item.
+local function wipeMoney(src, player)
+  for _, acct in ipairs({ 'cash', 'bank', 'crypto' }) do
+    local ok = pcall(function() exports.qbx_core:SetMoney(src, acct, 0, 'outbreak-wipe') end)
+    if not ok then pcall(function() player.Functions.SetMoney(acct, 0, 'outbreak-wipe') end) end
+  end
+end
 AddEventHandler('QBCore:Server:PlayerLoaded', function(player)
   local cid = player.PlayerData.citizenid
   local src = player.PlayerData.source
+  wipeMoney(src, player)
   local row = MySQL.single.await('SELECT citizenid FROM outbreak_players WHERE citizenid = ?', { cid })
   if row then return end
   MySQL.insert.await('INSERT INTO outbreak_players (citizenid) VALUES (?)', { cid })
-  exports.qbx_core:SetMoney(src, 'cash', 0, 'outbreak-wipe'); exports.qbx_core:SetMoney(src, 'bank', 0, 'outbreak-wipe')
   local sc, id = scenario()
   for _, kit in ipairs(sc.kit) do exports.ox_inventory:AddItem(src, kit[1], kit[2]) end
   if sc.needs then

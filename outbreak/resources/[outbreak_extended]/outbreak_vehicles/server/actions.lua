@@ -68,6 +68,8 @@ RegisterNetEvent('outbreak:veh:hotwired', function(netId, token)
   if v.locked then return end
   do local ok = exports.outbreak_minigames:consume(src, token, 'veh:splice:' .. tostring(netId)); if not ok then return end end
   S():set(plate, { hotwired = true }, 'hotwired')
+  giveKeys(src, netId, plate)
+  notify(src, 'Hotwired. Key · ' .. plate .. ' in your pocket: it is yours to lock, and it will be where you leave it.', 'success')
   pcall(function() exports.outbreak_skills:grantXP(src, 'hotwire') end)
 end)
 

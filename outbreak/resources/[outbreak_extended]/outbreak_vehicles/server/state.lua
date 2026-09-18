@@ -70,13 +70,19 @@ RegisterNetEvent('outbreak:veh:register', function(netId)
   if not V[plate] then
     local prof = classProfile(0) -- server has no GetVehicleClass; client sends class on register (below) else default
     local keysIn = seeded(plate, model, 'ign') < (E('KeysInIgnitionChance') or 0)   -- keys still in it: unlocked, runs
+    -- a car with someone at the wheel, or already moving, is RUNNING: it cannot be missing a part or a battery.
+    -- (traffic, a car you jack off the road, anything a client spawned): keys in it, tank not empty.
+    local driver = GetPedInVehicleSeat(ent, -1)
+    local vel = GetEntityVelocity(ent)
+    local running = (driver and driver ~= 0) or (vel.x * vel.x + vel.y * vel.y + vel.z * vel.z) > 1.0
+    if running then keysIn = true end
     local fr = E('FuelRange')
     V[plate] = {
       model = model, netId = netId,
       locked = (not keysIn) and seeded(plate, model, 'lock') < E('LockedChance'),
-      battery = seeded(plate, model, 'bat') < E('DeadBatteryChance') and 'dead' or 'ok',
-      fuel = fr[1] + seeded(plate, model, 'fuel') * (fr[2] - fr[1]),
-      hotwired = keysIn, part = seeded(plate, model, 'part') < E('MissingPartChance') and 'engine_parts' or nil,
+      battery = (not running) and seeded(plate, model, 'bat') < E('DeadBatteryChance') and 'dead' or 'ok',
+      fuel = math.max(running and 30 or 0, fr[1] + seeded(plate, model, 'fuel') * (fr[2] - fr[1])),
+      hotwired = keysIn, part = (not running) and seeded(plate, model, 'part') < E('MissingPartChance') and 'engine_parts' or nil,
       keyInside = seeded(plate, model, 'key') < E('KeyInGloveboxChance'),
       claimed = false, owner = nil, noise = prof.noise, burn = prof.burn, data = {},
     }
@@ -99,6 +105,16 @@ CreateThread(function()
       local ent = v.netId and NetworkGetEntityFromNetworkId(v.netId)
       if ent and ent ~= 0 and DoesEntityExist(ent) then
         local driver = GetPedInVehicleSeat(ent, -1)
+        -- a player driving a running car that nobody holds a key for: the keys were in it. Hand them over (persists it too).
+        if driver and driver ~= 0 and v.hotwired and not v.keyed and IsPedAPlayer(driver) then
+          for _, p in ipairs(GetPlayers()) do
+            if GetPlayerPed(tonumber(p)) == driver then
+              pcall(function() exports.outbreak_vehicles:giveKeys(tonumber(p), v.netId, plate) end)
+              TriggerClientEvent('ox_lib:notify', tonumber(p), { title = 'Keys were in it.', description = 'Key · ' .. plate .. ' is in your pocket. It is yours to lock now.', type = 'success' })
+              break
+            end
+          end
+        end
         if driver and driver ~= 0 and v.hotwired and v.battery == 'ok' and not v.part and v.fuel > 0 then
           local vel = GetEntityVelocity(ent)
           local kmh = math.sqrt(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z) * 3.6
