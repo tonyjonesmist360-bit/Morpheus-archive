@@ -89,6 +89,8 @@ CreateThread(function()
           end
         end
       end
+    elseif LocalPlayer.state.obGod then
+      if GetEntityHealth(ped) < 200 then SetEntityHealth(ped, 200) end   -- god / test mode: never enters the pipeline
     elseif IsEntityDead(ped) or GetEntityHealth(ped) <= 101 then
       local pos = GetEntityCoords(ped)
       if IsEntityDead(ped) then

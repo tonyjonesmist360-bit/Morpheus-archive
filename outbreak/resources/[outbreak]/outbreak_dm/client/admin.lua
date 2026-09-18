@@ -53,17 +53,18 @@ RegisterNetEvent('outbreak:dm:god', function(on)
   local ped = PlayerPedId()
   SetEntityInvincible(ped, on); SetPlayerInvincible(PlayerId(), on)
   if on then SetEntityHealth(ped, 200) end
-  lib.notify({ title = on and 'God mode on. Visible, unkillable.' or 'God mode off.', type = 'inform' })
+  if not LocalPlayer.state.obTest then lib.notify({ title = on and 'God mode on. Visible, unkillable.' or 'God mode off.', type = 'inform' }) end
+end)
+-- god holds: invincibility does not stop scripts that SET health (survival damage, down pipeline); those check obGod,
+-- and this tops the bar up from the core tick so nothing can chip it
+AddEventHandler('outbreak:tick', function(t)
+  if LocalPlayer.state.obGod and GetEntityHealth(t.ped) < 200 then SetEntityHealth(t.ped, 200) end
 end)
 
 -- ── GHOST: other clients hide a ghosted player's ped; NPCs ignore the ghost ──
 AddStateBagChangeHandler('obGhost', nil, function(bag, _, value)
   local sid = tonumber(bag:match('player:(%d+)')); if not sid then return end
-  if sid == GetPlayerServerId(PlayerId()) then
-    SetEveryoneIgnorePlayer(PlayerId(), value == true); SetPoliceIgnorePlayer(PlayerId(), value == true)
-    if value then SetEntityAlpha(PlayerPedId(), 120, false) else ResetEntityAlpha(PlayerPedId()) end
-    return
-  end
+  if sid == GetPlayerServerId(PlayerId()) then return end   -- own ghost look is handled by outbreak:dm:ghost in dm.lua
   local pid = GetPlayerFromServerId(sid); if pid == -1 then return end
   local ped = GetPlayerPed(pid); if ped == 0 then return end
   SetEntityVisible(ped, not value, false)

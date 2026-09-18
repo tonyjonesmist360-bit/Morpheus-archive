@@ -94,7 +94,11 @@ local function menu()
     { title = ('World era: %s'):format(GlobalState.obVehEra or '?'), icon = 'clock', description = 'early = cars mostly run, keys in half of them. live = locked, dead, dry. Cars seen from now on roll the new table',
       onSelect = function() local i = lib.inputDialog('Vehicle era', { { type = 'select', label = 'Era', options = { { value = 'early', label = 'early - day one, most cars run' }, { value = 'live', label = 'live - months in, scavenge for parts' } }, default = GlobalState.obVehEra or 'early', required = true } }); if i then act('vehera', { era = i[1] }) end end },
   } })
+  local testOn = LocalPlayer.state.obTest == true
   lib.registerContext({ id = 'dm_admin', title = 'Admin', menu = 'dm_main', options = {
+    { title = testOn and 'TEST MODE: ON (click to leave)' or 'Test mode', icon = 'flask', description = 'god + ghost + needs paused: unkillable, invisible to players and NPCs, visible to you. /testmode', onSelect = function() act('testmode', { on = not testOn }) end },
+    { title = 'Test kit', icon = 'briefcase-medical', description = 'meds, food, tools, parts, radio, workbench, pistol - everything the F9 run needs', onSelect = function() act('testkit', {}) end },
+    { title = 'Give myself (search)', icon = 'gift', onSelect = function() act('givesearch', { target = GetPlayerServerId(PlayerId()) }) end },
     { title = 'Player panel', icon = 'users', description = 'health, needs, location; heal / feed / revive / freeze / tp / spectate', onSelect = function() TriggerEvent('outbreak:dm:openPanel') end },
     { title = 'Noclip / flight', icon = 'plane', description = '/noclip - WASD, Space, Ctrl, Shift', onSelect = function() ExecuteCommand('noclip') end },
     { title = god and 'God mode: ON (click to leave)' or 'God mode (visible, unkillable)', icon = 'shield', onSelect = function() act('god', { on = not god }) end },
@@ -183,8 +187,26 @@ RegisterNetEvent('outbreak:dm:cache', function(id, label, pos, model)
   exports.ox_target:addLocalEntity(o, { { label = 'Open ' .. label, icon = 'fa-solid fa-box-open', onSelect = function() exports.ox_inventory:openInventory('stash', id) end } })
 end)
 RegisterNetEvent('outbreak:dm:tp', function(pos) DoScreenFadeOut(300); Wait(350); SetEntityCoords(PlayerPedId(), pos.x, pos.y, pos.z + 0.5); Wait(200); DoScreenFadeIn(300) end)
+-- GHOST: invisible to players and NPCs, visible to yourself (translucent). SetEntityVisible(false) replicates;
+-- SetEntityLocallyVisible must be called every frame, so a thread runs only while ghosted (CORE-MECHANICS: conditional, restores).
+local ghostOn = false
 RegisterNetEvent('outbreak:dm:ghost', function(on)
   local ped = PlayerPedId()
   SetEntityVisible(ped, not on, false); SetEntityInvincible(ped, on); SetPlayerInvincible(PlayerId(), on)
-  lib.notify({ title = on and 'Ghost: you are not here.' or 'Back in the world.', type = 'inform' })
+  SetPedCanBeTargetted(ped, not on); SetEveryoneIgnorePlayer(PlayerId(), on); SetPoliceIgnorePlayer(PlayerId(), on); SetPlayerCanBeHassledByGangs(PlayerId(), not on)
+  if on and not ghostOn then
+    ghostOn = true
+    CreateThread(function()
+      while ghostOn do
+        Wait(0)
+        local p = PlayerPedId()
+        SetEntityLocallyVisible(p); SetEntityAlpha(p, 160, false)
+      end
+      ResetEntityAlpha(PlayerPedId()); SetEntityVisible(PlayerPedId(), true, false)
+    end)
+  elseif not on then ghostOn = false end
+  lib.notify({ title = on and 'Ghost: they cannot see you. You can.' or 'Back in the world.', type = 'inform' })
+end)
+RegisterNetEvent('outbreak:dm:testmode', function(on)
+  lib.notify({ title = on and 'TEST MODE ON' or 'Test mode off', description = on and 'Unkillable. Needs paused. Invisible to players and NPCs, ignored by the dead. /testmode off to leave.' or 'Mortal again.', type = on and 'warning' or 'inform', duration = 8000, position = 'top' })
 end)

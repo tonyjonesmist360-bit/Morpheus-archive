@@ -29,6 +29,7 @@ Core mechanics first on purpose: if K1 or K4 fail, stop and tell me before anyth
 |---|---|---|---|
 | B1 | Server ONLINE, no red outbreak_* lines | watch the txAdmin console during boot | 33 outbreak_ resources start clean |
 | B2 | Client joined, F8 clean | connect, open F8 | no red lines; no "Invalid key name" |
+| B4 | Test mode | /testmode (or F10 -> Admin -> Test mode), then ob_needs 0 0 0 and stand next to a zombie | bars refill and stay full; health never drops; zombies and raiders ignore you; you see yourself translucent; a friend does not see you. /testmode off restores |
 | B3 | No qbx_vehiclekeys warning | search the boot log for [OB-VEH] | no red "qbx_vehiclekeys is running" line (if there is one, stop it and tell me) |
 
 ## 1 CORE MECHANICS
@@ -184,4 +185,4 @@ Core mechanics first on purpose: if K1 or K4 fail, stop and tell me before anyth
 | G1 | Controller: Up inv, Down wheel, Left radio, B cancel | pad | all four |
 
 ---
-Generated 2026-09-18 by tools/gen_test_guide.py from shakedown.lua (105 steps). Edit the Lua, rerun the script.
+Generated 2026-09-18 by tools/gen_test_guide.py from shakedown.lua (106 steps). Edit the Lua, rerun the script.

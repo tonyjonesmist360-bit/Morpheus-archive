@@ -37,6 +37,7 @@ end
 -- the decay tick: client reports factors, server applies rules
 RegisterNetEvent('outbreak:server:needsTick', function(f)
   local src = source; local st = S[src]; if not st then return end
+  if Player(src).state.obGod then st.hunger, st.thirst, st.fatigue = 100.0, 100.0, 100.0; st.bleeding = false; push(src) return end  -- god / test mode: the body is paused
   local mult = (f and f.sprinting) and NeedsCfg.SprintMultiplier or 1.0
   local hm, tm, fm = 1.0, 1.0, 1.0
   pcall(function()

@@ -105,6 +105,25 @@ end
 Actions.wait = function(src, a) Wait((a.seconds or 10) * 1000) end
 -- ── admin console (2026-09-14) ──
 Actions.god = function(src, a) local on = a.on and true or false; Player(src).state:set('obGod', on, true); TriggerClientEvent('outbreak:dm:god', src, on) end
+-- TEST MODE (2026-09-18): one switch for testing. god (unkillable, needs paused, never downed) + ghost (invisible to
+-- players and NPCs, ignored by the dead, still visible to yourself). Off puts everything back.
+Actions.testmode = function(src, a)
+  local on = a.on and true or false
+  Player(src).state:set('obGod', on, true); Player(src).state:set('obGhost', on, true); Player(src).state:set('obTest', on, true)
+  TriggerClientEvent('outbreak:dm:god', src, on); TriggerClientEvent('outbreak:dm:ghost', src, on)
+  if on then pcall(function() exports.outbreak_needs:consume(src, { hunger = 100, thirst = 100, fatigue = 100 }) end) end
+  TriggerClientEvent('outbreak:dm:testmode', src, on)
+end
+Actions.testkit = function(src, a)
+  local t = a.target or src
+  for _, it in ipairs(DMCfg.TestKit or {}) do exports.ox_inventory:AddItem(t, it[1], it[2]) end
+  notify(t, 'Test kit in your pockets.', 'success')
+end
+RegisterCommand('testmode', function(src, a)
+  if src == 0 or not dm(src) then return end
+  local on = a[1] ~= 'off' and not (a[1] == nil and Player(src).state.obTest == true)
+  Actions.testmode(src, { on = on }); log(src, 'testmode', { on = on })
+end, false)
 Actions.spectate = function(src, a) TriggerClientEvent('outbreak:dm:spectate', src, a.target) end
 Actions.heal = function(src, a) local t = a.target or src; pcall(function() exports.outbreak_needs:reset(t) end); TriggerClientEvent('outbreak:dm:heal', t) end
 Actions.feed = function(src, a) local t = a.target or src; pcall(function() exports.outbreak_needs:consume(t, { hunger = 100, thirst = 100, fatigue = 100 }) end); notify(t, 'An admin fed you.', 'success') end

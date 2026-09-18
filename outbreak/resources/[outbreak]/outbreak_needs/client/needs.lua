@@ -50,7 +50,7 @@ RegisterNetEvent('outbreak:client:infected', function() TriggerServerEvent('outb
 -- Survival damage: the server decides how much (starvation, bleeding, infection stage)
 -- and this applies it, because SetEntityHealth does not exist server-side.
 RegisterNetEvent('outbreak:client:survivalDamage', function(dmg)
-  if type(dmg) ~= 'number' or dmg <= 0 then return end
+  if type(dmg) ~= 'number' or dmg <= 0 or LocalPlayer.state.obGod then return end
   local ped = PlayerPedId()
   SetEntityHealth(ped, math.max(0, GetEntityHealth(ped) - dmg))
 end)

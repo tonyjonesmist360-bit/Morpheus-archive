@@ -9,6 +9,7 @@ local Steps = {
   -- ── 0 BOOT ──
   { sec = '0 Boot', id = 'B1', label = 'Server ONLINE, no red outbreak_* lines', cmd = 'watch the txAdmin console during boot', expect = '33 outbreak_ resources start clean' },
   { sec = '0 Boot', id = 'B2', label = 'Client joined, F8 clean', cmd = 'connect, open F8', expect = 'no red lines; no "Invalid key name"' },
+  { sec = '0 Boot', id = 'B4', label = 'Test mode', cmd = '/testmode (or F10 -> Admin -> Test mode), then ob_needs 0 0 0 and stand next to a zombie', expect = 'bars refill and stay full; health never drops; zombies and raiders ignore you; you see yourself translucent; a friend does not see you. /testmode off restores' },
   { sec = '0 Boot', id = 'B3', label = 'No qbx_vehiclekeys warning', cmd = 'search the boot log for [OB-VEH]', expect = 'no red "qbx_vehiclekeys is running" line (if there is one, stop it and tell me)' },
   -- ── 1 CORE MECHANICS (protected list) ──
   { sec = '1 CORE MECHANICS', id = 'K1', label = 'Enter / exit a car as driver', cmd = 'walk to an unlocked car, F', expect = 'you get in; F again gets you out. Repeat on 3 cars' },

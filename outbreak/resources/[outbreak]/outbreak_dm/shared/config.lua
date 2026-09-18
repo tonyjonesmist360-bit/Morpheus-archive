@@ -42,8 +42,26 @@ DMCfg = {
     -- boats
     { 'dinghy', 'Dinghy' }, { 'dinghy2', 'Dinghy (2-seat)' }, { 'suntrap', 'Suntrap' }, { 'seashark', 'Seashark (jetski)' }, { 'speeder', 'Speeder' }, { 'jetmax', 'Jetmax' }, { 'squalo', 'Squalo' }, { 'tug', 'Tug' }, { 'marquis', 'Marquis (sailboat)' }, { 'predator', 'Police boat' },
   },
+  -- TEST KIT: everything the F9 run needs in one grab (F10 -> Admin -> Test kit, or /testmode then the menu)
+  TestKit = {
+    { 'bandage', 4 }, { 'ripped_sheet', 4 }, { 'splint', 2 }, { 'painkillers', 3 }, { 'antibiotics', 2 }, { 'adrenaline_shot', 1 },
+    { 'canned_beans', 3 }, { 'can_opener', 1 }, { 'water_clean', 3 }, { 'water_dirty', 2 }, { 'purify_tabs', 2 }, { 'mre', 2 },
+    { 'crowbar_tool', 1 }, { 'hammer_tool', 1 }, { 'plank', 4 }, { 'nails', 3 }, { 'duct_tape', 2 }, { 'car_battery', 1 }, { 'engine_parts', 1 }, { 'gas_can_small', 1 }, { 'hose_kit', 1 }, { 'key_blank', 2 }, { 'padlock', 1 },
+    { 'radio_handheld', 1 }, { 'radio_battery', 2 }, { 'workbench', 1 }, { 'crate', 1 }, { 'duffel_bag', 1 }, { 'note', 2 }, { 'old_cash', 20 }, { 'soda', 2 }, { 'beer', 1 }, { 'map_scrap', 1 },
+    { 'WEAPON_KNIFE', 1 }, { 'WEAPON_PISTOL', 1 }, { 'ammo-9', 48 },
+  },
   -- Saved teleport locations for the admin menu. Add your own with /coords (copies a vec4 to the clipboard).
+  -- TEST LOCATIONS (F9 run): every place a step sends you. Coordinates from memory where unverified.
   Locations = {
+    { label = 'TEST · Sandy Shores 24/7 (E1, E7)',       pos = vec4(1960.5, 3740.6, 32.3, 300.0) },
+    { label = 'TEST · Sandy Ammunation (G1-G4)',         pos = vec4(1693.4, 3760.2, 34.7, 220.0) },
+    { label = 'TEST · Fleeca Legion Square (N1-N4)',     pos = vec4(147.0, -1046.1, 29.4, 340.0) },
+    { label = 'TEST · Pacific Standard vault',           pos = vec4(263.6, 213.4, 101.7, 0.0) },
+    { label = 'TEST · Grove St house (L1-L6)',           pos = vec4(-14.28, -1441.44, 31.10, 0.0) },
+    { label = 'TEST · Zancudo armory (S3)',              pos = vec4(-2359.5, 3248.9, 32.81, 60.0) },
+    { label = 'TEST · Raider cache, boneyard (S5)',      pos = vec4(1385.3, 3618.8, 34.98, 200.0) },
+    { label = 'TEST · LS Customs Burton, tool bench (T8)', pos = vec4(-337.4, -136.9, 39.0, 70.0) },
+    { label = 'TEST · Sandy Medical station (D3)',       pos = vec4(1839.6, 3672.93, 34.28, 210.0) },
     { label = 'Sandy Shores motel (spawn)', pos = vec4(1961.24, 3742.4, 32.34, 300.0) },
     { label = 'Sandy Medical',              pos = vec4(1839.6, 3672.93, 34.28, 210.0) },
     { label = 'Sandy bungalow (safehouse)', pos = vec4(1893.45, 3768.72, 32.94, 0.0) },
