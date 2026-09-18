@@ -1,39 +1,52 @@
-<#  08-disable-commerce.ps1  (v0.23 - bugfix 2: banks and every other shop-front the recipe ships)
-    Finds `ensure <resource>` lines for known commerce resources in every .cfg under the live tree
-    and comments them out with an `# OUTBREAK: disabled` prefix. PREVIEW by default; -Apply writes
-    (backs up each cfg first). Nothing is deleted, nothing is reordered; un-comment to restore.
+<#  08-disable-commerce.ps1  (v0.24.3 - bugfix 2: banks and every other shop-front the recipe ships)
+    The QBox recipe starts whole folders (`ensure [qbx]`), so single resources cannot be commented out.
+    This finds commerce resources by FOLDER NAME under <Base>\resources and writes `stop <name>` lines to
+    <Base>\outbreak-commerce.cfg, which server.cfg execs at the end of the OUTBREAK block (after every ensure).
+    PREVIEW by default; -Apply writes. Nothing is moved or deleted; delete a line from the file to restore.
 
       powershell -ExecutionPolicy Bypass -File .\setup\08-disable-commerce.ps1 -Base "C:\Outbreak\txData"
       powershell -ExecutionPolicy Bypass -File .\setup\08-disable-commerce.ps1 -Base "C:\Outbreak\txData" -Apply
 
-    Add names with -Extra 'name1','name2' (e.g. whatever the recipe's bank resource is actually called;
-    `Get-ChildItem C:\Outbreak\txData\resources -Recurse -Directory -Filter "*bank*"` tells you).
+    -Extra 'name1','name2' adds resources by exact folder name. -Keep 'name' spares one that matched a pattern.
 #>
-param([string]$Base, [switch]$Apply, [string[]]$Extra = @())
+param([string]$Base, [switch]$Apply, [string[]]$Extra = @(), [string[]]$Keep = @())
 . "$PSScriptRoot\_common.ps1"
 $baseResolved = Resolve-Base -Base $Base
-$names = @('qbx_bank','qb-banking','Renewed-Banking','okokBanking','ps-banking','qbx_pawnshop','qbx_vehicleshop','qb-vehicleshop','qbx_clothing','qb-clothing','qbx_shops','qb-shops','qbx_barbershop','qbx_tattooshop','qbx_ammunation','qb-weapons-shop','qbx_vehiclekeys') + $Extra
-Write-Host "OUTBREAK - disable commerce resources" -ForegroundColor White
+$res = Join-Path $baseResolved 'resources'
+# exact names, plus patterns for the things that keep getting renamed between recipe versions
+$exact = @('qbx_bank','qb-banking','Renewed-Banking','okokBanking','ps-banking','qbx_pawnshop','qbx_vehicleshop','qb-vehicleshop','qbx_clothing','qb-clothing','qbx_shops','qb-shops','qbx_barbershop','qbx_tattooshop','qbx_ammunation','qb-weapons-shop','qbx_vehiclekeys','qbx_management','qbx_bossmenu','qbx_atm') + $Extra
+$patterns = @('*bank*','*shop*','*ammunation*','*vehiclekeys*','*atm*','*pawn*','*dealer*')
+Write-Host "OUTBREAK - disable commerce resources (stop lines in outbreak-commerce.cfg)" -ForegroundColor White
 if (-not $Apply) { Warn "PREVIEW - nothing will be changed. Add -Apply to write." }
-$cfgs = Get-ChildItem -LiteralPath $baseResolved -Recurse -Filter *.cfg -File -ErrorAction SilentlyContinue
-$hits = 0
-foreach ($cfg in $cfgs) {
-    $lines = @(Get-Content -LiteralPath $cfg.FullName)
-    $changed = $false
-    for ($i = 0; $i -lt $lines.Count; $i++) {
-        $l = $lines[$i]
-        if ($l -match '^\s*(ensure|start)\s+(\S+)\s*$') {
-            $r = $Matches[2]
-            if ($names -contains $r) {
-                $hits++
-                Note "$($cfg.Name):$($i+1)  $l"
-                $lines[$i] = "# OUTBREAK: disabled (no commerce) " + $l
-                $changed = $true
-            }
-        }
-    }
-    if ($changed -and $Apply) { Backup-File -Path $cfg.FullName | Out-Null; Write-TextNoBom -Path $cfg.FullName -Lines $lines; Ok "written: $($cfg.FullName)" }
+if (-not (Test-Path -LiteralPath $res)) { Bad "resources folder not found: $res"; exit 1 }
+$dirs = Get-ChildItem -LiteralPath $res -Recurse -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'fxmanifest.lua') }
+$found = @{}
+foreach ($d in $dirs) {
+    $n = $d.Name
+    if ($n -like 'outbreak_*') { continue }
+    if ($Keep -contains $n) { continue }
+    $hit = $false
+    if ($exact -contains $n) { $hit = $true }
+    else { foreach ($p in $patterns) { if ($n -like $p) { $hit = $true; break } } }
+    if ($hit) { $found[$n] = $d.FullName }
 }
-if ($hits -eq 0) { Ok "no commerce ensure lines found (nothing to do). Banks may be called something else: see the header." }
-elseif (-not $Apply) { Warn "$hits line(s) would be commented out. Re-run with -Apply." }
-else { Ok "$hits line(s) disabled. Restart the server." }
+if ($found.Count -eq 0) {
+    Warn "no commerce resources found under $res. Look for the bank by hand:"
+    Warn "  Get-ChildItem `"$res`" -Recurse -Directory | Where-Object Name -match 'bank|shop|atm' | Select-Object FullName"
+    Warn "then re-run with -Extra 'thatname'"
+    exit 0
+}
+foreach ($n in ($found.Keys | Sort-Object)) { Note ("stop {0,-28} {1}" -f $n, $found[$n]) }
+if (-not $Apply) { Warn "$($found.Count) resource(s) would be stopped. Check the list (a wrong match = -Keep 'name'), then re-run with -Apply."; exit 0 }
+$file = Join-Path $baseResolved 'outbreak-commerce.cfg'
+$lines = @('## outbreak-commerce.cfg - generated by setup/08-disable-commerce.ps1 -Apply on ' + (Get-Date -Format 'yyyy-MM-dd HH:mm'),
+           '## stop lines run after every ensure. Delete a line and restart to bring that resource back.')
+foreach ($n in ($found.Keys | Sort-Object)) { $lines += "stop $n" }
+if (Test-Path -LiteralPath $file) { Backup-File -Path $file | Out-Null }
+Write-TextNoBom -Path $file -Lines $lines
+Ok "$file written: $($found.Count) stop line(s)"
+$cfg = Join-Path $baseResolved 'server.cfg'
+if ((Test-Path -LiteralPath $cfg) -and -not ((Get-Content -LiteralPath $cfg -Raw) -match 'exec outbreak-commerce.cfg')) {
+    Warn "server.cfg does not exec outbreak-commerce.cfg yet: run 07-update-cfg.ps1 -Apply (the v0.24.3 block has the exec line)"
+}
+Ok "Restart the server. Boot log should show those resources stopping after the outbreak_ ensures."
