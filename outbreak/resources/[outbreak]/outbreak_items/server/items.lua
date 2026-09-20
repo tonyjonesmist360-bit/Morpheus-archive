@@ -51,7 +51,7 @@ end)
 -- The barber (v0.25): the one thing old money still buys. Five notes, same as always.
 RegisterNetEvent('outbreak:server:barber', function()
   local src = source
-  local price = 5   -- keep in step with MapKeyCfg.Barber.price (the label the player sees)
+  local price = 5   -- keep in step with the barber price in outbreak_mapkey (the label the player sees)
   if exports.ox_inventory:GetItemCount(src, 'old_cash') < price then TriggerClientEvent('ox_lib:notify', src, { title = ('%d Old Money. Same as always.'):format(price), description = 'He does not take beans.', type = 'error' }) return end
   if exports.ox_inventory:RemoveItem(src, 'old_cash', price) then TriggerClientEvent('outbreak:client:barberChair', src) end
 end)

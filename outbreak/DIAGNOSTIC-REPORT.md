@@ -3,9 +3,8 @@
 Resources scanned: 41  ·  files: 197
 
 
-## ERROR (1)
+## ERROR (0)
 
-- **outbreak_items** — server/items.lua uses MapKeyCfg (defined in outbreak_mapkey/shared/config.lua) but manifest does not include '@outbreak_mapkey/shared/config.lua'
 
 ## WARN (0)
 
@@ -14,7 +13,6 @@ Resources scanned: 41  ·  files: 197
 
 - **outbreak_debug** — handler 'onClientResourceStart' registered but never triggered (dead or external)
 - **outbreak_debug** — handler 'onResourceStart' registered but never triggered (dead or external)
-- **outbreak_dm** — handler 'onResourceStop' registered but never triggered (dead or external)
 - **outbreak_faction** — data/jobs_snippet.lua is a paste-in fragment (not loaded, not syntax-checked as a file)
 - **outbreak_items** — data/ox_items_snippet.lua is a paste-in fragment (not loaded, not syntax-checked as a file)
 - **outbreak_items** — data/ox_shops_snippet.lua is a paste-in fragment (not loaded, not syntax-checked as a file)
@@ -22,6 +20,7 @@ Resources scanned: 41  ·  files: 197
 - **outbreak_log** — handler 'playerConnecting' registered but never triggered (dead or external)
 - **outbreak_log** — handler 'playerJoining' registered but never triggered (dead or external)
 - **outbreak_needs** — handler 'weaponDamageEvent' registered but never triggered (dead or external)
+- **outbreak_spawn** — handler 'onResourceStop' registered but never triggered (dead or external)
 - **outbreak_vehicles** — handler 'outbreak:veh:battery' registered but never triggered (dead or external)
 - **outbreak_vehicles** — handler 'outbreak:veh:part' registered but never triggered (dead or external)
 - **outbreak_vehicles** — handler 'outbreak:veh:stripBattery' registered but never triggered (dead or external)
