@@ -27,6 +27,12 @@ end
 
 RegisterCommand('craft', function() openCraft(false) end, false)  -- key lives in outbreak_binds
 RegisterNetEvent('outbreak:client:crafted', function() local s = CraftCfg.Sound; if s then PlaySoundFrontend(-1, s[1], s[2], true) end end)
+-- fixed bench sites (zones, no prop names)
+CreateThread(function()
+  for _, b in ipairs(CraftCfg.BenchSites or {}) do
+    exports.ox_target:addSphereZone({ coords = b.pos, radius = 2.5, options = { { label = 'Use the workbench', icon = 'fa-solid fa-screwdriver-wrench', onSelect = function() openCraft(true) end } } })
+  end
+end)
 -- the bench: map tool benches and placed workbenches open the full list
 CreateThread(function()
   local models = {}

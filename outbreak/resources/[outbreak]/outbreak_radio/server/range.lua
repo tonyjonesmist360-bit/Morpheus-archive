@@ -47,6 +47,20 @@ RegisterNetEvent('outbreak:radio:channel', function(ch, inDead)
 end)
 AddEventHandler('playerDropped', function() channels[source] = nil; dead[source] = nil end)
 exports('channelOf', function(src) return channels[src] or 0 end)
+-- SCAN (v0.25): a channel that is live right now and not yet known to the scanner. Live = someone is
+-- on it, a faction net, or main comms. Nothing secret: channels are pma-voice numbers; finding them is the game.
+lib.callback.register('outbreak:radio:scan', function(src, knownList)
+  local known = {}
+  for _, c in ipairs(knownList or {}) do known[tonumber(c)] = true end
+  local live = {}
+  for s, c in pairs(channels) do if c and c > 0 and s ~= src then live[c] = true end end
+  for _, c in ipairs(((RadioCfg.Channels or {}).Scan or {}).always or {}) do live[c] = true end
+  pcall(function() live[FactionCfg.Military.radioChannel] = true; live[FactionCfg.Raider.radioChannel] = true end)
+  local pick = {}
+  for c in pairs(live) do if not known[c] then pick[#pick + 1] = c end end
+  if #pick == 0 then return nil end
+  return pick[math.random(#pick)]
+end)
 exports('playersOnChannel', function(ch) local out = {}; for s, c in pairs(channels) do if c == ch then out[#out + 1] = s end end return out end)
 
 local function rangeOf(src)

@@ -28,6 +28,9 @@ DownCfg = {
       { id = 'pillbox', label = 'Pillbox Triage',   pos = vec3(307.7, -595.2, 43.28), radius = 6.0 },
       { id = 'sandy',   label = 'Sandy Medical',    pos = vec3(1839.6, 3672.9, 34.28), radius = 6.0 },
       { id = 'paleto',  label = 'Paleto Clinic',    pos = vec3(-247.8, 6331.2, 32.43), radius = 6.0 },
+      { id = 'zonah',   label = 'Mount Zonah Medical', pos = vec3(-449.6, -340.2, 34.5), radius = 6.0 },   -- v0.25, unverified
+      { id = 'fiacre',  label = 'St Fiacre Hospital',  pos = vec3(1151.2, -1529.6, 35.4), radius = 6.0 },  -- v0.25, unverified
+      { id = 'harmony', label = 'Harmony Medical Van', pos = vec3(1155.1, 2665.6, 38.2), radius = 6.0 },   -- v0.25, unverified
     },
   },
   Adrenaline = { item = 'adrenaline_shot', healthPct = 10, fatigueCost = 40 }, -- solo lifeline, works ONLY while incapacitated

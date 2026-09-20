@@ -26,6 +26,12 @@ RegisterCommand('mapkey', function()
       opts[#opts + 1] = { title = e.label, description = e.what, icon = e.icon, iconColor = e.colour, readOnly = true }
     end
   end
+  for _, cat in ipairs({ 'store', 'clothing', 'barber', 'customs', 'prison' }) do
+    local d = (MapKeyCfg.Places or {})[cat]; if d then opts[#opts + 1] = { title = d.legend, description = d.what, icon = 'location-dot', readOnly = true } end
+  end
+  for _, k in ipairs({ 'gunstore', 'vault', 'station', 'bench' }) do
+    local d = (MapKeyCfg.Derived or {})[k]; if d then opts[#opts + 1] = { title = d.legend, description = 'named on the map', icon = 'location-dot', readOnly = true } end
+  end
   opts[#opts + 1] = { title = 'Everything else is gone', description = 'Banks, shops, clothing, ammunation: the map does not show them because they are not open. What you find, you loot.', icon = 'ban', readOnly = true }
   lib.registerContext({ id = 'ob_mapkey', title = 'Map key', options = opts })
   lib.showContext('ob_mapkey')

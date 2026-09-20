@@ -23,6 +23,10 @@ RadioCfg = {
     { label = 'the Braddock tunnel',   pos = vec3(-2270.0, 2540.0, 5.0),  radius = 200.0 },
   },
   Sfx = { click = 0.7, hiss = 0.45, weak = 0.55 },
+  -- CHANNELS (v0.25). A radio powers up on the EMERGENCY channel. Other channels must be found: a scan
+  -- (S on the screen) picks one that is live (someone on it, a faction net, main comms), a faction hands
+  -- you its net when you join, a repeater you light gives you its channel. Up/down step known channels only.
+  Channels = { emergency = 1, main = 4, KnownAtStart = { 1 }, Scan = { seconds = 4, chance = 0.85, always = { 4 } } },
   TagRange = 25.0,              -- metres: draw "((radio))" over a transmitting player this close
   BatteryHeartbeats = 9,        -- heartbeats (5 min each) per battery = 45 min
 }

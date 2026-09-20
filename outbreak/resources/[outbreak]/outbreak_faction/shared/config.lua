@@ -14,6 +14,18 @@ FactionCfg = {
     radioChannel = 13,
     Camp = { coords = vec3(1385.3, 3618.8, 34.98), stash = 'raider_cache', slots = 40, weight = 150000 }, -- Sandy Shores boneyard
   },
+  -- POSTS (v0.25): where a faction physically is. A recruiter ped is the target (enlist / walk out / stash);
+  -- guards stand around, shoot the dead, and ignore you unless you are the other side. Client-local peds,
+  -- spawned inside SpawnRadius, removed beyond it. Models from memory - unverified.
+  Posts = {
+    military = { pos = vec4(-1611.1, 2806.9, 17.05, 0.0), recruiter = 's_m_y_marine_03', recruiterLabel = 'Sergeant',
+                 guard = 's_m_y_marine_01', weapon = 'WEAPON_CARBINERIFLE', guards = { { 3.0, 2.0 }, { -3.5, 1.5 }, { 2.0, -4.0 }, { -2.5, -4.5 }, { 5.0, -1.0 } },
+                 group = 'OUTBREAK_MIL' },
+    raider   = { pos = vec4(1385.3, 3618.8, 34.98, 200.0), recruiter = 'g_m_y_lost_02', recruiterLabel = 'Warlord',
+                 guard = 'g_m_y_lost_01', weapon = 'WEAPON_PUMPSHOTGUN', guards = { { 3.0, 2.0 }, { -3.0, 2.0 }, { 2.5, -3.5 }, { -3.0, -3.0 } },
+                 group = 'OUTBREAK_RAIDERS' },
+  },
+  SpawnRadius = 180.0, DespawnRadius = 260.0, GuardSight = 70.0,
   -- Military-job players are allies of checkpoint soldiers; raider-job players are hostile to them.
   -- JOINING (v0.22): at the armory / the boneyard cache. Rep gates it; leaving costs rep with the ones you leave.
   Join = { minRep = -10, leaveRepCost = 25, cooldownMinutes = 30 },

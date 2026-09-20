@@ -41,6 +41,7 @@ end)
 RegisterNetEvent('outbreak:server:claimHouse', function(id)
   local src = source
   local h = houses[id]; if not h or h.owner then return end
+  do local c = cfg(id); if c and c.requires then local kind, pid = c.requires:match('^(%w+):(.+)$'); if kind == 'pool' then local left; pcall(function() left = exports.outbreak_core:poolLeft(pid) end); if left == nil or left > 0 then TriggerClientEvent('ox_lib:notify', src, { title = 'Not while they are inside.', description = 'Clear the place first.', type = 'error' }) return end end end end
   local p = QBCore.Functions.GetPlayer(src); if not p then return end
   h.owner = p.PlayerData.citizenid; save(id)
   pcall(function() exports.outbreak_log:log('house.claim', src, { house = id }) end)

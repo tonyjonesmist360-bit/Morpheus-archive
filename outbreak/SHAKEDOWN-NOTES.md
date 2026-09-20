@@ -682,3 +682,21 @@ happened. `/ob_wound` moved to a debug-only event so test wounds still land.
 
 **Not started:** Q3 (server-side population). It depends on Q0's tuning numbers and is the one entry where a
 mistake breaks the core loop; it should not be built without a boot in reach.
+
+## 2026-09-20 — v0.25.0: repairs from the first F9 run (55 marked, 43 pass)
+
+Real bugs: trunk/glovebox ids collided with ox_inventory's own `trunk`/`glove` parsing (fixed v0.24.4);
+vending machines only had three models listed (six more). Not bugs: bank tellers and vehiclekeys were still
+running because `08-disable-commerce` had not been applied; crews need a second player; `/tutorial` was typed
+without the slash. The armory target was 700 m inside the base while the DM location pointed at the gate, so
+"no enlist target" was true: posts now spawn a recruiter ped where the marker is.
+
+Radio "unable to join": every channel was reachable but nothing told the player which one anyone used. Now
+channel 1 is home and the rest are found (scan / faction / repeater).
+
+Prison pool: kills are client-reported to the server (same trust class as minigame results before Q1; a
+token would be overkill for a counter that only ever goes down). Each client can spawn up to `left` locally, so
+two players inside can briefly see more than the pool; the count still only falls.
+
+Unverified this build: every Places coordinate, the five post models, `s_m_m_prisguard_01`, blip sprites
+52/71/72/73/108/110/188/402, scenario names WORLD_HUMAN_GUARD_STAND(_ARMY).

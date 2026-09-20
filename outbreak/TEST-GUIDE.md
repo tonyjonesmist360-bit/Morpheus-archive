@@ -155,6 +155,28 @@ Core mechanics first on purpose: if K1 or K4 fail, stop and tell me before anyth
 | A7 | Strip a car | unclaimed running car -> Pull the battery / Strip engine parts | check, then the item in pockets and the car dead / part missing |
 | A8 | Too fast is refused | ask a friend to spam-win a minigame with a macro (or set pins very high and win instantly) | refused; logs kind:minigame.reject shows "too fast" |
 
+## 11 v0.25
+
+| # | Test | Do | Expect |
+|---|---|---|---|
+| V1 | Radio powers up on channel 1 | N with a radio in pockets | lands on 1 with "Channel 1: emergency."; known list under the screen reads "known: 1" |
+| V2 | Unknown channel refused | type 44, Enter | "Nothing on 44." with static; still on 1 |
+| V3 | Scan finds a live channel | S (or /radioscan) | 4 s of hiss, then "New channel: 4" (or 7/13, or a channel a friend is on); ▲▼ now step 1 <-> 4 |
+| V4 | Joining a faction hands you its net | enlist at the gate | "New channel: 7 - Military Remnant net" |
+| F1 | Zancudo gate post | F10 -> Saved locations -> Zancudo gate | a Sergeant plus 5 marines at the gate; Enlist / Walk out / Armory / Talk on the Sergeant |
+| F2 | Guards shoot the dead, not you | ob_zombie 5 near the gate; stand there | marines open fire on the zombies and ignore you (unless you are a raider) |
+| F3 | Boneyard post | F10 -> Saved locations -> Raider cache | a Warlord plus 4 raiders; Join / Leave / Cache / Talk on the Warlord |
+| F4 | Enlist works end to end | Sergeant -> Enlist -> confirm | job military, channel 7 learned, F1 Faction row military. If nothing happens: jobs paste-in missing (04 -Only all) |
+| P1 | Prison pool | console: ob_pool  then drive into Bolingbroke | prints prison left=50; inside, zombies spawn (runners) but never more than are left |
+| P2 | Pool counts down and clears | kill them (or console: ob_pool prison 3, then kill 3) | ob_pool shows left falling; at 0 a radio line "somebody cleared it" |
+| P3 | Prison opens when clear | cafeteria, infirmary, towers, cell block door | before clear: no targets, claim refused "Not while they are inside"; after: cafeteria food, infirmary meds, tower safes with one guard on top, cells claimable |
+| M1 | Map places | open the map | named blips: 24/7 & LTD, clothing, barbers, mechanics, gun stores, vaults, medical stations, workbenches, Bolingbroke; no vanilla shop/bank blips (Renewed-Banking stopped) |
+| M2 | Clothing store | Binco Strawberry | "Change clothes (free)" opens the appearance editor; "Loot the racks" gives sheets/a duffel/old money |
+| M3 | Barber charges old money | any barber zone | "Haircut · 5 Old Money": refused under 5; takes 5 and opens the editor |
+| M4 | More stations and doors | Mount Zonah / St Fiacre / Harmony van; Paleto house, Grapeseed farm, Mirror Park... | green medical blips; new doors claimable with named search spots |
+| M5 | Bench sites | Sandy Shores garage | "Use the workbench" zone without a prop; molotov / barricade kit list |
+| M6 | Vending machines | any soda / snack / water / coffee machine | "Break into the machine" target |
+
 ## 6 PRIOR SHEET
 
 | # | Test | Do | Expect |
@@ -185,4 +207,4 @@ Core mechanics first on purpose: if K1 or K4 fail, stop and tell me before anyth
 | G1 | Controller: Up inv, Down wheel, Left radio, B cancel | pad | all four |
 
 ---
-Generated 2026-09-18 by tools/gen_test_guide.py from shakedown.lua (106 steps). Edit the Lua, rerun the script.
+Generated 2026-09-20 by tools/gen_test_guide.py from shakedown.lua (123 steps). Edit the Lua, rerun the script.

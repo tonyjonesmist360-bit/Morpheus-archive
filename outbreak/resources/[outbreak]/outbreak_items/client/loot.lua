@@ -28,12 +28,41 @@ CreateThread(function()
 end)
 
 -- NAMED LOOT SITES: sphere zones (gun store racks and safes, bank vaults). No prop names to get wrong.
+local function siteOpen(s)
+  if not s.requires then return true end
+  local kind, id = s.requires:match('^(%w+):(.+)$')
+  if kind == 'pool' then local p = (GlobalState.obPool or {})[id]; return p and p.left == 0 end
+  return true
+end
+-- a site guard: one hostile ped at the spot (a tower top), local, once per session
+local guards = {}
+AddRelationshipGroup('OUTBREAK_HOSTILE'); SetRelationshipBetweenGroups(5, `OUTBREAK_HOSTILE`, `PLAYER`); SetRelationshipBetweenGroups(5, `PLAYER`, `OUTBREAK_HOSTILE`)
+local lastGuard = 0
+AddEventHandler('outbreak:tick', function(t)
+  if GetGameTimer() - lastGuard < 5000 then return end
+  lastGuard = GetGameTimer()
+  for _, s in ipairs(LootCfg.Sites or {}) do
+    if s.guard and guards[s.id] == nil and #(t.pos - s.pos) < 120.0 then
+      guards[s.id] = false
+      local m = joaat(s.guard.model); RequestModel(m); local t0 = GetGameTimer(); while not HasModelLoaded(m) and GetGameTimer() - t0 < 3000 do Wait(10) end
+      if HasModelLoaded(m) then
+        local g = CreatePed(4, m, s.pos.x, s.pos.y, s.pos.z, 0.0, false, false)
+        SetEntityAsMissionEntity(g, true, true); SetBlockingOfNonTemporaryEvents(g, true); SetPedRelationshipGroupHash(g, `OUTBREAK_HOSTILE`)
+        GiveWeaponToPed(g, joaat(s.guard.weapon), 200, false, true); SetPedInfiniteAmmo(g, true, joaat(s.guard.weapon)); SetPedAccuracy(g, 40)
+        SetPedCombatAttributes(g, 46, true); SetPedSeeingRange(g, 80.0); SetPedArmour(g, 50)
+        TaskCombatHatedTargetsAroundPed(g, 80.0, 0)
+        guards[s.id] = g
+      end
+    end
+  end
+end)
 CreateThread(function()
   for _, s in ipairs(LootCfg.Sites or {}) do
     local label = (LootCfg.Labels or {})[s.table] or ('Search ' .. s.label)
     local noise = (LootCfg.Noise or {})[s.table]
     exports.ox_target:addSphereZone({ coords = s.pos, radius = s.radius or 2.0, options = { {
       label = label, icon = s.minigame and 'fa-solid fa-lock' or 'fa-solid fa-hand-holding',
+      canInteract = function() return siteOpen(s) end,
       onSelect = function()
         if noise then TriggerEvent('outbreak:noise:spike', noise) end
         local token = nil

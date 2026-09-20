@@ -31,6 +31,43 @@ exports('schedules', function() local out = {}; for k, s in pairs(schedules) do 
 exports('fireEvent', fireEvent)
 exports('cancelEvent', function(name) schedules[name] = nil end)
 
+-- ── POOLS (v0.25): zones with a fixed population. Kills are counted here; the client only reports. ──
+local Pools = {}
+local function savePools() SaveResourceFile(GetCurrentResourceName(), 'pools.json', json.encode(Pools), -1) end
+local function publishPools() GlobalState.obPool = Pools end
+do
+  local ok, saved = pcall(json.decode, LoadResourceFile(GetCurrentResourceName(), 'pools.json') or '')
+  for _, z in ipairs(OutbreakCfg.HotZones or {}) do
+    if z.pool then
+      local s = ok and type(saved) == 'table' and saved[z.id] or nil
+      Pools[z.id] = { left = s and s.left or z.pool, total = z.pool, label = z.label or z.id }
+    end
+  end
+  publishPools()
+end
+local lastPoolKill = {}
+RegisterNetEvent('outbreak:pool:kill', function(id)
+  local src = source; local p = Pools[id]; if not p or p.left <= 0 then return end
+  local now = GetGameTimer(); if lastPoolKill[src] and now - lastPoolKill[src] < 250 then return end
+  lastPoolKill[src] = now
+  p.left = p.left - 1
+  if p.left % 10 == 0 or p.left <= 5 then publishPools() end
+  if p.left == 0 then
+    publishPools(); savePools()
+    print(('^5[OB-POOL]^7 %s is CLEAR'):format(p.label))
+    pcall(function() exports.outbreak_radio:transmit(0, 'OVERHEARD', ('...%s... it is quiet in there... somebody cleared it...'):format(p.label)) end)
+    pcall(function() exports.outbreak_log:log('pool.cleared', src, { id = id }) end)
+  elseif p.left % 10 == 0 then savePools() end
+end)
+RegisterCommand('ob_pool', function(src, a)
+  if src ~= 0 and not IsPlayerAceAllowed(src, 'outbreak.debug') and not IsPlayerAceAllowed(src, 'outbreak.dm') then return end
+  local id, n = a[1], tonumber(a[2])
+  if not id or not Pools[id] then print('pools: ' .. json.encode(Pools)) return end
+  Pools[id].left = math.max(0, math.floor(n or Pools[id].total)); publishPools(); savePools()
+  print(('^5[OB-POOL]^7 %s -> %d left'):format(id, Pools[id].left))
+end, true)
+exports('poolLeft', function(id) local p = Pools[id]; return p and p.left or nil end)
+
 -- Debug convar -> GlobalState
 GlobalState.obDebug = GetConvarInt('ob_debug', 0) == 1
 

@@ -14,7 +14,7 @@ param([string]$Base, [switch]$Apply, [switch]$Jobs, [string[]]$Extra = @(), [str
 $baseResolved = Resolve-Base -Base $Base
 $res = Join-Path $baseResolved 'resources'
 # exact names, plus patterns for the things that keep getting renamed between recipe versions
-$exact = @('qbx_bank','qb-banking','Renewed-Banking','okokBanking','ps-banking','qbx_pawnshop','qbx_vehicleshop','qb-vehicleshop','qbx_vehiclesales','qbx_clothing','qb-clothing','qbx_shops','qb-shops','qbx_barbershop','qbx_tattooshop','qbx_ammunation','qb-weapons-shop','qbx_vehiclekeys','qbx_management','qbx_bossmenu','qbx_atm','qbx_customs','qbx_cityhall') + $Extra
+$exact = @('qbx_bank','qb-banking','Renewed-Banking','okokBanking','ps-banking','qbx_pawnshop','qbx_vehicleshop','qb-vehicleshop','qbx_vehiclesales','qbx_clothing','qb-clothing','qbx_shops','qb-shops','qbx_barbershop','qbx_tattooshop','qbx_ammunation','qb-weapons-shop','qbx_vehiclekeys','qbx_management','qbx_bossmenu','qbx_atm','qbx_cityhall')   # qbx_customs is KEPT on purpose: car mods stay, free (its price table needs editing by hand) + $Extra
 $patterns = @('*bank*','*shop*','*ammunation*','*vehiclekeys*','*atm*','*pawn*','*dealer*','*sales*')
 # -Jobs: the recipe's paid jobs, races, drugs, robberies with police, prison. Nothing in them fits a dead world,
 # and several pay framework money. Kept: seatbelt, radialmenu, smallresources, adminmenu, chat_theme, binoculars, diving.

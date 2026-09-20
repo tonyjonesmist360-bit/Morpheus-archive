@@ -35,6 +35,7 @@ local function doSearch(src, containerId, tableName, where, token)
     for _, s in ipairs(LootCfg.Sites or {}) do if 'site_' .. s.id == containerId and s.table == tableName then site = s; where = where or s.label end end
     if not site then return end
     if #(GetEntityCoords(GetPlayerPed(src)) - site.pos) > (site.radius or 2.5) + 3.0 then return end
+    if site.requires then local kind, id = site.requires:match('^(%w+):(.+)$'); if kind == 'pool' then local left = nil; pcall(function() left = exports.outbreak_core:poolLeft(id) end); if left == nil or left > 0 then return end end end
     if site.minigame then local ok = exports.outbreak_minigames:consume(src, token, 'site:' .. site.id); if not ok then return end end  -- Q1
   end
   local last = searched[containerId]

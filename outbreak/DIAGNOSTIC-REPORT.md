@@ -1,10 +1,11 @@
 # DIAGNOSTIC REPORT (static, pre-boot)
 
-Resources scanned: 41  ·  files: 196
+Resources scanned: 41  ·  files: 197
 
 
-## ERROR (0)
+## ERROR (1)
 
+- **outbreak_items** — server/items.lua uses MapKeyCfg (defined in outbreak_mapkey/shared/config.lua) but manifest does not include '@outbreak_mapkey/shared/config.lua'
 
 ## WARN (0)
 
@@ -13,8 +14,8 @@ Resources scanned: 41  ·  files: 196
 
 - **outbreak_debug** — handler 'onClientResourceStart' registered but never triggered (dead or external)
 - **outbreak_debug** — handler 'onResourceStart' registered but never triggered (dead or external)
+- **outbreak_dm** — handler 'onResourceStop' registered but never triggered (dead or external)
 - **outbreak_faction** — data/jobs_snippet.lua is a paste-in fragment (not loaded, not syntax-checked as a file)
-- **outbreak_group** — handler 'onResourceStop' registered but never triggered (dead or external)
 - **outbreak_items** — data/ox_items_snippet.lua is a paste-in fragment (not loaded, not syntax-checked as a file)
 - **outbreak_items** — data/ox_shops_snippet.lua is a paste-in fragment (not loaded, not syntax-checked as a file)
 - **outbreak_log** — handler 'chatMessage' registered but never triggered (dead or external)

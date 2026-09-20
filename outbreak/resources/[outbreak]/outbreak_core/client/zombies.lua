@@ -80,6 +80,7 @@ exports('lureTo', function(pos, radius)
   return n
 end)
 
+local poolOf, poolZone = {}, nil   -- pooled zones (prison): which pool a zombie counts against
 AddRelationshipGroup('OUTBREAK_ZOMBIES')
 SetRelationshipBetweenGroups(5, ZGROUP, `PLAYER`)
 SetRelationshipBetweenGroups(5, `PLAYER`, ZGROUP)
@@ -209,6 +210,7 @@ spawnZombie = function(pos, combatTarget)
   if vname == 'runner' then SetPedMovementClipset(ped, 'move_m@hurry@a', 1.0) end
   SetModelAsNoLongerNeeded(model)
   if combatTarget then TaskCombatPed(ped, combatTarget, 0, 16) end
+  return ped
 end
 
 -- Bloaters burst on death; screamers call a mini-horde the first time they see you
@@ -258,11 +260,20 @@ CreateThread(function()
     local hz = hotZone(ppos)
     zoneBias = hz and hz.bias or nil
     if hz then target = math.max(0, math.ceil(target * hz.mult)) end
+    -- a pooled zone: never more alive than the pool has left; zero when it is cleared
+    poolZone = nil
+    if hz and hz.pool then
+      local p = (GlobalState.obPool or {})[hz.id]
+      local left = p and p.left or 0
+      target = math.min(target, left)
+      poolZone = hz.id
+    end
     do local t = GlobalState.obTide; if hz and t and t.zone == hz.id then target = math.ceil(target * (t.mult or 2.0)) end end   -- the Tide is here
     local count = 0
     for ped in pairs(zombies) do
       if not DoesEntityExist(ped) or IsEntityDead(ped) then
         if DoesEntityExist(ped) and variantOf[ped] then onZombieDeath(ped) end
+        if poolOf[ped] then TriggerServerEvent('outbreak:pool:kill', poolOf[ped]); poolOf[ped] = nil end
         zombies[ped] = nil
       elseif #(GetEntityCoords(ped) - ppos) > OutbreakCfg.DespawnRadius then
         DeleteEntity(ped); zombies[ped] = nil
@@ -272,7 +283,7 @@ CreateThread(function()
     end
     if count < target then
       local pos = findSpawnPos(ppos)
-      if pos then spawnZombie(pos) end
+      if pos then local z = spawnZombie(pos); if z and poolZone then poolOf[z] = poolZone end end
     end
   end
 end)

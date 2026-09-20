@@ -48,7 +48,9 @@ OutbreakCfg = {
     { id = 'pillbox',     pos = vec3(  310.0, -560.0,  43.3), radius = 200.0, mult = 2.0, bias = 'shambler' },
     { id = 'sandy_town',  pos = vec3( 1960.0, 3740.0,  32.3), radius = 250.0, mult = 1.4, bias = 'shambler' },
     { id = 'paleto_town', pos = vec3(  -180.0,6350.0,  31.5), radius = 220.0, mult = 1.3, bias = 'shambler' },
-    { id = 'prison',      pos = vec3( 1700.0, 2590.0,  45.6), radius = 260.0, mult = 2.4, bias = 'runner'   },
+    -- pool = a FIXED population (server-counted kills, persisted in pools.json). No respawn once cleared;
+    -- `ob_pool prison 50` refills. The prison's cafeteria, infirmary, towers and cells open when it is clear.
+    { id = 'prison',      pos = vec3( 1700.0, 2590.0,  45.6), radius = 260.0, mult = 2.4, bias = 'runner', pool = 50, label = 'Bolingbroke' },
     { id = 'humane_labs', pos = vec3( 3620.0, 3740.0,  28.7), radius = 240.0, mult = 2.0, bias = 'bloater'  },
     -- Quiet by design: the outskirts, so there is somewhere to breathe.
     { id = 'grapeseed',   pos = vec3( 1700.0, 4780.0,  42.0), radius = 250.0, mult = 0.5 },

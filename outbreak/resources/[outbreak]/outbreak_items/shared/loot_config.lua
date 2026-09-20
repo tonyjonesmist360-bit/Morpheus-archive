@@ -6,6 +6,7 @@ LootCfg = {
     [`prop_bin_05a`] = 'trash',
     [`prop_postbox_01a`] = 'house',
     [`prop_vend_soda_01`] = 'vend', [`prop_vend_soda_02`] = 'vend', [`prop_vend_snak_01_tu`] = 'vend',
+    [`prop_vend_snak_01`] = 'vend', [`prop_vend_water_01`] = 'vend', [`prop_vend_coffe_01`] = 'vend', [`prop_vend_fags_01`] = 'vend', [`prop_vend_condom_01`] = 'vend', [`prop_vend_ice_01`] = 'vend',
     [`prop_toolchest_01`] = 'tools', [`prop_toolchest_02`] = 'tools', [`prop_toolchest_03`] = 'tools',
     [`prop_medstation_01`] = 'medical',
     -- the till: forcing it is loud, and what is inside stopped meaning anything
@@ -43,6 +44,11 @@ LootCfg = {
     { id = 'vault_fleeca_burton',label = 'Fleeca Burton — vault',            table = 'vault',    pos = vec3(-350.5, -53.2, 49.0),   radius = 2.5, minigame = 'pinsweep', pins = 4 },
     { id = 'vault_fleeca_gcp',   label = 'Fleeca Great Ocean Hwy — vault',   table = 'vault',    pos = vec3(-2962.6, 482.9, 15.7),  radius = 2.5, minigame = 'pinsweep', pins = 4 },
     { id = 'vault_blaine',       label = 'Blaine County Savings — vault',    table = 'vault',    pos = vec3(-109.4, 6470.3, 31.6),  radius = 2.5, minigame = 'pinsweep', pins = 4 },
+    -- BOLINGBROKE (v0.25): opens when the pool is clear (requires = 'pool:prison'). Coordinates from memory - unverified.
+    { id = 'prison_cafeteria',  label = 'Bolingbroke — cafeteria stores', table = 'prison_food', pos = vec3(1746.8, 2593.5, 45.6), radius = 3.0, requires = 'pool:prison' },
+    { id = 'prison_infirmary',  label = 'Bolingbroke — infirmary',        table = 'medical',     pos = vec3(1770.2, 2571.4, 45.6), radius = 3.0, requires = 'pool:prison' },
+    { id = 'prison_tower_ne',   label = 'Bolingbroke — NE tower',         table = 'gunsafe',     pos = vec3(1827.0, 2636.0, 60.0), radius = 3.0, requires = 'pool:prison', guard = { model = 's_m_m_prisguard_01', weapon = 'WEAPON_PUMPSHOTGUN' } },
+    { id = 'prison_tower_sw',   label = 'Bolingbroke — SW tower',         table = 'gunsafe',     pos = vec3(1612.0, 2497.0, 60.0), radius = 3.0, requires = 'pool:prison', guard = { model = 's_m_m_prisguard_01', weapon = 'WEAPON_CARBINERIFLE' } },
     { id = 'vault_fleeca_sandy', label = 'Fleeca Route 68 — vault',          table = 'vault',    pos = vec3(1175.3, 2706.8, 38.1),  radius = 2.5, minigame = 'pinsweep', pins = 4 },
   },
   Tables = {
@@ -55,6 +61,8 @@ LootCfg = {
     gunsafe  = { { 'ammo-9', 12, 40, 0.80 }, { 'ammo-shotgun', 4, 16, 0.45 }, { 'ammo-rifle', 10, 30, 0.20 }, { 'WEAPON_PISTOL', 1, 1, 0.30 }, { 'weapon_kit', 1, 1, 0.10 } },
     -- BANKS ARE RUINS (bugfix 2): the vault is full of paper nobody wants, and the odd thing someone hid there.
     vault    = { { 'old_cash', 40, 120, 0.95 }, { 'document', 1, 1, 0.25 }, { 'padlock', 1, 1, 0.20 }, { 'key_blank', 1, 1, 0.15 } },
+    prison_food = { { 'canned_beans', 2, 6, 0.90 }, { 'mre', 1, 3, 0.60 }, { 'water_clean', 2, 5, 0.80 }, { 'noodle_bowl', 1, 4, 0.60 }, { 'can_opener', 1, 1, 0.30 } },
+    clothing = { { 'ripped_sheet', 2, 5, 0.80 }, { 'duffel_bag', 1, 1, 0.20 }, { 'old_cash', 1, 5, 0.30 } },
     house   = { { 'old_cash', 1, 6, 0.25 }, { 'canned_beans', 1, 2, 0.35 }, { 'can_opener', 1, 1, 0.12 }, { 'bandage', 1, 1, 0.20 }, { 'map_scrap', 1, 1, 0.05 }, { 'radio_base', 1, 1, 0.02 }, { 'radio_battery', 1, 2, 0.10 }, { 'ammo-9', 4, 9, 0.08 }, { 'WEAPON_KNIFE', 1, 1, 0.04 }, { 'gun_oil', 1, 1, 0.03 }, { 'note', 1, 3, 0.20 }, { 'padlock', 1, 1, 0.05 }, { 'duffel_bag', 1, 1, 0.04 } },
     tools   = { { 'workbench', 1, 1, 0.04 }, { 'hammer_tool', 1, 1, 0.20 }, { 'nails', 1, 1, 0.35 }, { 'plank', 1, 2, 0.30 }, { 'gas_can_small', 1, 1, 0.10 }, { 'radio_battery', 1, 1, 0.12 }, { 'crowbar_tool', 1, 1, 0.15 }, { 'car_battery', 1, 1, 0.08 }, { 'hose_kit', 1, 1, 0.12 }, { 'engine_parts', 1, 1, 0.07 }, { 'key_blank', 1, 1, 0.06 }, { 'radio_coil', 1, 1, 0.03 }, { 'ammo-shotgun', 2, 6, 0.05 }, { 'WEAPON_HATCHET', 1, 1, 0.03 }, { 'crate', 1, 1, 0.05 }, { 'rain_catcher', 1, 1, 0.05 }, { 'padlock', 1, 1, 0.06 } },
     medical = { { 'bandage', 1, 2, 0.45 }, { 'antibiotics', 1, 1, 0.12 }, { 'painkillers', 1, 1, 0.30 }, { 'splint', 1, 1, 0.15 }, { 'adrenaline_shot', 1, 1, 0.04 } },

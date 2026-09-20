@@ -1,4 +1,22 @@
-# START HERE — Outbreak v0.24.0 — BUILD QUEUE Q1 + Q2 (server authority)
+# START HERE — Outbreak v0.25.0 — REPAIRS FROM THE FIRST F9 RUN
+
+**Deploy:** extract, robocopy into `C:\Outbreak\pack`, `02-copy-resources`, `08-disable-commerce -Jobs` (preview) then `-Apply`, restart.
+No migration, no cfg change, no new items. F9 section **11 v0.25** (17 steps). `qbx_customs` is now KEPT by the commerce script (car mods stay).
+
+## What changed since v0.24.4
+
+| | |
+|---|---|
+| **Radio channels** | A radio powers up on **channel 1 (emergency)**. Other channels must be found: **SCAN** (S on the screen, `/radioscan`) locks onto a live one (someone on it, main comms 4, a faction net); joining a faction hands you its net; ▲▼ step known channels only; an unknown channel is "Nothing on N." Known channels persist per character. |
+| **Faction posts** | A **Sergeant + 5 marines at the Zancudo gate** and a **Warlord + 4 raiders at the boneyard**. Guards shoot the dead and ignore you unless you are the other side. The recruiter is the target: Enlist / Walk out / Armory / Talk. The old sphere zones stay. |
+| **Bolingbroke** | A **pool of 50** (server-counted, persisted in `pools.json`, `ob_pool prison 50` refills). No respawn past the pool. Cleared: cafeteria stores, infirmary, two tower safes each with a guard on top, and the cell block claimable as a safehouse. |
+| **Map places** | Named blips for 16 stores, 8 clothing stores (free change + rack loot), 6 barbers (**5 Old Money**), 4 mechanics, gun stores, vaults, medical stations, workbenches, the prison. Legend lists them. Coordinates from memory: `/coords` on the real spot and tell me. |
+| **More of everything** | 9 new safehouse doors, 3 more medical stations (Mount Zonah, St Fiacre, Harmony van), 7 workbench sites as zones, 6 more vending models. |
+| **Not built** | Mechanics faction with deliveries and raider chases (next build, needs the caravan pattern). qbx_customs prices need its own config edited to zero. |
+
+---
+
+# v0.24.0 — BUILD QUEUE Q1 + Q2 (server authority)
 
 **Deploy:** extract, `robocopy` into `C:\Outbreak\pack`, `02-copy-resources`, restart the server (no cfg, no migration, no items).
 F9 section **10 AUTHORITY** (A1–A8). Q0's in-game half (`/ob_animcheck`, `/ob_models`, `/ob_walk`, the tuning evening) is still yours.

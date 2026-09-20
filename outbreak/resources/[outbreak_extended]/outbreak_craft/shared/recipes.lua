@@ -4,6 +4,16 @@ CraftCfg = {
   -- (names from memory - UNVERIFIED) or a placed 'workbench' item. Field recipes work anywhere on K.
   BenchModels = { 'prop_tool_bench02', 'prop_tool_bench02_ld', 'prop_toolchest_05', 'prop_workbench_01' },
   Sound = { 'PICK_UP', 'HUD_FRONTEND_DEFAULT_SOUNDSET' },
+  -- BENCH SITES (v0.25): fixed workbench spots as zones, so no prop name has to be right. Unverified coordinates.
+  BenchSites = {
+    { id = 'bench_burton',    label = 'LS Customs Burton',     pos = vec3(-337.4, -136.9, 39.0) },
+    { id = 'bench_sandy',     label = 'Sandy Shores garage',   pos = vec3(1173.3, 2640.0, 37.8) },
+    { id = 'bench_paleto',    label = 'Paleto garage',         pos = vec3(114.4, 6626.9, 31.8) },
+    { id = 'bench_grapeseed', label = 'Grapeseed barn',        pos = vec3(2426.7, 4986.2, 46.2) },
+    { id = 'bench_harmony',   label = 'Harmony hardware',      pos = vec3(1206.7, 2693.1, 37.8) },
+    { id = 'bench_lsc_lsia',  label = 'LS Customs airport',    pos = vec3(-1155.0, -2007.0, 13.2) },
+    { id = 'bench_zancudo',   label = 'Zancudo motor pool',    pos = vec3(-2185.5, 3221.9, 32.8) },
+  },
   Recipes = {
     { id = 'molotov',   label = 'Molotov',        gives = { 'WEAPON_MOLOTOV', 1 }, needs = { { 'beer', 1 }, { 'ripped_sheet', 1 }, { 'gas_can_small', 0 } }, bench = true, desc = 'A bottle, a rag, a splash from the can. The can is not used up.' },
     { id = 'boards',    label = 'Barricade kit',  gives = { 'barricade_kit', 1 }, needs = { { 'plank', 2 }, { 'nails', 1 }, { 'hammer_tool', 0 } }, bench = true, desc = 'Boards cut and nails counted: one level of barricade, ready to hang.' },

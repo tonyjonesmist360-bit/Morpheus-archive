@@ -48,5 +48,15 @@ HousingCfg = {
     { id = 'island_dock',    door = vec3(5000.0, -5750.0, 3.0),     label = 'The Far Dock (island)', preOwned = 'enclave' },
     { id = 'eclipse_apt',    door = vec3(-773.8, 312.9, 85.7),      label = 'Eclipse Towers Apt',
       interior = vec4(-773.0, 342.0, 196.7, 180.0) },   -- Eclipse Towers penthouse (default apartment IPL)
+    -- v0.25: more doors to claim. Exterior-only (door menu + named spots). Coordinates from memory - unverified.
+    { id = 'paleto_house',    door = vec3(-114.4, 6459.5, 31.5),   label = 'Paleto Bay House' },
+    { id = 'grapeseed_farm',  door = vec3(2438.6, 4970.4, 46.8),   label = 'Grapeseed Farmhouse' },
+    { id = 'harmony_house',   door = vec3(1099.9, 2723.6, 38.6),   label = 'Harmony Roadside House' },
+    { id = 'sandy_trailer2',  door = vec3(1893.9, 3712.1, 32.8),   label = 'Sandy Trailer Park' },
+    { id = 'vinewood_hills',  door = vec3(-1290.8, 454.6, 97.0),   label = 'Vinewood Hills House' },
+    { id = 'mirror_park',     door = vec3(1256.3, -401.1, 69.0),   label = 'Mirror Park House' },
+    { id = 'vespucci_flat',   door = vec3(-1150.9, -1521.1, 10.6), label = 'Vespucci Beach Flat' },
+    { id = 'chumash_cabin',   door = vec3(-3033.4, 84.5, 11.6),    label = 'Chumash Cabin' },
+    { id = 'prison_cells',    door = vec3(1697.0, 2565.0, 45.6),   label = 'Bolingbroke Cell Block', requires = 'pool:prison' },
   },
 }
