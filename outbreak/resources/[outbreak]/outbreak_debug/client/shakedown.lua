@@ -120,6 +120,16 @@ local Steps = {
   { sec = '11 v0.25', id = 'M4', label = 'More stations and doors', cmd = 'Mount Zonah / St Fiacre / Harmony van; Paleto house, Grapeseed farm, Mirror Park...', expect = 'green medical blips; new doors claimable with named search spots' },
   { sec = '11 v0.25', id = 'M5', label = 'Bench sites', cmd = 'Sandy Shores garage', expect = '"Use the workbench" zone without a prop; molotov / barricade kit list' },
   { sec = '11 v0.25', id = 'M6', label = 'Vending machines', cmd = 'any soda / snack / water / coffee machine', expect = '"Break into the machine" target' },
+  -- ── 12 THE YARD (v0.26) ──
+  { sec = '12 THE YARD', id = 'Y1', label = 'The Yard is staffed', cmd = 'go to Beeker\'s Garage, Harmony (map: mechanic blip)', expect = 'a Foreman with a clipboard and two hands welding; Foreman targets: Take a delivery job / Repairs & mods / Talk' },
+  { sec = '12 THE YARD', id = 'Y2', label = 'Take a job', cmd = 'Foreman -> Take a delivery job', expect = 'a yellow route blip to the pickup; notify with plate and 20-minute clock; key in pocket' },
+  { sec = '12 THE YARD', id = 'Y3', label = 'Drive it back', cmd = 'get in the car at the pickup', expect = 'route flips to the Yard; bottom line "DELIVERY <plate> · to the Yard"' },
+  { sec = '12 THE YARD', id = 'Y4', label = 'Raiders give chase', cmd = 'drive 350 m from the pickup', expect = '~3 in 4 jobs: two raider cars behind you, shooting; they break off past 400 m or after 4 min' },
+  { sec = '12 THE YARD', id = 'Y5', label = 'Delivery judged', cmd = 'park inside the Yard, step out', expect = 'within 5 s: "That will do." (+15) or "Not a scratch" (+20); car vanishes; channel 9 learned; Factions tab shows The Yard' },
+  { sec = '12 THE YARD', id = 'Y6', label = 'Wreck it = fail', cmd = 'take a job, blow the car up', expect = '"Wrecked it" and -5 standing' },
+  { sec = '12 THE YARD', id = 'Y7', label = 'Free repairs by standing', cmd = 'park a dented car in the Yard -> Repairs & mods', expect = 'menu shows standing; Repair works at wary+; paint at neutral; engine/brakes/box at trusted; armour/turbo at kin. Under the band: greyed with "needs: ..."' },
+  { sec = '12 THE YARD', id = 'Y8', label = 'Mods persist', cmd = 'mod a keyed car, restart the server', expect = 'same mods and colour after the restart' },
+  { sec = '12 THE YARD', id = 'Y9', label = 'Standing jump for the test', cmd = 'ob_rep mechanics 50', expect = 'menu unlocks performance mods (trusted)' },
   -- ── 6 PRIOR SHEET ──
   { sec = '6 PRIOR SHEET', id = 'P1', label = 'Walkie: screen, channel keys, prop + anim, hiss', cmd = 'N; ] and [; CapsLock', expect = 'radio screen; channel steps; radio in hand while talking; hiss at range' },
   { sec = '6 PRIOR SHEET', id = 'P2', label = 'Admin: noclip / god / spectate / entity gun', cmd = 'F10 -> Admin', expect = 'each works and turns off cleanly' },

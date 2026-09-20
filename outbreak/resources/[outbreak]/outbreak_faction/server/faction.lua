@@ -86,7 +86,7 @@ end)
 -- standings read-model for the journal and F1: every faction, number + word
 lib.callback.register('outbreak:faction:standings', function(src)
   local out = {}
-  for _, f in ipairs({ 'military', 'raider', 'enclave' }) do
+  for _, f in ipairs({ 'military', 'raider', 'enclave', 'mechanics' }) do
     local v = exports.outbreak_faction:getRep(src, f)
     out[#out + 1] = { id = f, name = FactionCfg.Names[f], value = v, word = standingWord(v), blurb = FactionCfg.Blurbs[f], mine = jobOf(src) == f }
   end

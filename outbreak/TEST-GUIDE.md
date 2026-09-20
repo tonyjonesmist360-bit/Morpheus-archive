@@ -177,6 +177,20 @@ Core mechanics first on purpose: if K1 or K4 fail, stop and tell me before anyth
 | M5 | Bench sites | Sandy Shores garage | "Use the workbench" zone without a prop; molotov / barricade kit list |
 | M6 | Vending machines | any soda / snack / water / coffee machine | "Break into the machine" target |
 
+## 12 THE YARD
+
+| # | Test | Do | Expect |
+|---|---|---|---|
+| Y1 | The Yard is staffed | go to Beeker's Garage, Harmony (map: mechanic blip) | a Foreman with a clipboard and two hands welding; Foreman targets: Take a delivery job / Repairs & mods / Talk |
+| Y2 | Take a job | Foreman -> Take a delivery job | a yellow route blip to the pickup; notify with plate and 20-minute clock; key in pocket |
+| Y3 | Drive it back | get in the car at the pickup | route flips to the Yard; bottom line "DELIVERY <plate> · to the Yard" |
+| Y4 | Raiders give chase | drive 350 m from the pickup | ~3 in 4 jobs: two raider cars behind you, shooting; they break off past 400 m or after 4 min |
+| Y5 | Delivery judged | park inside the Yard, step out | within 5 s: "That will do." (+15) or "Not a scratch" (+20); car vanishes; channel 9 learned; Factions tab shows The Yard |
+| Y6 | Wreck it = fail | take a job, blow the car up | "Wrecked it" and -5 standing |
+| Y7 | Free repairs by standing | park a dented car in the Yard -> Repairs & mods | menu shows standing; Repair works at wary+; paint at neutral; engine/brakes/box at trusted; armour/turbo at kin. Under the band: greyed with "needs: ..." |
+| Y8 | Mods persist | mod a keyed car, restart the server | same mods and colour after the restart |
+| Y9 | Standing jump for the test | ob_rep mechanics 50 | menu unlocks performance mods (trusted) |
+
 ## 6 PRIOR SHEET
 
 | # | Test | Do | Expect |
@@ -207,4 +221,4 @@ Core mechanics first on purpose: if K1 or K4 fail, stop and tell me before anyth
 | G1 | Controller: Up inv, Down wheel, Left radio, B cancel | pad | all four |
 
 ---
-Generated 2026-09-20 by tools/gen_test_guide.py from shakedown.lua (123 steps). Edit the Lua, rerun the script.
+Generated 2026-09-20 by tools/gen_test_guide.py from shakedown.lua (132 steps). Edit the Lua, rerun the script.

@@ -1,4 +1,22 @@
-# START HERE — Outbreak v0.25.0 — REPAIRS FROM THE FIRST F9 RUN
+# START HERE — Outbreak v0.26.0 — THE YARD (mechanics faction)
+
+**Deploy:** robocopy into the pack, `02-copy-resources`, `07-update-cfg -Apply` (one new ensure line), `08-disable-commerce -Jobs -Apply`
+(qbx_customs is now stopped: the Yard replaces it), restart. F9 section **12 THE YARD** (9 steps).
+
+## What changed since v0.25.0
+
+| | |
+|---|---|
+| **The Yard** | Beeker's Garage at Harmony is a faction: a Foreman (clipboard) and two hands who shoot the dead. Standing with `mechanics` sits beside the other three in the journal. Channel 9. |
+| **Delivery jobs** | Foreman → *Take a delivery job*: a car spawns at one of six pickups with your key, a route blip, a 20-minute clock. Get in and the route flips to the Yard. Park inside and step out: the server judges it. +15 standing, +5 more if the engine is untouched, -5 for a wreck, -3 for dropping it. |
+| **Raider chase** | Once the car is 350 m from the pickup, three jobs in four spawn two raider cars behind you, drivers chasing, riders shooting. They break off past 400 m or after four minutes. |
+| **Free repairs and mods** | Foreman → *Repairs & mods* with the car in the Yard: repair at *wary*, six resprays at *neutral*, engine / brakes / transmission at *trusted*, armour and turbo at *kin*. No money anywhere. Mods are saved with keyed cars and re-applied after a restart. |
+
+Unverified: the Yard, foreman and pickup coordinates; models `s_m_y_xmech_02`, `s_m_m_autoshop_01/02`; scenarios WORLD_HUMAN_CLIPBOARD / WORLD_HUMAN_WELDING.
+
+---
+
+# v0.25.0 — REPAIRS FROM THE FIRST F9 RUN
 
 **Deploy:** extract, robocopy into `C:\Outbreak\pack`, `02-copy-resources`, `08-disable-commerce -Jobs` (preview) then `-Apply`, restart.
 No migration, no cfg change, no new items. F9 section **11 v0.25** (17 steps). `qbx_customs` is now KEPT by the commerce script (car mods stay).

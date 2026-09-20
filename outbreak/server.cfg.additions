@@ -100,6 +100,8 @@ ensure outbreak_debug
 ## outbreak_emotes, all ensured above, plus migration 004_vehicles.sql.
 ## Untested in play. If the boot goes red, comment this line and restart.
 ensure outbreak_vehicles
+## mechanics: the Yard at Harmony. deliveries, raider chases, free repairs and mods by standing. needs faction, vehicles
+ensure outbreak_mechanics
 
 ## PROGRESSION and CRAFT are ENABLED above in the layer 1 block. Do not add them twice.
 

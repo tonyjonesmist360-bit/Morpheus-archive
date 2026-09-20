@@ -138,7 +138,7 @@ CreateThread(function()
     local d0 = json.decode(r.data or '{}')
     V[r.plate] = { model = r.model, fuel = r.fuel, battery = r.battery, hotwired = r.hotwired == 1, locked = r.locked == 1, part = r.part, claimed = r.claimed == 1, keyed = d0.keyed or false, owner = r.owner,
                    pos = vector3(r.x, r.y, r.z), heading = r.heading, noise = 1.0, burn = 1.0, data = d0, boat = d0.boat or false,
-                   restore = (d0.body or d0.engine) and { body = d0.body, engine = d0.engine } or nil }
+                   restore = (d0.body or d0.engine or d0.mods) and { body = d0.body, engine = d0.engine, mods = d0.mods } or nil }
     if VehCfg.Persistence.respawnOnStart then
       local d = json.decode(r.data or '{}')
       local ent = CreateVehicleServerSetter(r.model, d.boat and 'boat' or 'automobile', r.x, r.y, r.z, r.heading)
@@ -151,6 +151,12 @@ CreateThread(function()
   end
 end)
 
+-- mods (outbreak_mechanics): stored in data.mods, re-applied by the first client that sees the car after a restart
+RegisterNetEvent('outbreak:veh:mods', function(netId, mods)
+  local plate = ByNet[netId]; local v = plate and V[plate]; if not v or type(mods) ~= 'table' then return end
+  v.data = v.data or {}; v.data.mods = mods
+  if v.claimed or v.keyed then save(plate) end
+end)
 -- the first client to see a restored car applies its saved damage, then tells us so nobody else does
 RegisterNetEvent('outbreak:veh:restored', function(netId)
   local plate = ByNet[netId]; local v = plate and V[plate]

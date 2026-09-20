@@ -31,10 +31,11 @@ FactionCfg = {
   Join = { minRep = -10, leaveRepCost = 25, cooldownMinutes = 30 },
   -- Standing words for the journal / F1. Bands on reputation -100..100.
   Standing = { { -40, 'hostile' }, { -1, 'wary' }, { 39, 'neutral' }, { 79, 'trusted' }, { 100, 'kin' } },
-  Names = { military = 'Military Remnant', raider = 'Boneyard raiders', enclave = 'The Enclave' },
+  Names = { military = 'Military Remnant', raider = 'Boneyard raiders', enclave = 'The Enclave', mechanics = 'The Yard (mechanics)' },
   Blurbs = {
     military = 'What is left of Zancudo. Channel 7. They hold the gate and the armory, and they remember who helped.',
     raider   = 'The Boneyard crew out of Sandy Shores. Channel 13. They take what they want and call it trade.',
     enclave  = 'The settlements that talk to each other on channel 4. Doors, stockpiles, people who remember your name.',
+    mechanics = 'Beeker\'s Garage at Harmony, still turning wrenches. Channel 9. Bring them cars and they will keep yours running - for free, if they like you.',
   },
 }

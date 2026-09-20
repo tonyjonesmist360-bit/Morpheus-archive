@@ -18,6 +18,7 @@ AddEventHandler('outbreak:tick', function(t)
       if v and v.restore then
         if v.restore.body then SetVehicleBodyHealth(veh, v.restore.body + 0.0) end
         if v.restore.engine then SetVehicleEngineHealth(veh, v.restore.engine + 0.0) end
+        if v.restore.mods then pcall(function() exports.outbreak_mechanics:applyMods(veh, v.restore.mods) end) end
         TriggerServerEvent('outbreak:veh:restored', id)
       end
     end

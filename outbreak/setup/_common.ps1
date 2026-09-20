@@ -134,7 +134,7 @@ $script:CompetingResources = @(
     @{ Name = 'Renewed-Weathersync'; Group = '[standalone]'; Why = 'outbreak_world owns time/weather (limitation #12)' }
 )
 
-$script:SliceResourceCount = 31   # 19 services + chat + loadscreen + ambience + hud + status + wheel + dm + debug + mapkey + group + tuning + log (v0.23)
+$script:SliceResourceCount = 32   # ... + mapkey + group + tuning + log + mechanics (v0.26)
 $script:MigrationFiles = @(
     '001_slice.sql','002_extended.sql','003_progression.sql','004_vehicles.sql',
     '005_radio.sql','006_worlditems.sql','007_dm.sql','008_supply.sql','009_house_spots.sql'
