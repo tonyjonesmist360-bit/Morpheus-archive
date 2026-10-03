@@ -24,3 +24,6 @@
 21. **Cayo Perico via `SetIslandHopperEnabled('HeistIsland', true)`**: client-side streaming toggle; all island coordinates (beach, far dock, enclave, lighthouse) are approximate and need a pass. Whether the mainland and island coexist cleanly for players on both at once is unverified (GTA normally treats the island as a separate map state).
 22. **Boat server-side creation** (`CreateVehicleServerSetter(..., 'boat', ...)`) and boat class detection (class 14) are assumed.
 23. **Nothing has run.** Every line is untested on FXServer. See INTEGRATION_REPORT.md.
+20. **Editor NPCs are per-client local peds** (same pattern as the faction posts): every player sees their own copy. Talk and trade are fine; a guard's kills are the local player's zombies. Interactions are server-validated by distance to the stored position.
+21. **Item creation needs a restart**: ox_inventory reads items once at start. The editor drafts into `outbreak_items/data/ox_items_snippet.lua` (managed EDITOR ITEMS section) and writes the icon into `ox_inventory/web/images/`; `04-paste-ins -Only items` + restart lands it. Loot overrides, NPCs, interactions, zones and missions are live immediately.
+22. **Editor camera screen-ray maths** assumes a standard FOV/aspect; on ultrawide the cursor may sit a little off the mouse. Right-click selects by distance, so it degrades gently.

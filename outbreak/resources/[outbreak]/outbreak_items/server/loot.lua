@@ -10,6 +10,7 @@ local function roll(src, tbl, list)
   local lvl = tonumber(Player(src).state.scavLevel) or 0
   local found = false
   local mult = 1.0; pcall(function() mult = tonumber(GlobalState.obTune and GlobalState.obTune['loot.multiplier']) or 1.0 end)
+  pcall(function() local c = GetEntityCoords(GetPlayerPed(src)); mult = mult * (exports.outbreak_editor:lootBias(c.x, c.y, c.z) or 1.0) end)   -- painted loot-bias zones
   for _, e in ipairs(tbl) do
     if math.random() < (e[4] + lvl * 0.03) * mult then
       local amount = math.random(e[2], e[3])
@@ -28,7 +29,9 @@ local function respawnMinutes()
   return v or LootCfg.RespawnMinutes
 end
 local function doSearch(src, containerId, tableName, where, token)
-  local tbl = LootCfg.Tables[tableName]; if not tbl or type(containerId) ~= 'string' then return end
+  local tbl = LootCfg.Tables[tableName]
+  pcall(function() local ov = exports.outbreak_editor:kv('loot'); if ov and ov.tables and ov.tables[tableName] then tbl = ov.tables[tableName] end end)   -- editor override, edited in place
+  if not tbl or type(containerId) ~= 'string' then return end
   -- a site id must match a configured site, and the table must be the site's own (no client-chosen tables)
   if containerId:find('^site_') then
     local site

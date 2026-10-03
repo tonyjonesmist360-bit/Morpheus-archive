@@ -15,4 +15,4 @@
 
 **Not tested against anything yet.** "Tested against" above means "written to the API of". See INTEGRATION_REPORT.md.
 
-Pack: outbreak v0.26.0 — 32 slice resources (outbreak_mechanics new), 9 migrations, 24 tables; 8 extended (vehicles + craft ensured), 2 progression (ensured); 8 migrations, 23 tables. Lua 5.4 everywhere (`lua54 'yes'`). All resources `fx_version 'cerulean'`.
+Pack: outbreak v0.27.0 — 33 slice resources (outbreak_editor new), 10 migrations, 31 tables; 8 extended (vehicles + craft ensured), 2 progression (ensured); 8 migrations, 23 tables. Lua 5.4 everywhere (`lua54 'yes'`). All resources `fx_version 'cerulean'`.

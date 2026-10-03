@@ -22,6 +22,8 @@ Every one writes a line to the event log (`logs kind:admin`).
 | `restart_warn [minutes]` | fire a restart warning by hand |
 | `ob_scene_clear x y z [r]` · `ob_scene_restore <file>` | undo a DM scene |
 | `ob_vehera early\|live` | vehicle era |
+| `/editor` · `/editor off` · F10 → Editor | the World Editor (EDITOR.md). Needs `outbreak.dm` |
+| `editor_export [name]` · `editor_import <name>` | content packs in `outbreak_editor/packs/` (console or in-game) |
 
 Log line format: `date time | src:name:citizenid | kind | {json}`. Kinds so far: `player.join/drop`, `faction.join/leave/standing_change`,
 `death.<mode>`, `house.claim`, `house.spot`, `loot.search`, `crew.create`, `dm.<action>`, `director.<action>`, `admin.<cmd>`,

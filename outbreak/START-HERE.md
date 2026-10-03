@@ -1,4 +1,25 @@
-# START HERE — Outbreak v0.26.0 — THE YARD (mechanics faction)
+# START HERE — Outbreak v0.27.0 — THE WORLD EDITOR
+
+**Deploy:** robocopy into the pack, `02-copy-resources`, `03-apply-migrations` (010_editor.sql, 31 tables), `07-update-cfg -Apply` (one new ensure line), restart.
+F9 section **13 THE EDITOR** (17 steps). `EDITOR.md` is the manual.
+
+## What changed since v0.26.0
+
+| | |
+|---|---|
+| **F10 → Editor** | Sims-style mode: free camera (WASD, right-drag look, wheel height, Space/Q), a ground-snapped cursor with grid snap (G: 0 / 0.25 / 0.5 / 1 / 2 m) and rotation (R, Ctrl+wheel), undo/redo (Z/Y, 60 deep). Palette left, inspector right, bone-on-olive. The server grants it: invisible, invulnerable, everyone ignores you, needs paused, noise forced to zero, no infection rolls. Esc drops you where the cursor was. |
+| **NPCs** | Place a persistent NPC: model picker with a translucent preview on the cursor, name, look, behaviour (stand / wander / guard / patrol / sleep), pose, stance (friendly / neutral / hostile / military / raider / yard), weapon for guards. Guards shoot the dead and go back to their post. **Suppress map peds**: click an ambient ped and that model stops spawning around that spot, persistently. |
+| **Make anything interactable** | Click a prop, a placed NPC or the ground: label, icon, hold time, animation, **conditions** (item, rep, time, flag, settlement key, once, cooldown, chapter, job) and **ordered actions** (give / take / stash / say / notify / mission / flag / scene / transmit / spawn / rep / teleport / heal / learn channel / noise / loot / report). A generic server runner executes it. No Lua. Shortcuts: *Prop → container* (a stash on any prop), *Shelf → loot* (walk the aisles, click shelves, pick the table). |
+| **Zones** | Paint safe (no spawns), infested (2.5×), faction territory, loot-bias, quarantine (1.5×) discs. The spawner and loot read them live. |
+| **Loot and items** | Edit any loot table in place (overrides apply to every search immediately). Create an item with an uploaded PNG icon: it is drafted into the items snippet and lands after `04-paste-ins -Only items` + restart (ox_inventory cannot hot-add items; said plainly in the panel). |
+| **Missions** | A builder for data-defined chains: steps goto / collect / deliver / talk / kill / flag, rewards, fail timer, cooldown, repeatable. Each registers into the opportunity engine: journal, persistence, state machine. The *Mission-step* tool drops a step at the cursor. |
+| **Content packs** | Everything exports to `outbreak_editor/packs/<name>.json`; import is additive. `editor_export` / `editor_import` from the console too. |
+
+Unverified: every ped model in the palette list, scenario names, the eleven animation dictionaries in `AnimDict`, the screen-ray maths at odd aspect ratios (tested on paper only).
+
+---
+
+# v0.26.0 — THE YARD (mechanics faction)
 
 **Deploy:** robocopy into the pack, `02-copy-resources`, `07-update-cfg -Apply` (one new ensure line), `08-disable-commerce -Jobs -Apply`
 (qbx_customs is now stopped: the Yard replaces it), restart. F9 section **12 THE YARD** (9 steps).

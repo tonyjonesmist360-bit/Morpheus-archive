@@ -21,7 +21,8 @@ CORE-MECHANICS.md                  the protected-mechanics list + review rule: r
 outbreak_tuning/shared/defaults.lua every magic number; consumers read GlobalState.obTune (BALANCE-TUNING.md). New knob = new key here
 outbreak_log                       exports.outbreak_log:log(kind, src, details) for anything an admin would ask "why" about (ADMIN-COMMANDS.md)
 TEST-GUIDE.md                      GENERATED from outbreak_debug/client/shakedown.lua by tools/gen_test_guide.py - never hand-edit
-sql/migrations/001..008            apply in order, idempotent
+sql/migrations/001..010            apply in order, idempotent
+outbreak_editor                    the World Editor (EDITOR.md): everything placed/painted/wired lives in outbreak_editor_* tables and GlobalState.obEditor
 tools_diag*.py + tools_luac.py     static analyzers — run ALL FOUR after every patch:
                                    `python tools_diag.py && python tools_diag2.py && python tools_diag3.py && python tools_luac.py`
                                    (pass 3 covers undefined helpers, client-only natives on the server,

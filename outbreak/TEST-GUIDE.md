@@ -191,6 +191,28 @@ Core mechanics first on purpose: if K1 or K4 fail, stop and tell me before anyth
 | Y8 | Mods persist | mod a keyed car, restart the server | same mods and colour after the restart |
 | Y9 | Standing jump for the test | ob_rep mechanics 50 | menu unlocks performance mods (trusted) |
 
+## 13 THE EDITOR
+
+| # | Test | Do | Expect |
+|---|---|---|---|
+| W1 | Enter / leave | F10 -> Editor (or /editor). WASD, right-drag, wheel, Space/Q. Esc | camera lifts off; palette left, inspector right; a bone cursor on the ground with a grid; needs bars freeze; zombies ignore you; Esc puts you back where the cursor was |
+| W2 | Not there | in the editor fly through a horde; have a friend look at you; check F1 noise | nothing aggroes; friend sees nobody; noise 0; no infection, no fall damage |
+| W3 | Place a named NPC | Palette -> Place NPC -> model a_m_m_farmer_01, name Earl, look "sunburnt", behaviour stand -> click the ground -> Save. Esc. Walk up | translucent preview follows the cursor; after Save a solid Earl stands there; target shows "Earl" (notify says sunburnt); still there after a restart |
+| W4 | Grid, rotate, undo | G cycles grid; R / Ctrl+wheel turns the heading line; place an NPC; Z; Y | cursor snaps to 0.25/0.5/1/2 m; heading line turns in 15°; Z removes the NPC, Y puts it back (same spot) |
+| W5 | Guard shoots the dead | place an NPC: behaviour guard, stance military, weapon WEAPON_CARBINERIFLE. Spawn zombies near it | it opens fire on the dead, ignores you, returns to its post |
+| W6 | Suppress a map ped | Palette -> Suppress map ped -> click an ambient pedestrian | it vanishes; walk away and back: that model no longer spawns around that spot; listed under Everything placed |
+| W7 | Make a prop interactable | Make interactable -> click a dumpster -> label "Kick it", hold 1500, anim pry, action say title Dumpster text "Clang.", action noise v 60 -> Save. Esc, go kick it | ox_target shows Kick it; progress with anim; "Clang." notify; noise spikes; logged editor.interact |
+| W8 | Conditions | add condition once; then condition item bandage count 1 to the same interaction | second use says "You already did this."; without a bandage: "You need bandage." |
+| W9 | Prop as a container | Palette -> Prop -> container -> click a crate -> Save. Esc, open it, put beans in, restart | a stash opens on the crate; beans survive the restart |
+| W10 | Shelves | Shelf -> loot -> click a store shelf -> table register -> Save; then click the next shelf | "Search the shelf" on each; rolls the table; 30-minute cooldown per player |
+| W11 | Zones: safe and infested | Paint zone -> safe r40 at your base; infested r60 somewhere else; Esc; stand in each for a minute | safe: no new zombies spawn inside; infested: about 2.5x; discs drawn only in the editor |
+| W12 | Loot in place | Loot tables -> register -> add row donut 1 2 1.0 -> Save override; search a register | a donut (or the item you named) every time; Reset to pack returns to normal |
+| W13 | New item | New item -> name donut, label Donut, weight 120, pick a PNG -> Draft item. Then 04-paste-ins -Only items, restart | notify "Item drafted"; after the paste-in and restart /giveitem donut shows the icon |
+| W14 | Mission builder | Missions -> New -> title Earls errand; Mission-step tool: click a spot (goto); add step collect bandage 1; reward give beans 2; Save; press ▶ | journal lists it; blip + route to the spot; arriving advances; holding a bandage finishes; beans land |
+| W15 | Talk to deliver | on Earl add interaction "Hand it over" with action report mission <id> kind talk; mission step deliver npc <earlId> item bandage | talking to Earl takes the bandage and advances the mission |
+| W16 | Content pack | Content packs -> Export; check outbreak_editor/packs/<name>.json; delete something; Import | one JSON with npcs/interactions/zones/missions/kv; import adds it back (duplicates are additive, never deleting) |
+| W17 | Non-admin cannot | as a player without outbreak.dm: /editor; F10 | "You need the outbreak.dm ace."; nothing happens |
+
 ## 6 PRIOR SHEET
 
 | # | Test | Do | Expect |
@@ -221,4 +243,4 @@ Core mechanics first on purpose: if K1 or K4 fail, stop and tell me before anyth
 | G1 | Controller: Up inv, Down wheel, Left radio, B cancel | pad | all four |
 
 ---
-Generated 2026-09-20 by tools/gen_test_guide.py from shakedown.lua (132 steps). Edit the Lua, rerun the script.
+Generated 2026-10-03 by tools/gen_test_guide.py from shakedown.lua (149 steps). Edit the Lua, rerun the script.

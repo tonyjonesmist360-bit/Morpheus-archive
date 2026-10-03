@@ -260,6 +260,7 @@ CreateThread(function()
     local hz = hotZone(ppos)
     zoneBias = hz and hz.bias or nil
     if hz then target = math.max(0, math.ceil(target * hz.mult)) end
+    pcall(function() local em = exports.outbreak_editor:zoneMult(ppos); if em then target = math.ceil(target * em) end end)   -- painted zones (editor): safe 0, infested 2.5, quarantine 1.5
     -- a pooled zone: never more alive than the pool has left; zero when it is cleared
     poolZone = nil
     if hz and hz.pool then
@@ -387,6 +388,7 @@ AddEventHandler('gameEventTriggered', function(name, args)
   local victim, attacker = args[1], args[2]
   if zombies[victim] and IsEntityDead(victim) then tryResurrect(victim) end
   if victim == PlayerPedId() and zombies[attacker] then
+    if LocalPlayer.state.obEditor or LocalPlayer.state.obGod then return end   -- editor / god: no infection rolls
     local chance = tonumber((GlobalState.obTune or {})['infection.chancePerHit']) or OutbreakCfg.InfectionChancePerHit
     pcall(function() if exports.outbreak_skills:hasTrait('thick_skinned') then chance = chance * 0.75 end end)
     if math.random() < chance then

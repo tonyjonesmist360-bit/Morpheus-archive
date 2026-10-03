@@ -120,6 +120,7 @@ local function menu()
     { title = 'Spawn', icon = 'skull', menu = 'dm_spawn' },
     { title = 'Story', icon = 'book', description = 'Radio, notes, intel, opportunities, camps, rep', menu = 'dm_story' },
     { title = 'World', icon = 'earth-americas', description = 'Time, weather, players, ghost', menu = 'dm_world' },
+    { title = 'Editor', icon = 'pen-ruler', description = 'The World Editor: free camera, place NPCs, make anything interactable, zones, loot, missions, packs', onSelect = function() TriggerServerEvent('outbreak:editor:toggle', true) end },
   } })
   lib.showContext('dm_main')
 end

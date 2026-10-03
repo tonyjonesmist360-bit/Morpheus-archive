@@ -102,6 +102,8 @@ ensure outbreak_debug
 ensure outbreak_vehicles
 ## mechanics: the Yard at Harmony. deliveries, raider chases, free repairs and mods by standing. needs faction, vehicles
 ensure outbreak_mechanics
+## the World Editor (F10 -> Editor, /editor). needs dm, core, items, opportunities; migration 010_editor.sql
+ensure outbreak_editor
 
 ## PROGRESSION and CRAFT are ENABLED above in the layer 1 block. Do not add them twice.
 

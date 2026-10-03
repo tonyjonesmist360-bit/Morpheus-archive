@@ -44,6 +44,7 @@ AddEventHandler('outbreak:tick', function(t)
     if exports.outbreak_skills:hasTrait('clumsy') then footMult = footMult * 1.3 end
   end)
   noise = math.max(base * footMult, spike)
+  if LocalPlayer.state.obEditor then noise = 0.0; spike = 0.0 end   -- the World Editor: you are not there
   TriggerEvent('outbreak:hud:noise', noise)
 end)
 

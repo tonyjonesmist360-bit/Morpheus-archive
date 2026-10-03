@@ -1,6 +1,6 @@
 # DIAGNOSTIC REPORT (static, pre-boot)
 
-Resources scanned: 42  ·  files: 203
+Resources scanned: 43  ·  files: 215
 
 
 ## ERROR (0)
@@ -13,11 +13,11 @@ Resources scanned: 42  ·  files: 203
 
 - **outbreak_debug** — handler 'onClientResourceStart' registered but never triggered (dead or external)
 - **outbreak_faction** — data/jobs_snippet.lua is a paste-in fragment (not loaded, not syntax-checked as a file)
-- **outbreak_group** — handler 'onResourceStop' registered but never triggered (dead or external)
 - **outbreak_items** — data/ox_items_snippet.lua is a paste-in fragment (not loaded, not syntax-checked as a file)
 - **outbreak_items** — data/ox_shops_snippet.lua is a paste-in fragment (not loaded, not syntax-checked as a file)
 - **outbreak_log** — handler 'chatMessage' registered but never triggered (dead or external)
 - **outbreak_log** — handler 'onResourceStart' registered but never triggered (dead or external)
+- **outbreak_log** — handler 'onResourceStop' registered but never triggered (dead or external)
 - **outbreak_log** — handler 'playerConnecting' registered but never triggered (dead or external)
 - **outbreak_log** — handler 'playerJoining' registered but never triggered (dead or external)
 - **outbreak_needs** — handler 'weaponDamageEvent' registered but never triggered (dead or external)

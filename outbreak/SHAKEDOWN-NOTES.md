@@ -700,3 +700,21 @@ two players inside can briefly see more than the pool; the count still only fall
 
 Unverified this build: every Places coordinate, the five post models, `s_m_m_prisguard_01`, blip sprites
 52/71/72/73/108/110/188/402, scenario names WORLD_HUMAN_GUARD_STAND(_ARMY).
+
+## 2026-10-03 — v0.27.0: the World Editor
+
+New resource `outbreak_editor`, migration 010 (7 tables). Nothing in the slice was rewired: four one-line hooks
+(noise → 0 under `obEditor`; spawner × painted zone; loot table override + loot-bias; infection roll skipped under
+`obEditor`/`obGod`) and one DM menu entry. The editor camera is the one new per-frame thread, alive only while
+editing and torn down on Esc, resource stop or disconnect (CORE-MECHANICS: conditional, restores).
+
+Design calls: the NUI owns the mouse (`SetNuiFocusKeepInput`) so panels are usable while WASD still flies; look is
+right-drag deltas forwarded from the page; the cursor is a shape-test along the screen ray under the pointer.
+Persistent NPCs follow the faction-post pattern (local peds per client) rather than server-side `CreatePed`, so
+there is no ownership migration to chase. Every editor object is one row and one verb (`npc.save`, `zone.delete`…)
+behind the `outbreak.dm` ace; undo/redo replays those verbs.
+
+Honest gaps: item creation is a draft + paste-in + restart; mission `kill` counting is client-reported (same class
+as pool kills); zones are circles, not polygons.
+
+Unverified this build: palette ped models, scenario names, anim dicts in `AnimDict`, the screen-ray maths.

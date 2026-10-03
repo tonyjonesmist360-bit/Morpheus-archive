@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Outbreak Editor</title>
+<style>
+  /* Field-gear, same identity as the HUD: stencilled bone-on-olive, worn and quiet. */
+  :root{--bone:#d8d2c0;--olive:#3c4230;--rust:#b4552d;--blood:#8e2f2f;--smoke:rgba(24,26,19,.82);--panel:#1a1d16;--deep:#12140f;--dim:#8d8a7c;--ok:#7d8a5c;--water:#5f8fa3;--food:#c98f3d}
+  *{box-sizing:border-box} html,body{margin:0;height:100%;background:transparent;overflow:hidden;font:13px/1.45 'Trebuchet MS','Segoe UI',sans-serif;color:var(--bone);user-select:none}
+  body.off{display:none}
+  #stage{position:absolute;inset:0;cursor:crosshair}
+  .panel{position:absolute;top:18px;bottom:48px;width:290px;background:var(--smoke);border:1px solid rgba(216,210,192,.18);border-radius:4px;display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(2px)}
+  #left{left:18px} #right{right:18px;width:340px}
+  .hd{padding:8px 12px;background:var(--olive);letter-spacing:.12em;font-size:11px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+  .hd b{color:var(--bone)} .hd small{color:var(--dim);letter-spacing:0}
+  .bd{padding:10px 12px;overflow:auto;flex:1}
+  .tool{display:flex;gap:10px;align-items:center;padding:7px 9px;margin:3px 0;border:1px solid transparent;border-radius:3px;cursor:pointer;color:var(--bone)}
+  .tool:hover{background:rgba(216,210,192,.06)} .tool.on{border-color:var(--rust);background:rgba(180,85,45,.14)}
+  .tool i{width:20px;text-align:center;color:var(--dim)} .tool.on i{color:var(--rust)} .tool small{display:block;color:var(--dim);font-size:11px}
+  h4{margin:12px 0 6px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid rgba(216,210,192,.12);padding-bottom:4px}
+  label{display:block;margin:7px 0 2px;color:var(--dim);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+  input,select,textarea{width:100%;background:var(--deep);border:1px solid rgba(216,210,192,.18);color:var(--bone);padding:6px 8px;border-radius:3px;font:inherit}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--rust)} textarea{min-height:48px;resize:vertical}
+  .row{display:flex;gap:6px} .row>*{flex:1}
+  button{background:var(--olive);border:1px solid rgba(216,210,192,.22);color:var(--bone);padding:6px 10px;border-radius:3px;cursor:pointer;font:inherit;letter-spacing:.06em;text-transform:uppercase;font-size:11px}
+  button:hover{border-color:var(--bone)} button.rust{background:var(--rust)} button.blood{background:var(--blood)} button.sm{padding:3px 7px;font-size:10px}
+  .list{margin:4px 0} .it{display:flex;justify-content:space-between;align-items:center;padding:5px 7px;border-bottom:1px solid rgba(216,210,192,.08);cursor:pointer}
+  .it:hover{background:rgba(216,210,192,.05)} .it.on{background:rgba(180,85,45,.14)} .it small{color:var(--dim)}
+  .card{border:1px solid rgba(216,210,192,.14);border-radius:3px;padding:7px;margin:5px 0;background:rgba(18,20,15,.5)}
+  .card .x{float:right;color:var(--dim);cursor:pointer} .card .x:hover{color:var(--rust)}
+  #bar{position:absolute;left:18px;right:18px;bottom:14px;height:26px;background:var(--smoke);border:1px solid rgba(216,210,192,.14);border-radius:3px;display:flex;align-items:center;gap:18px;padding:0 12px;font-size:11px;color:var(--dim);letter-spacing:.06em}
+  #bar b{color:var(--bone)} #bar .k{color:var(--rust)}
+  .tabs{display:flex;border-bottom:1px solid rgba(216,210,192,.12)} .tabs div{flex:1;text-align:center;padding:6px 0;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);cursor:pointer} .tabs div.on{color:var(--bone);border-bottom:2px solid var(--rust)}
+  .muted{color:var(--dim);font-size:11px} .hint{color:var(--dim);font-size:11px;margin:6px 0;line-height:1.4}
+  img.icon{width:48px;height:48px;background:var(--deep);border:1px solid rgba(216,210,192,.18);border-radius:3px;object-fit:contain}
+</style></head>
+<body class="off">
+<div id="stage"></div>
+<div id="left" class="panel"><div class="hd"><b>Palette</b><small id="rev"></small></div><div class="bd" id="palette"></div></div>
+<div id="right" class="panel"><div class="hd"><b id="ititle">Inspector</b><small id="isub"></small></div><div class="bd" id="insp"><div class="hint">Pick a tool on the left and click the ground. Right-click selects what is under the cursor. Everything saves to the server the moment you press Save.</div></div></div>
+<div id="bar"><span><b class="k">WASD</b> fly</span><span><b class="k">RMB-drag</b> look</span><span><b class="k">Wheel</b> height · <b class="k">Ctrl+Wheel</b> rotate</span><span><b class="k">G</b> grid <b id="snap">0.5</b></span><span><b class="k">R</b> heading <b id="head">0</b>°</span><span><b class="k">Z/Y</b> undo <b id="undo">0</b>/<b id="redo">0</b></span><span><b class="k">Del</b> delete</span><span><b class="k">Esc</b> leave</span></div>
+<script>
+const post=(n,d)=>fetch(`https://${GetParentResourceName()}/${n}`,{method:'POST',body:JSON.stringify(d||{})}).then(r=>r.json()).catch(()=>({}));
+let S={},CFG={},LOOT={},tool='select',sel=null,draft=null,draftKind=null,tab='npc';
+const $=s=>document.querySelector(s); const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const vals=o=>Object.values(o||{});
+// ───────── stage: pointer, look, wheel, keys ─────────
+const stage=$('#stage'); let rmb=false,lx=0,ly=0,lastMove=0;
+stage.addEventListener('mousemove',e=>{ if(rmb){post('look',{dx:e.movementX,dy:e.movementY});return} const t=Date.now(); if(t-lastMove>25){lastMove=t;post('pointer',{x:e.clientX/innerWidth,y:e.clientY/innerHeight})}});
+stage.addEventListener('mousedown',e=>{ if(e.button===2){rmb=true;stage.style.cursor='grabbing'} });
+window.addEventListener('mouseup',e=>{ if(e.button===2){rmb=false;stage.style.cursor='crosshair'} });
+stage.addEventListener('click',e=>post('click',{button:0}));
+stage.addEventListener('contextmenu',e=>{e.preventDefault();});
+stage.addEventListener('mouseup',e=>{ if(e.button===2&&Math.abs(e.movementX)<2) post('click',{button:2}); });
+stage.addEventListener('wheel',e=>post('wheel',{d:e.deltaY,ctrl:e.ctrlKey}));
+document.addEventListener('keydown',e=>{ const typing=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName); if(e.key==='Escape'){ if(typing){document.activeElement.blur();return} post('key',{key:'Escape'});return } if(typing)return; const k=e.key.toLowerCase(); if(['g','r','z','y'].includes(k)) post('key',{key:k,shift:e.shiftKey}); if(e.key==='Delete') post('key',{key:'Delete'}); });
+document.addEventListener('focusin',e=>{ if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) post('typing',{on:true}) });
+document.addEventListener('focusout',e=>{ post('typing',{on:false}) });
+// ───────── messages ─────────
+window.addEventListener('message',({data:m})=>{
+  if(m.action==='open'){ S=m.data.state||{};CFG=m.data.cfg||{};LOOT=m.data.lootTables||{};document.body.classList.remove('off');palette();inspectorHome() }
+  else if(m.action==='close'){ document.body.classList.add('off') }
+  else if(m.action==='state'){ S=m.data.state||{}; $('#rev').textContent=count(); if(tab==='list')listView(); if(tab==='missions'&&!draft)missionsHome(); if(tab==='loot'&&!draft)lootHome(); }
+  else if(m.action==='hint'){ $('#snap').textContent=m.data.snap;$('#head').textContent=m.data.heading;$('#undo').textContent=m.data.undo;$('#redo').textContent=m.data.redo; }
+  else if(m.action==='place'){ place(m.data) }
+  else if(m.action==='selected'){ sel=m.data.obj?{kind:m.data.kind,obj:m.data.obj}:null; if(sel) edit(sel.kind,sel.obj); else inspectorHome(); }
+  else if(m.action==='saved'){ sel={kind:m.data.kind,obj:m.data.obj}; edit(sel.kind,sel.obj,true) }
+});
+function count(){ return `${vals(S.npcs).length} npc · ${vals(S.interactions).length} int · ${vals(S.zones).length} zones · ${vals(S.missions).length} missions` }
+// ───────── palette ─────────
+const TOOLS=[['select','fa-arrow-pointer','Select','right-click also selects'],['move','fa-arrows-up-down-left-right','Move selected','click a new spot'],['npc','fa-user','Place NPC','persistent, named, behaved'],['hide','fa-user-slash','Suppress map ped','click an ambient ped: gone, persistently'],['interact','fa-hand','Make interactable','click any prop, NPC or ground'],['container','fa-box-open','Prop → container','a stash on any prop'],['shelf','fa-store','Shelf → loot','click shelves in a store; pick the table'],['zone','fa-draw-polygon','Paint zone','safe / infested / territory / loot / quarantine'],['step','fa-flag','Mission step here','adds a step at the cursor']];
+function palette(){ $('#rev').textContent=count(); $('#palette').innerHTML=TOOLS.map(t=>`<div class="tool ${tool===t[0]?'on':''}" data-t="${t[0]}"><i class="fa-solid ${t[1]}"></i><div>${t[2]}<small>${t[3]}</small></div></div>`).join('')+
+ `<h4>Browse</h4><div class="tool" data-tab="list"><i class="fa-solid fa-list"></i><div>Everything placed<small>jump to, edit, delete</small></div></div><div class="tool" data-tab="loot"><i class="fa-solid fa-sack-dollar"></i><div>Loot tables<small>edit in place</small></div></div><div class="tool" data-tab="item"><i class="fa-solid fa-cookie"></i><div>New item<small>name, icon, weight</small></div></div><div class="tool" data-tab="missions"><i class="fa-solid fa-scroll"></i><div>Missions<small>data-defined chains</small></div></div><div class="tool" data-tab="packs"><i class="fa-solid fa-file-export"></i><div>Content packs<small>export / import one JSON</small></div></div>`;
+ document.querySelectorAll('#palette .tool[data-t]').forEach(el=>el.onclick=()=>{tool=el.dataset.t;draft=null;post('tool',{tool});palette(); if(tool==='npc')npcDraft(); else if(tool==='zone')inspectorHome('Click the ground to drop a zone.'); else if(tool==='interact')inspectorHome('Click a prop, a placed NPC, or the ground.'); else inspectorHome();});
+ document.querySelectorAll('#palette .tool[data-tab]').forEach(el=>el.onclick=()=>{tab=el.dataset.tab;draft=null;({list:listView,loot:lootHome,item:itemForm,missions:missionsHome,packs:packsView})[tab]()});
+}
+function inspectorHome(t){ tab='home'; $('#ititle').textContent='Inspector';$('#isub').textContent=''; $('#insp').innerHTML=`<div class="hint">${esc(t||'Pick a tool on the left and click the ground. Right-click selects what is under the cursor.')}</div>` }
+function fld(id,label,val,type='text',extra=''){ return `<label>${label}</label><input id="${id}" type="${type}" value="${esc(val)}" ${extra}>` }
+function selF(id,label,opts,val){ return `<label>${label}</label><select id="${id}">${opts.map(o=>`<option ${o===val?'selected':''}>${esc(o)}</option>`).join('')}</select>` }
+function v(id){ const e=$('#'+id); return e?e.value:'' } function n(id){ return parseFloat(v(id))||0 }
+// ───────── placement from a click ─────────
+function place(d){
+  if(d.kind==='npc'){ if(!draft||draftKind!=='npc')npcDraft(); draft.x=d.x;draft.y=d.y;draft.z=d.z;draft.h=d.h; $('#isub').textContent=`${d.x.toFixed(1)}, ${d.y.toFixed(1)}`; $('#npcpos').textContent='placed'; }
+  else if(d.kind==='zone'){ draft={name:'',kind:'safe',x:d.x,y:d.y,z:d.z,radius:20,data:{}};draftKind='zone';edit('zone',draft) }
+  else if(d.kind==='interaction'){ draft={target:d.target,label:'Use',icon:'fa-solid fa-hand',hold:0,anim:'',conditions:[],actions:[],enabled:true};draftKind='interaction';edit('interaction',draft) }
+  else if(d.kind==='container'){ draft={target:d.target,label:'Open',icon:'fa-solid fa-box-open',hold:800,anim:'search',conditions:[],actions:[{type:'stash',id:'c'+Date.now().toString(36),label:'Container',slots:20,weight:60000}],enabled:true};draftKind='interaction';edit('interaction',draft) }
+  else if(d.kind==='shelf'){ draft={target:d.target,label:'Search the shelf',icon:'fa-solid fa-magnifying-glass',hold:4000,anim:'search',conditions:[{type:'cooldown',seconds:1800}],actions:[{type:'loot',table:'register',label:'Shelf'}],enabled:true};draftKind='interaction';edit('interaction',draft) }
+  else if(d.kind==='step'){ if(tab!=='missions'||!draft||draftKind!=='mission'){ missionsHome(); newMission(); } draft.def.steps.push({type:'goto',label:'Go there',x:d.x,y:d.y,z:d.z,radius:8,text:''}); missionForm(); }
+}
+// ───────── NPC ─────────
+function npcDraft(){ draft={name:'',look:'',model:CFG.models[0],x:0,y:0,z:0,h:0,behaviour:{kind:'stand',scenario:'stand',radius:15,weapon:''},stance:'neutral',data:{invincible:true}};draftKind='npc';edit('npc',draft) }
+function edit(kind,o,saved){ draft=o;draftKind=kind; $('#ititle').textContent=(o.id?'Edit ':'New ')+kind; $('#isub').textContent=o.id?('#'+o.id):'';
+  if(kind==='npc')npcForm(o); else if(kind==='zone')zoneForm(o); else if(kind==='interaction')interForm(o); else if(kind==='mission'){tab='missions';missionForm()} }
+function npcForm(o){ const b=o.behaviour||{}; $('#insp').innerHTML=`${fld('nname','Name',o.name)}${fld('nlook','Look (what people see)',o.look)}<label>Model</label><div class="row"><input id="nmodel" list="models" value="${esc(o.model)}"><button class="sm" id="npv">Preview</button></div><datalist id="models">${CFG.models.map(m=>`<option value="${m}">`).join('')}</datalist>
+ <div class="row">${selF('nbeh','Behaviour',CFG.behaviours,b.kind||'stand')}${selF('nstance','Stance',CFG.stances,o.stance||'neutral')}</div>
+ <div class="row">${selF('nscen','Pose',Object.keys(CFG.scenarios),b.scenario||'stand')}${fld('nrad','Wander radius',b.radius||15,'number')}</div>${fld('nweap','Weapon (guard)',b.weapon||'')}
+ <label>Position</label><div class="muted" id="npcpos">${o.id?`${(+o.x).toFixed(1)}, ${(+o.y).toFixed(1)} · heading ${Math.round(o.h)}`:'click the ground to place'}</div>
+ <div class="row" style="margin-top:10px"><button class="rust" id="save">Save</button>${o.id?'<button class="blood" id="del">Delete</button>':''}</div>`;
+ $('#npv').onclick=()=>post('preview',{model:v('nmodel')}); $('#nmodel').onchange=()=>post('preview',{model:v('nmodel')});
+ $('#save').onclick=()=>{ if(!o.id&&!o.x&&!o.y){alert('Click the ground first.');return} post('save',{kind:'npc',obj:{id:o.id,name:v('nname'),look:v('nlook'),model:v('nmodel'),x:o.x,y:o.y,z:o.z,h:o.h,behaviour:{kind:v('nbeh'),scenario:v('nscen'),radius:n('nrad'),weapon:v('nweap')},stance:v('nstance'),data:o.data||{}}}) };
+ if(o.id)$('#del').onclick=()=>post('delete',{kind:'npc',id:o.id}); }
+// ───────── ZONE ─────────
+function zoneForm(o){ $('#insp').innerHTML=`${fld('zname','Name',o.name)}${selF('zkind','Kind',Object.keys(CFG.zones),o.kind)}${fld('zrad','Radius (m)',o.radius,'number')}<div id="zx"></div><div class="row" style="margin-top:10px"><button class="rust" id="save">Save</button>${o.id?'<button class="blood" id="del">Delete</button>':''}</div>`;
+ const extra=()=>{ const k=v('zkind'); $('#zx').innerHTML=k==='territory'?fld('zfac','Faction',(o.data||{}).faction||'military'):k==='loot'?fld('zbias','Loot bias (1.5 = +50%)',(o.data||{}).bias||1.5,'number'):'' }; extra(); $('#zkind').onchange=extra;
+ $('#save').onclick=()=>{ const k=v('zkind'); const data=k==='territory'?{faction:v('zfac')}:k==='loot'?{bias:n('zbias')}:{}; post('save',{kind:'zone',obj:{id:o.id,name:v('zname'),kind:k,x:o.x,y:o.y,z:o.z,radius:n('zrad'),data}}) };
+ if(o.id)$('#del').onclick=()=>post('delete',{kind:'zone',id:o.id}); }
+// ───────── INTERACTION ─────────
+const AF={give:['item','count'],take:['item','count'],stash:['id','label','slots','weight'],say:['title','text'],notify:['title','text','type'],mission:['op','id'],flag:['name','value'],scene:['id'],transmit:['ch','title','text'],spawn:['kind','count'],rep:['faction','delta','reason'],teleport:['x','y','z'],heal:[],learn_channel:['ch'],noise:['v'],report:['mission','kind'],loot:['table','label']};
+const CF={item:['item','count'],rep:['faction','min'],time:['from','to'],flag:['name','value'],settlement:[],once:[],cooldown:['seconds'],chapter:['min'],job:['job']};
+function interForm(o){ const t=o.target||{}; const tdesc=t.kind==='npc'?`NPC #${t.id}`:t.kind==='entity'?`prop ${t.model} @ ${(+t.x).toFixed(1)}, ${(+t.y).toFixed(1)}`:t.kind==='zone'?`zone r${t.radius}`:`point ${(+t.x||0).toFixed(1)}, ${(+t.y||0).toFixed(1)}`;
+ $('#insp').innerHTML=`<div class="muted">Target: ${esc(tdesc)}</div>${fld('ilabel','Label',o.label)}${fld('iicon','Icon (fa class)',o.icon||'fa-solid fa-hand')}<div class="row">${fld('ihold','Hold (ms)',o.hold||0,'number')}${selF('ianim','Anim',['',...CFG.anims],o.anim||'')}</div>
+ ${t.kind==='point'?fld('irad','Make it a zone of radius (0 = point)',t.radius||0,'number'):''}
+ <h4>Conditions <button class="sm" id="addc">+</button></h4><div id="conds"></div><h4>Actions (in order) <button class="sm" id="adda">+</button></h4><div id="acts"></div>
+ <div class="row" style="margin-top:10px"><button class="rust" id="save">Save</button>${o.id?'<button class="blood" id="del">Delete</button>':''}</div>`;
+ const conds=o.conditions||[],acts=o.actions||[];
+ const rend=()=>{ $('#conds').innerHTML=conds.map((c,i)=>`<div class="card"><span class="x" data-i="${i}">✕</span><select data-ci="${i}">${CFG.conditions.map(x=>`<option ${x===c.type?'selected':''}>${x}</option>`).join('')}</select>${(CF[c.type]||[]).map(f=>`<input placeholder="${f}" data-ci="${i}" data-f="${f}" value="${esc(c[f]??'')}" style="margin-top:4px">`).join('')}</div>`).join('')||'<div class="muted">none: anyone, any time</div>';
+   $('#acts').innerHTML=acts.map((a,i)=>`<div class="card"><span class="x" data-i="${i}">✕</span><select data-ai="${i}">${[...CFG.actions,'loot'].map(x=>`<option ${x===a.type?'selected':''}>${x}</option>`).join('')}</select>${(AF[a.type]||[]).map(f=>`<input placeholder="${f}" data-ai="${i}" data-f="${f}" value="${esc(a[f]??'')}" style="margin-top:4px">`).join('')}</div>`).join('')||'<div class="muted">none: it will only say the label</div>';
+   $('#conds').querySelectorAll('select').forEach(s=>s.onchange=()=>{conds[+s.dataset.ci]={type:s.value};rend()}); $('#conds').querySelectorAll('input').forEach(s=>s.oninput=()=>{conds[+s.dataset.ci][s.dataset.f]=s.value}); $('#conds').querySelectorAll('.x').forEach(s=>s.onclick=()=>{conds.splice(+s.dataset.i,1);rend()});
+   $('#acts').querySelectorAll('select').forEach(s=>s.onchange=()=>{acts[+s.dataset.ai]={type:s.value};rend()}); $('#acts').querySelectorAll('input').forEach(s=>s.oninput=()=>{acts[+s.dataset.ai][s.dataset.f]=s.value}); $('#acts').querySelectorAll('.x').forEach(s=>s.onclick=()=>{acts.splice(+s.dataset.i,1);rend()}); };
+ rend(); $('#addc').onclick=()=>{conds.push({type:'item'});rend()}; $('#adda').onclick=()=>{acts.push({type:'say'});rend()};
+ $('#save').onclick=()=>{ const tg={...t}; if(t.kind==='point'){const r=n('irad'); if(r>0){tg.kind='zone';tg.radius=r}} post('save',{kind:'interaction',obj:{id:o.id,target:tg,label:v('ilabel'),icon:v('iicon'),hold:n('ihold'),anim:v('ianim'),conditions:conds,actions:acts,enabled:true}}) };
+ if(o.id)$('#del').onclick=()=>post('delete',{kind:'interaction',id:o.id}); }
+// ───────── LIST ─────────
+function listView(){ tab='list'; $('#ititle').textContent='Everything placed';$('#isub').textContent=count();
+ const row=(k,o,label,sub,x,y,z)=>`<div class="it" data-k="${k}" data-id="${o.id}" data-x="${x}" data-y="${y}" data-z="${z}"><span>${esc(label)}<br><small>${esc(sub)}</small></span><span><button class="sm" data-del="${k}:${o.id}">✕</button></span></div>`;
+ $('#insp').innerHTML=`<h4>NPCs</h4>${vals(S.npcs).map(o=>row('npc',o,o.name||o.model,`${o.model} · ${(o.behaviour||{}).kind} · ${o.stance}`,o.x,o.y,o.z)).join('')||'<div class="muted">none</div>'}
+ <h4>Interactions</h4>${vals(S.interactions).map(o=>row('interaction',o,o.label,`${o.target.kind} · ${(o.actions||[]).map(a=>a.type).join(', ')||'no actions'}`,o.target.x,o.target.y,o.target.z)).join('')||'<div class="muted">none</div>'}
+ <h4>Zones</h4>${vals(S.zones).map(o=>row('zone',o,o.name||o.kind,`${o.kind} · r${o.radius}`,o.x,o.y,o.z)).join('')||'<div class="muted">none</div>'}
+ <h4>Suppressed map peds</h4>${vals(S.hidden).map(o=>`<div class="it"><span>${esc(o.note||o.model)}<br><small>${(+o.x).toFixed(0)}, ${(+o.y).toFixed(0)}</small></span><button class="sm" data-hdel="${o.id}">✕</button></div>`).join('')||'<div class="muted">none</div>'}`;
+ $('#insp').querySelectorAll('.it[data-k]').forEach(el=>el.onclick=e=>{ if(e.target.dataset.del)return; const k=el.dataset.k,id=+el.dataset.id; const o=(k==='npc'?S.npcs:k==='zone'?S.zones:S.interactions)[id]||Object.values(k==='npc'?S.npcs:k==='zone'?S.zones:S.interactions).find(x=>x.id===id); post('select',{kind:k,id,x:el.dataset.x,y:el.dataset.y,z:el.dataset.z}); sel={kind:k,obj:o}; edit(k,o) });
+ $('#insp').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const [k,id]=b.dataset.del.split(':');post('delete',{kind:k,id:+id})});
+ $('#insp').querySelectorAll('[data-hdel]').forEach(b=>b.onclick=()=>post('hiddenDelete',{id:+b.dataset.hdel})); }
+// ───────── LOOT ─────────
+function lootHome(){ tab='loot'; draft=null; const ov=((S.kv||{}).loot||{}).tables||{}; const names=[...new Set([...Object.keys(LOOT),...Object.keys(ov)])].sort();
+ $('#ititle').textContent='Loot tables';$('#isub').textContent=`${Object.keys(ov).length} overridden`;
+ $('#insp').innerHTML=`<div class="hint">Edit any table in place. Overrides live on the server and apply to every search of that table immediately (shelves, containers, sites).</div><div class="row"><input id="newtbl" placeholder="new table name"><button class="sm" id="mk">New</button></div>`+names.map(k=>`<div class="it" data-t="${k}"><span>${k} ${ov[k]?'<small>(overridden)</small>':''}</span><small>${(ov[k]||LOOT[k]||[]).length} rows</small></div>`).join('');
+ $('#insp').querySelectorAll('.it').forEach(el=>el.onclick=()=>lootEdit(el.dataset.t)); $('#mk').onclick=()=>{ const k=v('newtbl').replace(/[^\w]/g,''); if(k)lootEdit(k,true) }; }
+function lootEdit(name,isNew){ const ov=((S.kv||{}).loot||{}).tables||{}; const rows=JSON.parse(JSON.stringify(ov[name]||LOOT[name]||[])); draft=rows;draftKind='loot';
+ $('#ititle').textContent='Loot: '+name;$('#isub').textContent=ov[name]?'override':'pack default';
+ const rend=()=>{ $('#insp').innerHTML=`<div class="muted">item · min · max · chance (0-1)</div><div id="rows">${rows.map((r,i)=>`<div class="row" style="margin:3px 0"><input data-i="${i}" data-f="0" value="${esc(r[0])}" style="flex:2"><input data-i="${i}" data-f="1" value="${r[1]}" type="number"><input data-i="${i}" data-f="2" value="${r[2]}" type="number"><input data-i="${i}" data-f="3" value="${r[3]}" type="number" step="0.05"><button class="sm" data-x="${i}">✕</button></div>`).join('')}</div>
+   <div class="row" style="margin-top:8px"><button class="sm" id="add">+ row</button><button class="rust" id="save">Save override</button>${ov[name]?'<button class="blood" id="reset">Reset to pack</button>':''}<button class="sm" id="back">Back</button></div>`;
+   $('#rows').querySelectorAll('input').forEach(s=>s.oninput=()=>{ const r=rows[+s.dataset.i]; const f=+s.dataset.f; r[f]=f===0?s.value:parseFloat(s.value)||0 }); $('#rows').querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{rows.splice(+b.dataset.x,1);rend()});
+   $('#add').onclick=()=>{rows.push(['',1,1,0.2]);rend()}; $('#back').onclick=lootHome;
+   $('#save').onclick=()=>{ const loot=JSON.parse(JSON.stringify((S.kv||{}).loot||{})); loot.tables=loot.tables||{}; loot.tables[name]=rows.filter(r=>r[0]); post('kv',{k:'loot',v:loot}); setTimeout(lootHome,400) };
+   if(ov[name])$('#reset').onclick=()=>{ const loot=JSON.parse(JSON.stringify((S.kv||{}).loot||{})); delete loot.tables[name]; post('kv',{k:'loot',v:loot}); setTimeout(lootHome,400) }; };
+ rend(); }
+// ───────── ITEM ─────────
+function itemForm(){ tab='item'; $('#ititle').textContent='New item';$('#isub').textContent='"Donuts" in forty seconds'; let icon=null;
+ $('#insp').innerHTML=`<div class="hint">Drafts land in the items snippet. They become real after <b>setup/04-paste-ins.ps1 -Only items</b> and a restart. Honest: no hot item creation in ox_inventory.</div>${fld('itname','Name (a-z, _)','')}${fld('itlabel','Label','')}<div class="row">${fld('itw','Weight (g)',100,'number')}</div>${fld('itdesc','Description','')}<label>Icon (PNG, ≤ 64 KB)</label><div class="row"><input type="file" id="itfile" accept="image/png"><img class="icon" id="itpv"></div><div class="row" style="margin-top:10px"><button class="rust" id="save">Draft item</button></div>
+ <h4>Drafted so far</h4>${Object.entries((S.kv||{}).items||{}).map(([k,i])=>`<div class="it"><span>${k}<br><small>${esc(i.label)} · ${i.weight} g</small></span></div>`).join('')||'<div class="muted">none</div>'}`;
+ $('#itfile').onchange=e=>{ const f=e.target.files[0]; if(!f)return; if(f.size>65536){alert('Too big. 64 KB max.');return} const r=new FileReader(); r.onload=()=>{icon=r.result;$('#itpv').src=icon}; r.readAsDataURL(f) };
+ $('#save').onclick=()=>{ if(!v('itname')){alert('Name.');return} post('item',{name:v('itname'),label:v('itlabel')||v('itname'),weight:n('itw'),description:v('itdesc'),icon}) }; }
+// ───────── MISSIONS ─────────
+function missionsHome(){ tab='missions'; draft=null; $('#ititle').textContent='Missions';$('#isub').textContent=`${vals(S.missions).length}`;
+ $('#insp').innerHTML=`<div class="hint">A mission is steps in order: go to, collect, deliver (to an NPC via a talk interaction with a <i>report</i> action), talk, kill, flag. It registers into the opportunity engine: journal, persistence, state machine, all real.</div><button class="rust" id="new">New mission</button>`+vals(S.missions).map(m=>`<div class="it" data-id="${m.id}"><span>${esc(m.def.title||m.id)}<br><small>${m.id} · ${(m.def.steps||[]).length} steps ${m.enabled?'':'· disabled'}</small></span><button class="sm" data-start="${m.id}">▶</button></div>`).join('');
+ $('#new').onclick=newMission; $('#insp').querySelectorAll('.it').forEach(el=>el.onclick=e=>{ if(e.target.dataset.start)return; const m=S.missions[el.dataset.id]||vals(S.missions).find(x=>x.id===el.dataset.id); draft=JSON.parse(JSON.stringify(m));draftKind='mission';missionForm() });
+ $('#insp').querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>post('mission',{op:'start',id:b.dataset.start})); }
+function newMission(){ draft={def:{id:'m_'+Date.now().toString(36),title:'',summary:'',steps:[],rewards:[],failMinutes:0,repeatable:false,cooldownMinutes:0},enabled:true};draftKind='mission';missionForm() }
+const SF={goto:['label','x','y','z','radius','text'],collect:['label','item','count','text'],deliver:['label','npc','item','count','x','y','z','text'],talk:['label','npc','x','y','z','text'],kill:['label','count','text'],flag:['label','flag','value','text']};
+const RF={give:['item','count'],rep:['faction','delta'],flag:['name','value'],notify:['text']};
+function missionForm(){ const d=draft.def; $('#ititle').textContent=draft.id||S.missions[d.id]?'Edit mission':'New mission'; $('#isub').textContent=d.id;
+ const rend=()=>{ $('#insp').innerHTML=`${fld('mid','Id',d.id)}${fld('mtitle','Title',d.title)}${fld('msum','Summary (journal)',d.summary)}<div class="row">${fld('mfail','Fail after (min, 0 = never)',d.failMinutes||0,'number')}${fld('mcool','Cooldown (min)',d.cooldownMinutes||0,'number')}</div><label><input type="checkbox" id="mrep" ${d.repeatable?'checked':''} style="width:auto"> repeatable</label>
+   <h4>Steps (in order) <button class="sm" id="adds">+</button> <span class="muted">or use the Mission-step tool at the cursor</span></h4><div id="steps">${d.steps.map((s,i)=>`<div class="card"><span class="x" data-i="${i}">✕</span><select data-si="${i}">${Object.keys(SF).map(x=>`<option ${x===s.type?'selected':''}>${x}</option>`).join('')}</select>${SF[s.type].map(f=>`<input placeholder="${f}" data-si="${i}" data-f="${f}" value="${esc(s[f]??'')}" style="margin-top:4px">`).join('')}</div>`).join('')}</div>
+   <h4>Rewards <button class="sm" id="addr">+</button></h4><div id="rews">${(d.rewards||[]).map((r,i)=>`<div class="card"><span class="x" data-i="${i}">✕</span><select data-ri="${i}">${Object.keys(RF).map(x=>`<option ${x===r.type?'selected':''}>${x}</option>`).join('')}</select>${RF[r.type].map(f=>`<input placeholder="${f}" data-ri="${i}" data-f="${f}" value="${esc(r[f]??'')}" style="margin-top:4px">`).join('')}</div>`).join('')}</div>
+   <div class="row" style="margin-top:10px"><button class="rust" id="save">Save</button><button class="sm" id="back">Back</button>${S.missions[d.id]?'<button class="blood" id="del">Delete</button>':''}</div>`;
+   $('#steps').querySelectorAll('select').forEach(s=>s.onchange=()=>{d.steps[+s.dataset.si]={type:s.value,label:d.steps[+s.dataset.si].label};rend()}); $('#steps').querySelectorAll('input').forEach(s=>s.oninput=()=>{d.steps[+s.dataset.si][s.dataset.f]=s.value}); $('#steps').querySelectorAll('.x').forEach(s=>s.onclick=()=>{d.steps.splice(+s.dataset.i,1);rend()});
+   $('#rews').querySelectorAll('select').forEach(s=>s.onchange=()=>{d.rewards[+s.dataset.ri]={type:s.value};rend()}); $('#rews').querySelectorAll('input').forEach(s=>s.oninput=()=>{d.rewards[+s.dataset.ri][s.dataset.f]=s.value}); $('#rews').querySelectorAll('.x').forEach(s=>s.onclick=()=>{d.rewards.splice(+s.dataset.i,1);rend()});
+   $('#adds').onclick=()=>{d.steps.push({type:'goto',label:'',radius:8});rend()}; $('#addr').onclick=()=>{d.rewards=d.rewards||[];d.rewards.push({type:'give'});rend()}; $('#back').onclick=missionsHome;
+   $('#save').onclick=()=>{ d.id=v('mid').replace(/[^\w]/g,'');d.title=v('mtitle');d.summary=v('msum');d.failMinutes=n('mfail');d.cooldownMinutes=n('mcool');d.repeatable=$('#mrep').checked; post('save',{kind:'mission',obj:{def:d,enabled:true}}); setTimeout(missionsHome,500) };
+   if(S.missions[d.id])$('#del').onclick=()=>post('delete',{kind:'mission',id:d.id}); };
+ rend(); }
+// ───────── PACKS ─────────
+function packsView(){ tab='packs'; $('#ititle').textContent='Content packs';$('#isub').textContent='';
+ $('#insp').innerHTML=`<div class="hint">Everything placed, painted, wired and written goes to one JSON in <b>outbreak_editor/packs/</b>. Version your world, back it up, hand it to another server. Import adds to what is there (it never deletes).</div>${fld('pname','Pack name','world-'+new Date().toISOString().slice(0,10))}<div class="row" style="margin-top:8px"><button class="rust" id="exp">Export</button><button id="imp">Import</button></div><div id="pres" class="muted" style="margin-top:8px"></div>`;
+ $('#exp').onclick=async()=>{ const r=await post('pack',{op:'export',name:v('pname')}); $('#pres').textContent=r.file?`${r.file}: ${r.n} objects`:'failed' }; $('#imp').onclick=async()=>{ const r=await post('pack',{op:'import',name:v('pname')}); $('#pres').textContent=r.err||`imported ${r.n} objects` }; }
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</body></html>
