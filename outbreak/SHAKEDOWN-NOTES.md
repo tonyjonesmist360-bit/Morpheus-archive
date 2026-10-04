@@ -728,3 +728,8 @@ Unverified this build: palette ped models, scenario names, anim dicts in `AnimDi
 - **Symptom:** `Table 'qboxproject_a70b55.outbreak_editor_npcs' doesn't exist` while 03 reported all tables present.
 - **Root cause:** `03-apply-migrations.ps1` defaulted `-DbName` to `outbreak` and created that database if missing; the server's `mysql_connection_string` names `qboxproject_a70b55`. Every table 03 ever made lived in the empty twin. Resources with guarded loads ran on their fallbacks.
 - **Patch:** 03 now reads `database=` (or the URI form) from the live `server.cfg` (`-Base`, then the two known txData paths) and refuses to guess; `-DbName` still overrides.
+
+### v0.27.2 · black screen after character selection on a first login — **FIXED**
+- **Symptom:** world black, HUD and menus visible, F8 clean, right after choosing a character.
+- **Root cause:** first time the fresh-spawn path ever ran. Until the migrations hit the real database, `MySQL.single.await` on the missing `outbreak_players` threw and the PlayerLoaded handler aborted before `outbreak:client:freshSpawn`. Now it runs, and its `DoScreenFadeOut(0)` + teleport landed while Qbox's own character spawn was still fading and placing the ped; the two fades fought and the screen stayed out.
+- **Patch:** `outbreak_spawn/client/spawn.lua`: wait for Qbox's fade-in (`IsScreenFadedIn`, `IsPlayerSwitchInProgress`, up to 20 s), then fade, unfreeze, move, fade in, with a 6-second watchdog that forces the fade-in. A character that already has its `outbreak_players` row never takes this path again.

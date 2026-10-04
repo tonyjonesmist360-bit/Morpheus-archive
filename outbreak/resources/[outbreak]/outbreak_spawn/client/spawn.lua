@@ -73,10 +73,19 @@ AddEventHandler('onResourceStop', function(r) if r == GetCurrentResourceName() a
 
 RegisterNetEvent('outbreak:client:freshSpawn', function(id)
   local p = SpawnCfg.Scenarios[id]; if not p then return end
+  -- v0.27.2: Qbox's own character spawn is still fading and moving the ped when this arrives. Fading out on top of it
+  -- left the screen black. Wait for its fade-in to finish (up to 20 s), then do ours, with a watchdog that always fades in.
+  local t = 0
+  while (not IsScreenFadedIn() or IsPlayerSwitchInProgress()) and t < 200 do Wait(100); t = t + 1 end
+  Wait(500)
   local ped = PlayerPedId()
-  DoScreenFadeOut(0)
+  DoScreenFadeOut(400); t = 0
+  while not IsScreenFadedOut() and t < 20 do Wait(50); t = t + 1 end
+  FreezeEntityPosition(ped, false); SetEntityVisible(ped, true, false)
   SetEntityCoords(ped, p.pos.x, p.pos.y, p.pos.z); SetEntityHeading(ped, p.pos.w)
-  Wait(1000); DoScreenFadeIn(4000); Wait(1500)
+  Wait(800); DoScreenFadeIn(2500)
+  CreateThread(function() Wait(6000); if not IsScreenFadedIn() then DoScreenFadeIn(500) end end)
+  Wait(1500)
   lib.notify({ title = p.label, description = p.story, duration = 10000, type = 'inform' })
   Wait(5000)
   lib.notify({ title = 'Check your pockets.', description = 'Find water. Find a radio. Stay quiet. Press G.', duration = 8000, type = 'warning' })
