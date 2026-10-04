@@ -718,3 +718,8 @@ Honest gaps: item creation is a draft + paste-in + restart; mission `kill` count
 as pool kills); zones are circles, not polygons.
 
 Unverified this build: palette ped models, scenario names, anim dicts in `AnimDict`, the screen-ray maths.
+
+### v0.27.1 · editor loader said "tables missing" right after 03 reported 31 tables — **FIXED**
+- **Symptom:** `[outbreak_editor] tables missing` at boot although `010_editor.sql` had applied.
+- **Root cause:** the loader wrapped every query in one pcall and reported any failure as "tables missing", with the real error swallowed; it also ran once, 1.5 s after start, with no retry if the pool was not up yet.
+- **Patch:** `outbreak_editor/server/store.lua`: prints the actual error, retries 12× over a minute, `editor_reload` console command, `isLoaded` export.

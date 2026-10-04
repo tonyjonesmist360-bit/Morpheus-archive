@@ -1,4 +1,4 @@
-# START HERE — Outbreak v0.27.0 — THE WORLD EDITOR
+# START HERE — Outbreak v0.27.1 — THE WORLD EDITOR (loader fix)
 
 **Deploy:** robocopy into the pack, `02-copy-resources`, `03-apply-migrations` (010_editor.sql, 31 tables), `07-update-cfg -Apply` (one new ensure line), restart.
 F9 section **13 THE EDITOR** (17 steps). `EDITOR.md` is the manual.

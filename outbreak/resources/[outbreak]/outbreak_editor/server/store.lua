@@ -24,7 +24,8 @@ local function publish()
   GlobalState.obEditor = { npcs = S.npcs, hidden = S.hidden, interactions = S.interactions, zones = S.zones, loot = S.kv['loot'] or {}, rev = (GlobalState.obEditor and (GlobalState.obEditor.rev or 0) or 0) + 1 }
 end
 local function load()
-  local okq = pcall(function()
+  local okq, qerr = pcall(function()
+    S.npcs, S.hidden, S.interactions, S.zones, S.kv, S.missions = {}, {}, {}, {}, {}, {}
     for _, r in ipairs(MySQL.query.await('SELECT * FROM outbreak_editor_npcs') or {}) do S.npcs[r.id] = { id = r.id, name = r.name, look = r.look, model = r.model, x = r.x, y = r.y, z = r.z, h = r.h, behaviour = dec(r.behaviour), stance = r.stance or 'neutral', data = dec(r.data) } end
     for _, r in ipairs(MySQL.query.await('SELECT * FROM outbreak_editor_hidden_peds') or {}) do S.hidden[r.id] = { id = r.id, model = r.model, x = r.x, y = r.y, z = r.z, note = r.note } end
     for _, r in ipairs(MySQL.query.await('SELECT * FROM outbreak_editor_interactions') or {}) do S.interactions[r.id] = { id = r.id, target = dec(r.target), label = r.label, icon = r.icon, hold = r.hold_ms or 0, anim = r.anim, conditions = dec(r.conditions), actions = dec(r.actions), enabled = r.enabled == 1 } end
@@ -32,14 +33,28 @@ local function load()
     for _, r in ipairs(MySQL.query.await('SELECT * FROM outbreak_editor_kv') or {}) do S.kv[r.k] = dec(r.v) end
     for _, r in ipairs(MySQL.query.await('SELECT * FROM outbreak_editor_missions') or {}) do S.missions[r.id] = { id = r.id, def = dec(r.def), enabled = r.enabled == 1 } end
   end)
-  if not okq then print('^1[outbreak_editor] tables missing: run setup/03-apply-migrations.ps1 (010_editor.sql). Editor is OFF until then.^7') return false end
+  if not okq then
+    print(('^1[outbreak_editor] load failed: %s^7'):format(tostring(qerr)))
+    print('^1[outbreak_editor] if that says a table does not exist: run setup/03-apply-migrations.ps1 -Base <txData> (010_editor.sql). Otherwise the DB was not ready yet; retrying.^7')
+    return false
+  end
+  S = { npcs = S.npcs, hidden = S.hidden, interactions = S.interactions, zones = S.zones, kv = S.kv, missions = S.missions }
   publish()
   local n = 0; for _ in pairs(S.interactions) do n = n + 1 end
   print(('^5[OB-EDITOR]^7 loaded: %d npcs, %d hidden peds, %d interactions, %d zones, %d missions'):format((function() local c = 0 for _ in pairs(S.npcs) do c = c + 1 end return c end)(), (function() local c = 0 for _ in pairs(S.hidden) do c = c + 1 end return c end)(), n, (function() local c = 0 for _ in pairs(S.zones) do c = c + 1 end return c end)(), (function() local c = 0 for _ in pairs(S.missions) do c = c + 1 end return c end)()))
   TriggerEvent('outbreak:editor:loaded')
   return true
 end
-CreateThread(function() Wait(1500); load() end)
+local loaded = false
+CreateThread(function()
+  -- the DB can come up after us: retry for a minute before giving up (the loader says why each time)
+  for attempt = 1, 12 do
+    Wait(attempt == 1 and 2000 or 5000)
+    if load() then loaded = true break end
+  end
+end)
+RegisterCommand('editor_reload', function(src) if src ~= 0 and not IsPlayerAceAllowed(src, EditorCfg.Ace) then return end; loaded = load(); print('[outbreak_editor] reload: ' .. (loaded and 'ok' or 'failed')) end, true)
+exports('isLoaded', function() return loaded end)
 
 -- ── CRUD. One event, one verb, server validates the ace and the shape. Every change is logged and republished. ──
 local function log(src, what, d) pcall(function() exports.outbreak_log:log('editor.' .. what, src, d) end) end
