@@ -723,3 +723,8 @@ Unverified this build: palette ped models, scenario names, anim dicts in `AnimDi
 - **Symptom:** `[outbreak_editor] tables missing` at boot although `010_editor.sql` had applied.
 - **Root cause:** the loader wrapped every query in one pcall and reported any failure as "tables missing", with the real error swallowed; it also ran once, 1.5 s after start, with no retry if the pool was not up yet.
 - **Patch:** `outbreak_editor/server/store.lua`: prints the actual error, retries 12× over a minute, `editor_reload` console command, `isLoaded` export.
+
+### v0.27.1 · migrations went to the wrong database — **FIXED**
+- **Symptom:** `Table 'qboxproject_a70b55.outbreak_editor_npcs' doesn't exist` while 03 reported all tables present.
+- **Root cause:** `03-apply-migrations.ps1` defaulted `-DbName` to `outbreak` and created that database if missing; the server's `mysql_connection_string` names `qboxproject_a70b55`. Every table 03 ever made lived in the empty twin. Resources with guarded loads ran on their fallbacks.
+- **Patch:** 03 now reads `database=` (or the URI form) from the live `server.cfg` (`-Base`, then the two known txData paths) and refuses to guess; `-DbName` still overrides.

@@ -3,10 +3,11 @@
     Every statement is CREATE TABLE IF NOT EXISTS - safe to re-run.
 #>
 param(
-    [string]$DbName = 'outbreak',
+    [string]$DbName,
     [string]$DbUser = 'root',
     [string]$DbPass,
     [string]$MysqlPath,
+    [string]$Base,
     [switch]$DryRun
 )
 
@@ -15,6 +16,25 @@ $pack = Get-PackRoot
 $migrations = Join-Path $pack 'sql\migrations'
 
 Write-Host "OUTBREAK - apply migrations" -ForegroundColor White
+
+# The database is whatever the live server.cfg's mysql_connection_string points at. Pass -DbName to override.
+# (v0.27.1: the old default 'outbreak' silently created a second, empty database next to the real one.)
+if (-not $DbName) {
+    $cfgCandidates = @()
+    if ($Base) { $cfgCandidates += (Join-Path $Base 'server.cfg') }
+    $cfgCandidates += 'C:\Outbreak\txData\server.cfg', 'C:\FXServer\txData\server.cfg'
+    foreach ($c in $cfgCandidates) {
+        if (Test-Path -LiteralPath $c) {
+            $line = Select-String -LiteralPath $c -Pattern 'mysql_connection_string' | Select-Object -First 1
+            if ($line) {
+                $m = [regex]::Match($line.Line, 'database=([^;"\s]+)')
+                if (-not $m.Success) { $m = [regex]::Match($line.Line, 'mysql://[^/]+/([^?"\s]+)') }
+                if ($m.Success) { $DbName = $m.Groups[1].Value; Ok "database from $c -> $DbName"; break }
+            }
+        }
+    }
+    if (-not $DbName) { throw "Could not read the database name from server.cfg. Pass -DbName <name> (see mysql_connection_string in server.cfg)." }
+}
 
 $mysql = if ($MysqlPath) { $MysqlPath } else { Find-MysqlClient }
 if (-not $mysql) { throw "No mariadb.exe/mysql.exe found. Pass -MysqlPath 'C:\Program Files\MariaDB 11.8\bin\mariadb.exe'." }

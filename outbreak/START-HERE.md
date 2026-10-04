@@ -1,6 +1,7 @@
 # START HERE — Outbreak v0.27.1 — THE WORLD EDITOR (loader fix)
 
-**Deploy:** robocopy into the pack, `02-copy-resources`, `03-apply-migrations` (010_editor.sql, 31 tables), `07-update-cfg -Apply` (one new ensure line), restart.
+**Deploy:** robocopy into the pack, then with `-Base C:\Outbreak\txData` on each: `02-copy-resources`, `03-apply-migrations` (reads the database name from server.cfg; 31 tables), `07-update-cfg -Apply`, restart.
+**v0.27.1 lesson:** the migration script used to default to a database called `outbreak`, not the one the server uses. Run 03 once more; every file is `IF NOT EXISTS`.
 F9 section **13 THE EDITOR** (17 steps). `EDITOR.md` is the manual.
 
 ## What changed since v0.26.0
